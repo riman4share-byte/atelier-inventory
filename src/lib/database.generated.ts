@@ -111,6 +111,51 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          email: string | null
+          erp_contact: string | null
+          erp_customer: string | null
+          erp_sync_status: Database["public"]["Enums"]["erp_sync_status"]
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          erp_contact?: string | null
+          erp_customer?: string | null
+          erp_sync_status?: Database["public"]["Enums"]["erp_sync_status"]
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          email?: string | null
+          erp_contact?: string | null
+          erp_customer?: string | null
+          erp_sync_status?: Database["public"]["Enums"]["erp_sync_status"]
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       dress_materials: {
         Row: {
           dress_id: string
@@ -143,6 +188,98 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "materials"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dress_movements: {
+        Row: {
+          condition_notes: string | null
+          condition_photo_paths: string[]
+          corrects_movement_id: string | null
+          created_at: string
+          customer_id: string | null
+          deposit_amount: number | null
+          direction: Database["public"]["Enums"]["movement_direction"]
+          dress_id: string
+          due_at: string | null
+          erp_stock_entry: string | null
+          erp_sync_status: Database["public"]["Enums"]["erp_sync_status"]
+          from_location: string | null
+          id: string
+          occurred_at: string
+          performed_by: string | null
+          reason: Database["public"]["Enums"]["movement_reason"]
+          source: Database["public"]["Enums"]["movement_source"]
+          to_location: string
+        }
+        Insert: {
+          condition_notes?: string | null
+          condition_photo_paths?: string[]
+          corrects_movement_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          deposit_amount?: number | null
+          direction: Database["public"]["Enums"]["movement_direction"]
+          dress_id: string
+          due_at?: string | null
+          erp_stock_entry?: string | null
+          erp_sync_status?: Database["public"]["Enums"]["erp_sync_status"]
+          from_location?: string | null
+          id?: string
+          occurred_at?: string
+          performed_by?: string | null
+          reason?: Database["public"]["Enums"]["movement_reason"]
+          source?: Database["public"]["Enums"]["movement_source"]
+          to_location: string
+        }
+        Update: {
+          condition_notes?: string | null
+          condition_photo_paths?: string[]
+          corrects_movement_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          deposit_amount?: number | null
+          direction?: Database["public"]["Enums"]["movement_direction"]
+          dress_id?: string
+          due_at?: string | null
+          erp_stock_entry?: string | null
+          erp_sync_status?: Database["public"]["Enums"]["erp_sync_status"]
+          from_location?: string | null
+          id?: string
+          occurred_at?: string
+          performed_by?: string | null
+          reason?: Database["public"]["Enums"]["movement_reason"]
+          source?: Database["public"]["Enums"]["movement_source"]
+          to_location?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dress_movements_corrects_movement_id_fkey"
+            columns: ["corrects_movement_id"]
+            isOneToOne: false
+            referencedRelation: "dress_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dress_movements_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dress_movements_dress_id_fkey"
+            columns: ["dress_id"]
+            isOneToOne: false
+            referencedRelation: "dresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dress_movements_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -197,6 +334,60 @@ export type Database = {
           },
         ]
       }
+      dress_reservations: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          dress_id: string
+          event_date: string | null
+          from_date: string
+          id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["reservation_status"]
+          to_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          dress_id: string
+          event_date?: string | null
+          from_date: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["reservation_status"]
+          to_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          dress_id?: string
+          event_date?: string | null
+          from_date?: string
+          id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["reservation_status"]
+          to_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dress_reservations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dress_reservations_dress_id_fkey"
+            columns: ["dress_id"]
+            isOneToOne: false
+            referencedRelation: "dresses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dresses: {
         Row: {
           ai_model: string | null
@@ -205,6 +396,7 @@ export type Database = {
           color: string | null
           created_at: string
           created_by: string | null
+          current_customer_id: string | null
           deleted_at: string | null
           description_ar: string | null
           description_en: string | null
@@ -215,6 +407,7 @@ export type Database = {
           fabrics: string[]
           id: string
           listing_type: Database["public"]["Enums"]["listing_type"]
+          location: Database["public"]["Enums"]["dress_location"]
           name_ar: string
           name_en: string
           neckline: string | null
@@ -234,6 +427,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           created_by?: string | null
+          current_customer_id?: string | null
           deleted_at?: string | null
           description_ar?: string | null
           description_en?: string | null
@@ -244,6 +438,7 @@ export type Database = {
           fabrics?: string[]
           id?: string
           listing_type?: Database["public"]["Enums"]["listing_type"]
+          location?: Database["public"]["Enums"]["dress_location"]
           name_ar?: string
           name_en?: string
           neckline?: string | null
@@ -263,6 +458,7 @@ export type Database = {
           color?: string | null
           created_at?: string
           created_by?: string | null
+          current_customer_id?: string | null
           deleted_at?: string | null
           description_ar?: string | null
           description_en?: string | null
@@ -273,6 +469,7 @@ export type Database = {
           fabrics?: string[]
           id?: string
           listing_type?: Database["public"]["Enums"]["listing_type"]
+          location?: Database["public"]["Enums"]["dress_location"]
           name_ar?: string
           name_en?: string
           neckline?: string | null
@@ -291,6 +488,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dresses_current_customer_id_fkey"
+            columns: ["current_customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
             referencedColumns: ["id"]
           },
         ]
@@ -599,10 +803,18 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      is_staff_or_admin: { Args: never; Returns: boolean }
       public_qr_page_enabled: { Args: never; Returns: boolean }
       suggest_dress_code: { Args: never; Returns: string }
     }
     Enums: {
+      dress_location:
+        | "in_atelier"
+        | "with_customer"
+        | "alteration"
+        | "cleaning"
+        | "photoshoot"
+        | "other"
       dress_status: "available" | "reserved" | "rented" | "sold"
       erp_action: "create" | "update" | "skip" | "error"
       erp_entity: "dress" | "material"
@@ -627,7 +839,19 @@ export type Database = {
         | "zipper"
         | "other"
       material_unit: "piece" | "gram" | "kg" | "meter"
+      movement_direction: "out" | "in"
+      movement_reason:
+        | "rental"
+        | "sale_delivery"
+        | "fitting"
+        | "alteration"
+        | "cleaning"
+        | "photoshoot"
+        | "return"
+        | "other"
+      movement_source: "app" | "erpnext"
       photo_angle: "front" | "back" | "side" | "neckline" | "detail" | "other"
+      reservation_status: "active" | "fulfilled" | "cancelled"
       stock_reason: "purchase" | "used" | "adjustment" | "return"
       test_status: "ok" | "failed" | "untested"
       user_role: "admin" | "staff"
@@ -761,6 +985,14 @@ export const Constants = {
   },
   public: {
     Enums: {
+      dress_location: [
+        "in_atelier",
+        "with_customer",
+        "alteration",
+        "cleaning",
+        "photoshoot",
+        "other",
+      ],
       dress_status: ["available", "reserved", "rented", "sold"],
       erp_action: ["create", "update", "skip", "error"],
       erp_entity: ["dress", "material"],
@@ -787,7 +1019,20 @@ export const Constants = {
         "other",
       ],
       material_unit: ["piece", "gram", "kg", "meter"],
+      movement_direction: ["out", "in"],
+      movement_reason: [
+        "rental",
+        "sale_delivery",
+        "fitting",
+        "alteration",
+        "cleaning",
+        "photoshoot",
+        "return",
+        "other",
+      ],
+      movement_source: ["app", "erpnext"],
       photo_angle: ["front", "back", "side", "neckline", "detail", "other"],
+      reservation_status: ["active", "fulfilled", "cancelled"],
       stock_reason: ["purchase", "used", "adjustment", "return"],
       test_status: ["ok", "failed", "untested"],
       user_role: ["admin", "staff"],

@@ -11,6 +11,7 @@ import {
   needsAttention,
   useDashboard,
 } from './api';
+import { useMovementSummary } from '@/features/movements/api';
 import { cx } from '@/lib/cx';
 
 const STATUS_TILE_CLASSES: Record<string, string> = {
@@ -24,6 +25,7 @@ export function DashboardPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const rows = useDashboard();
+  const movementSummary = useMovementSummary();
   const [exportOpen, setExportOpen] = useState(false);
 
   const counts = countByStatus(rows);
@@ -77,6 +79,31 @@ export function DashboardPage() {
             <p className="text-note text-muted">{t('dashboard.perDayNote')}</p>
           </div>
         </div>
+
+        {(() => {
+          const s = movementSummary.data;
+          if (!s) return null;
+          return (
+            <div className="grid grid-cols-2 gap-2.5" data-testid="movement-summary">
+              <div className="rounded-tile bg-soft p-3">
+                <strong className="block text-hero font-serif font-semibold text-ink">{s.outNow}</strong>
+                <small className="text-caption font-semibold text-muted">{t('dashboard.outNow')}</small>
+              </div>
+              <div className="rounded-tile bg-soft p-3">
+                <strong className="block text-hero font-serif font-semibold text-ink">{s.overdue}</strong>
+                <small className="text-caption font-semibold text-muted">{t('dashboard.overdue')}</small>
+              </div>
+              <div className="rounded-tile bg-soft p-3">
+                <strong className="block text-hero font-serif font-semibold text-ink">{s.dueThisWeek}</strong>
+                <small className="text-caption font-semibold text-muted">{t('dashboard.dueThisWeek')}</small>
+              </div>
+              <div className="rounded-tile bg-soft p-3">
+                <strong className="block text-hero font-serif font-semibold text-ink">{s.reservedThisMonth}</strong>
+                <small className="text-caption font-semibold text-muted">{t('dashboard.reservedThisMonth')}</small>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="flex flex-col gap-2">
           <p className="text-caption font-semibold text-muted">{t('dashboard.attention')}</p>

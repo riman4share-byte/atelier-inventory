@@ -288,7 +288,18 @@ bulk import wrote the original Instagram files to storage. Instagram exports
 are already small and location-free, so this is acceptable for the test set,
 but the honest behaviour differs between the two paths.
 
-### G-46 · Edge Functions cannot be served locally on this machine
+### G-47 · Phase 8 is partial: no customer page, movement exports or receipts yet
+
+**Status:** open · **Phase:** 8
+Core movement tracking shipped: check-out / check-in / reserve sheets, the
+dress page "where is it now" + timeline, the append-only ledger trigger, and
+dashboard counters (out now, overdue, due this week, reserved this month).
+Still to build: a dedicated customer page with contact details and their
+movements, movement-history export (Excel) with date/dress/customer/reason
+filters, dress history card PDF, customer statement, hand-over/return receipt
+PDF with signature lines, a reservation calendar view, and audit_log writes on
+customer exports. The ledger itself is append-only and correcting entries work
+via `corrects_movement_id`.
 
 **Status:** open · **Phase:** 5
 `supabase functions serve` fails with "failed to copy edge runtime main

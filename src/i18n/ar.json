@@ -191,7 +191,11 @@
     "attentionPhotos": "{{name}} ({{code}}) بلا صور بعد",
     "fix": "عالِج",
     "recent": "أُضيف حديثاً",
-    "export": "تصدير المخزون"
+    "export": "تصدير المخزون",
+    "outNow": "خارج الآن",
+    "overdue": "متأخر",
+    "dueThisWeek": "مستحق هذا الأسبوع",
+    "reservedThisMonth": "محجوز هذا الشهر"
   },
   "format": {
     "currency": "{{value}}"
@@ -273,6 +277,40 @@
     "noPhotos": "أضف صوراً أولاً.",
     "failed": "فشل تنظيف الخلفية. تحقّق من الاتصال أو مفتاح الواجهة.",
     "note": "الأصول لا تُستبدل أبداً. إعادة التصميم لا تحتاج استدعاء واجهة جديد."
+  },
+  "movements": {
+    "whereNow": "أين هي الآن",
+    "location": { "in_atelier": "في الأتيليه", "with_customer": "عند الزبون", "alteration": "في التعديل", "cleaning": "في التنظيف", "photoshoot": "في التصوير", "other": "أخرى" },
+    "direction": { "out": "أُخرجت", "in": "أُدخلت" },
+    "reason": { "rental": "تأجير", "sale_delivery": "تسليم بيع", "fitting": "تجربة", "alteration": "تعديل", "cleaning": "تنظيف", "photoshoot": "تصوير", "return": "إرجاع", "other": "أخرى" },
+    "checkOut": "إخراج",
+    "checkIn": "إدخال",
+    "reserve": "حجز",
+    "checkOutTitle": "إخراج {{code}}",
+    "checkInTitle": "إدخال {{code}}",
+    "reserveTitle": "حجز {{code}}",
+    "customer": "الزبون",
+    "searchCustomer": "بحث عن زبون",
+    "addNewCustomer": "إضافة جديد: {{name}}",
+    "newCustomer": "زبون جديد",
+    "fullName": "الاسم الكامل",
+    "phone": "الهاتف",
+    "reason": "السبب",
+    "dueDate": "الاستحقاق",
+    "deposit": "العربون",
+    "conditionNotes": "ملاحظات الحالة",
+    "nextLocation": "الموقع التالي",
+    "fromDate": "من",
+    "toDate": "إلى",
+    "eventDate": "تاريخ الحدث",
+    "notes": "ملاحظات",
+    "timeline": "السجل",
+    "due": "استحقاق",
+    "withCustomer": "عند الزبون (معرّف: {{id}})",
+    "pickCustomer": "اختر أو أضف زبوناً.",
+    "datesRequired": "تاريخا البداية والنهاية مطلوبان.",
+    "conflict": "هذا الفستان لديه حجز متداخل.",
+    "saveFailed": "فشل الحفظ. تحقّق من الاتصال ثم حاول مجدداً."
   },
   "share": {
     "pageSubtitle": "نظرة خاصة على فساتين مختارة.",

@@ -15,6 +15,10 @@ import {
   useUpdateDress,
   type DressRow,
 } from './api';
+import { useDressMovements } from '@/features/movements/api';
+import { CheckOutSheet } from '@/features/movements/CheckOutSheet';
+import { CheckInSheet } from '@/features/movements/CheckInSheet';
+import { ReserveSheet } from '@/features/movements/ReserveSheet';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
 import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
 import { DressAiReview } from '@/features/ai/DressAiReview';
@@ -89,6 +93,7 @@ function ExistingDress({ id }: { id: string }) {
   const navigate = useNavigate();
   const dressQuery = useDress(id);
   const photosQuery = useDressPhotos(id, { enabled: dressQuery.data?.found === true });
+  const movementsQuery = useDressMovements(id);
   const statusUpdate = useUpdateDress();
   const formUpdate = useUpdateDress();
   const softDelete = useSoftDeleteDress();
@@ -99,6 +104,9 @@ function ExistingDress({ id }: { id: string }) {
   const [deleteFailed, setDeleteFailed] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkinOpen, setCheckinOpen] = useState(false);
+  const [reserveOpen, setReserveOpen] = useState(false);
 
   if (dressQuery.isLoading || photosQuery.isLoading) return <FullScreenLoader />;
 
@@ -269,6 +277,54 @@ function ExistingDress({ id }: { id: string }) {
           ) : null}
         </div>
 
+        {/* Where is it now + movement actions */}
+        <div className="rounded-card bg-soft p-4" data-testid="where-now">
+          <p className="text-caption font-semibold text-muted">{t('movements.whereNow')}</p>
+          <p className="mt-1 text-body font-semibold text-ink">
+            {t(`movements.location.${dress.location ?? 'in_atelier'}`)}
+          </p>
+          {dress.current_customer_id ? (
+            <p className="mt-1 text-small text-muted">
+              {t('movements.withCustomer', { id: dress.current_customer_id })}
+            </p>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {dress.location === 'in_atelier' || dress.location === 'other' ? (
+              <Button variant="secondary" className="w-auto px-4" onClick={() => setCheckoutOpen(true)}>
+                {t('movements.checkOut')}
+              </Button>
+            ) : (
+              <Button variant="secondary" className="w-auto px-4" onClick={() => setCheckinOpen(true)}>
+                {t('movements.checkIn')}
+              </Button>
+            )}
+            <Button variant="secondary" className="w-auto px-4" onClick={() => setReserveOpen(true)}>
+              {t('movements.reserve')}
+            </Button>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        {(movementsQuery.data?.length ?? 0) > 0 ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-caption font-semibold text-muted">{t('movements.timeline')}</p>
+            {(movementsQuery.data ?? []).map((movement) => (
+              <div key={movement.id} className="rounded-field bg-surface px-3 py-2">
+                <p className="text-small font-semibold text-ink">
+                  {t(`movements.direction.${movement.direction}`)} · {t(`movements.reason.${movement.reason}`)}
+                </p>
+                <p className="text-note text-muted">
+                  {new Date(movement.occurred_at).toLocaleString()} → {movement.to_location}
+                  {movement.due_at ? ` · ${t('movements.due')} ${new Date(movement.due_at).toLocaleDateString()}` : ''}
+                </p>
+                {movement.condition_notes ? (
+                  <p className="mt-1 text-note text-ink">{movement.condition_notes}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         <div className="rounded-card bg-soft p-4">
           <p className="text-caption font-semibold text-muted">{t('dress.listingLabel')}</p>
           <p className="text-body font-semibold text-ink">{t(LISTING_LABELS[dress.listing_type])}</p>
@@ -366,11 +422,15 @@ function ExistingDress({ id }: { id: string }) {
         >
           {t('dress.printTag')}
         </Button>
+
+        <CheckOutSheet open={checkoutOpen} onClose={() => setCheckoutOpen(false)} dressId={dress.id} dressCode={dress.code} />
+        <CheckInSheet open={checkinOpen} onClose={() => setCheckinOpen(false)} dressId={dress.id} dressCode={dress.code} currentCustomerId={dress.current_customer_id} />
+        <ReserveSheet open={reserveOpen} onClose={() => setReserveOpen(false)} dressId={dress.id} dressCode={dress.code} />
       </div>
     </Screen>
   );
 }
-
+/** Create flow: /dresses/new */
 export function DressDetailPage() {
   const { id } = useParams<{ id: string }>();
   if (id === 'new') return <CreateDress />;
