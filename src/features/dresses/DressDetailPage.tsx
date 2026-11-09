@@ -19,6 +19,7 @@ import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './Dres
 import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
 import { DressAiReview } from '@/features/ai/DressAiReview';
 import { PhotoGallery } from '@/features/photos/PhotoGallery';
+import { BackgroundCleaner } from '@/features/cleanup/BackgroundCleaner';
 import { cx } from '@/lib/cx';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: DressRow['status']; labelKey: string }> = [
@@ -179,6 +180,8 @@ function ExistingDress({ id }: { id: string }) {
     >
       <div className="flex flex-1 flex-col gap-5 pb-2">
         <PhotoGallery dress={dress} photos={photos} />
+
+        {photos.length > 0 ? <BackgroundCleaner dressId={dress.id} photos={photos} /> : null}
 
         {aiOpen ? (
           <DressAiReview

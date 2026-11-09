@@ -249,6 +249,24 @@
     "confidence": "Confidence",
     "modelNote": "Drafted by the active vision model."
   },
+  "cleanup": {
+    "title": "Clean background",
+    "photo": "Photo",
+    "cleaned": "Cleaned",
+    "original": "Original",
+    "background": "Background",
+    "bg": { "white": "Studio white", "gray": "Soft gray", "blush": "Blush gradient", "custom": "Custom colour" },
+    "enhance": "Enhance (optional)",
+    "brightness": "Brightness",
+    "contrast": "Contrast",
+    "saturation": "Saturation",
+    "clean": "Clean background",
+    "revert": "Revert to original",
+    "cleanAll": "Clean all photos",
+    "noPhotos": "Add photos first.",
+    "failed": "Background removal failed. Check your connection or the API key.",
+    "note": "Originals are never overwritten. Re-styling needs no new API call."
+  },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
     "unavailableTitle": "This link is no longer available",
