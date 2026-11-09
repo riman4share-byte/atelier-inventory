@@ -1,0 +1,38 @@
+import { Navigate, Route, Routes } from 'react-router-dom';
+import { AppShell } from '@/components/layout/AppShell';
+import { LoginPage } from '@/features/auth/LoginPage';
+import { RequireAdmin } from '@/features/auth/RequireAdmin';
+import { RequireAuth } from '@/features/auth/RequireAuth';
+import { CapturePage } from '@/features/capture/CapturePage';
+import { DressesPage } from '@/features/dresses/DressesPage';
+import { MaterialsPage } from '@/features/materials/MaterialsPage';
+import { SettingsPage } from '@/features/settings/SettingsPage';
+import { useDocumentLanguage } from '@/i18n/useDocumentLanguage';
+import { ForbiddenPage } from '@/pages/ForbiddenPage';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+import { SetupPage } from '@/pages/SetupPage';
+
+export default function App() {
+  useDocumentLanguage();
+
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/setup" element={<SetupPage />} />
+      <Route path="/forbidden" element={<ForbiddenPage />} />
+
+      <Route element={<RequireAuth />}>
+        <Route element={<AppShell />}>
+          <Route index element={<Navigate to="/dresses" replace />} />
+          <Route path="dresses" element={<DressesPage />} />
+          <Route path="capture" element={<CapturePage />} />
+          <Route path="materials" element={<MaterialsPage />} />
+          <Route path="settings" element={<RequireAdmin />}>
+            <Route index element={<SettingsPage />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
+}

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier Inventory – Mockup v2</title>
+<style>
+:root{
+  --bg:#FDEFF4; --surface:#FFFFFF; --ink:#2B1424; --muted:#8A6B7C; --line:#F3D9E4;
+  --accent:#D81B73; --accent2:#7B3FE4; --gold:#E0A526; --accent-ink:#FFFFFF; --soft:#FFF1F6;
+  --c1:#FFD9E6; --c2:#E6DCFF; --c3:#FFE8C7; --c4:#D3F2E4;
+  --ok:#14804F; --ok-bg:#D3F2E4; --warn:#A15C00; --warn-bg:#FFE8C7; --info:#5A2FC4; --info-bg:#E6DCFF; --off:#6E5A66; --off-bg:#EEE3E9;
+  --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#1A0F18; --surface:#27161F; --ink:#FFF0F6; --muted:#C9A3B6; --line:#43283A;
+    --accent:#FF5CA8; --accent2:#A98BFF; --gold:#F2C14E; --accent-ink:#2B1424; --soft:#33202B;
+    --c1:#5A2A42; --c2:#3F3068; --c3:#5C4220; --c4:#1F4A38;
+    --ok:#7FE0AE; --ok-bg:#1F4A38; --warn:#FFC978; --warn-bg:#5C4220; --info:#C3B0FF; --info-bg:#3F3068; --off:#D5BBC9; --off-bg:#3A2733;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);padding:20px 0 32px}
+h1{font-family:var(--serif);font-weight:600;font-size:24px;padding:0 20px}
+.sub{color:var(--muted);font-size:13px;padding:4px 20px 16px}
+.rail{display:flex;gap:18px;overflow-x:auto;padding:4px 20px 14px;scroll-snap-type:x mandatory}
+.cell{flex:0 0 auto;scroll-snap-align:center}
+.cap{font-size:12px;color:var(--muted);margin:0 0 8px 4px;font-weight:600}
+.phone{width:292px;height:600px;background:var(--surface);border:1px solid var(--line);border-radius:30px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 14px 34px -18px var(--accent)}
+.top{padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:center}
+.top b{font-family:var(--serif);font-weight:600;font-size:20px}
+.hero{margin:0;padding:18px 16px 16px;background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);color:#fff}
+.hero small{opacity:.85;font-size:12px}.hero b{display:block;font-family:var(--serif);font-size:23px;font-weight:600;margin:2px 0 10px}
+.hero .stats{display:flex;gap:8px}.hero .stats span{background:rgba(255,255,255,.2);border-radius:12px;padding:6px 10px;font-size:11px}.hero .stats strong{display:block;font-size:17px}
+.body{flex:1;overflow:hidden;padding:10px 16px 12px;display:flex;flex-direction:column;gap:10px}
+.nav{display:flex;border-top:1px solid var(--line);padding:8px 6px 12px;background:var(--surface)}
+.nav span{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+.nav span.on{color:var(--accent);font-weight:700}
+.nav i{display:block;width:20px;height:20px;margin:0 auto 3px;border-radius:7px;background:var(--off-bg)}
+.nav .on i{background:var(--accent)}
+.ph{border-radius:18px;display:grid;place-items:center;color:#fff;position:relative;overflow:hidden}
+.ph svg{width:46%;height:auto;filter:drop-shadow(0 6px 8px rgba(0,0,0,.15))}
+.t1{background:var(--c1);color:var(--accent)}.t2{background:var(--c2);color:var(--accent2)}.t3{background:var(--c3);color:var(--gold)}.t4{background:var(--c4);color:var(--ok)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:6px 11px;border-radius:99px;background:var(--soft);color:var(--ink);font-weight:500}
+.chip.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:0;border-radius:16px;padding:13px;font-size:14px;font-weight:700;text-align:center;box-shadow:0 8px 16px -10px var(--accent)}
+.btn.alt{background:var(--soft);color:var(--accent);box-shadow:none}
+.lbl{font-size:11.5px;color:var(--muted);margin-bottom:3px;font-weight:600}
+.field{border:1.5px solid var(--line);border-radius:12px;padding:9px 11px;font-size:13px;background:var(--surface)}
+.field.ai{border-color:var(--accent);background:var(--soft)}
+.st{font-size:10.5px;padding:3px 9px;border-radius:99px;font-weight:700;white-space:nowrap}
+.st.ok{background:var(--ok-bg);color:var(--ok)}.st.warn{background:var(--warn-bg);color:var(--warn)}
+.st.info{background:var(--info-bg);color:var(--info)}.st.off{background:var(--off-bg);color:var(--off)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card .ph{aspect-ratio:3/4}
+.card p{font-size:14px;margin-top:6px;font-family:var(--serif);font-weight:600}
+.card small{font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:2px}
+.row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:16px;background:var(--soft)}
+.row div{flex:1;font-size:13px;font-weight:600}.row small{display:block;color:var(--muted);font-size:11px;font-weight:400}
+.sw{width:38px;height:38px;border-radius:50%;flex:0 0 auto;box-shadow:inset 0 -4px 8px rgba(0,0,0,.12),0 2px 6px -2px rgba(0,0,0,.25)}
+.bar{height:6px;border-radius:9px;background:var(--surface);margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.bar.low i{background:var(--gold)}
+.sw1{background:radial-gradient(circle at 30% 28%,#fff,#bfe3ff 55%,#9bb7ff)}.sw2{background:radial-gradient(circle at 30% 28%,#fff,#fbeedd 55%,#e8cfae)}
+.sw3{background:linear-gradient(135deg,#fff,#e7dcff)}.sw4{background:repeating-linear-gradient(45deg,#fff,#fff 3px,#f4d6e4 3px,#f4d6e4 6px)}.sw5{background:radial-gradient(circle at 30% 28%,#fff,#ffb6d2 60%,#f27aa5)}
+.view{flex:1;border-radius:20px;background:linear-gradient(160deg,#3a1d4a,#13091c);display:grid;place-items:center;color:#ffd3e6;position:relative}
+.view svg{width:38%;opacity:.9}
+.view b{position:absolute;width:26px;height:26px;border:3px solid #FF5CA8}
+.view .a{top:12px;left:12px;border-right:0;border-bottom:0;border-radius:10px 0 0 0}.view .b{top:12px;right:12px;border-left:0;border-bottom:0;border-radius:0 10px 0 0}
+.view .c{bottom:12px;left:12px;border-right:0;border-top:0;border-radius:0 0 0 10px}.view .d{bottom:12px;right:12px;border-left:0;border-top:0;border-radius:0 0 10px 0}
+.view em{position:absolute;bottom:20px;font-size:11px;font-style:normal;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:99px;color:#fff}
+.shutter{width:62px;height:62px;border-radius:50%;border:4px solid var(--surface);outline:3px solid var(--accent);background:linear-gradient(135deg,var(--accent),var(--accent2));margin:0 auto}
+.qr{width:116px;height:116px;margin:0 auto;background:#fff;padding:7px;border-radius:14px;border:2px solid var(--accent)}
+.seg{display:flex;background:var(--soft);border-radius:12px;padding:3px}.seg span{flex:1;text-align:center;font-size:11px;padding:7px 0;border-radius:10px;color:var(--muted)}.seg .on{background:var(--accent);color:#fff;font-weight:700}
+.api{border-radius:18px;padding:11px 12px;display:flex;gap:10px;align-items:center;background:var(--soft)}
+.api .ic{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-size:18px;flex:0 0 auto}
+.api div{flex:1;font-size:13.5px;font-weight:700}.api code{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.tg{width:36px;height:21px;border-radius:99px;background:var(--accent);position:relative;flex:0 0 auto}.tg:after{content:"";position:absolute;right:3px;top:3px;width:15px;height:15px;border-radius:50%;background:#fff}
+.tg.off{background:var(--off-bg)}.tg.off:after{right:auto;left:3px;background:var(--muted)}
+.note{font-size:11px;color:var(--muted);line-height:1.4}
+.spark{position:absolute;top:8px;right:10px;font-size:14px}
+
+:root{--danger:#B3261E;--danger-bg:#FDE0E0}
+@media (prefers-color-scheme:dark){:root{--danger:#FF9A94;--danger-bg:#4A2020}}
+.st.bad{background:var(--danger-bg);color:var(--danger)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{border-radius:18px;padding:12px}.tile strong{display:block;font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.1}.tile small{font-size:12px;font-weight:600}
+.tile.t1{background:var(--c4);color:var(--ok)}.tile.t2{background:var(--c3);color:var(--warn)}.tile.t3{background:var(--c2);color:var(--info)}.tile.t4{background:var(--c1);color:var(--accent)}
+.att{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:14px;background:var(--soft);font-size:12.5px}.att b{flex:1;font-weight:600}
+.tr{display:flex;align-items:center;gap:9px;height:56px;border-bottom:1px solid var(--line);font-size:13px}
+.tr .th{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto}.tr .th svg{width:55%}
+.tr div{flex:1;font-family:var(--serif);font-weight:600;font-size:14px}.tr small{display:block;font-family:var(--sans);font-weight:400;color:var(--muted);font-size:11px}
+.cb{width:18px;height:18px;border-radius:6px;border:2px solid var(--line);flex:0 0 auto}.cb.on{background:var(--accent);border-color:var(--accent)}
+.selbar{margin:auto 0 0;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-radius:18px;padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700}
+.selbar span{background:rgba(255,255,255,.22);border-radius:99px;padding:5px 10px;font-weight:600;font-size:11.5px}.selbar b{flex:1}
+.sheet{margin-top:auto;border-radius:26px 26px 0 0;background:var(--surface);border:1px solid var(--line);padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -10px 30px -18px var(--accent)}
+.sheet:before{content:"";width:40px;height:4px;border-radius:9px;background:var(--line);align-self:center}
+.scrim{flex:1;background:var(--soft);border-radius:18px;padding:10px;display:grid;gap:8px;align-content:start;opacity:.75}
+.tgrow{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600}
+.stat{display:flex;gap:8px}.stat span{flex:1;border-radius:14px;padding:8px;text-align:center;font-size:11px;font-weight:600}.stat strong{display:block;font-family:var(--serif);font-size:22px}
+
+.tl{position:relative;display:flex;flex-direction:column;gap:8px;padding-inline-start:18px}
+.tl:before{content:"";position:absolute;inset-inline-start:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.tl .ev{position:relative;background:var(--soft);border-radius:14px;padding:9px 11px;font-size:12px;line-height:1.35}
+.tl .ev:before{content:"";position:absolute;inset-inline-start:-18px;top:12px;width:12px;height:12px;border-radius:50%;background:var(--accent2);border:2px solid var(--surface)}
+.tl .ev.in:before{background:var(--ok)}
+.tl .ev b{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:2px}
+.tl .ev small{color:var(--muted);font-size:11px}
+.where{display:flex;gap:10px;align-items:center;background:var(--info-bg);color:var(--info);border-radius:16px;padding:10px 12px}
+.where div{flex:1;font-size:13px;font-weight:700}.where small{display:block;font-weight:500;font-size:11px;opacity:.85}
+.ph3{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto}
+.slots{display:flex;gap:8px}.slots span{width:52px;height:52px;border-radius:14px;border:2px dashed var(--line);display:grid;place-items:center;color:var(--muted);font-size:18px}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><symbol id="gown" viewBox="0 0 100 160"><path fill="currentColor" d="M40 10 L50 22 L60 10 L64 44 Q66 56 62 62 L90 148 Q50 162 10 148 L38 62 Q34 56 36 44 Z"/></symbol></svg>
+
+<h1>Atelier Inventory</h1>
+<p class="sub">Version 4: adds where-is-it-now with movement history and a check-out sheet. Swipe through the twelve screens.</p>
+
+<div class="rail">
+
+<!-- 1 Capture -->
+<div class="cell"><p class="cap">1 · Capture</p>
+<div class="phone">
+  <div class="top"><b>New dress</b><span class="st info">2 of 6 angles</span></div>
+  <div class="body">
+    <div class="chips"><span class="chip on">Front ✓</span><span class="chip on">Back ✓</span><span class="chip">Side</span><span class="chip">Neckline</span><span class="chip">Detail</span></div>
+    <div class="view"><b class="a"></b><b class="b"></b><b class="c"></b><b class="d"></b><svg><use href="#gown"/></svg><em>Fit the dress inside the corners</em></div>
+    <div class="shutter"></div>
+    <div class="btn alt">Upload photos instead</div>
+  </div>
+  <div class="nav"><span><i></i>Dresses</span><span class="on"><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 2 Review -->
+<div class="cell"><p class="cap">2 · Review and edit</p>
+<div class="phone">
+  <div class="top"><b>Review</b><span class="st warn">✦ AI draft</span></div>
+  <div class="body">
+    <div style="display:flex;gap:10px">
+      <div class="ph t1" style="width:98px;height:122px"><svg><use href="#gown"/></svg><span class="spark">✨</span></div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center">
+        <div class="btn">✨ Clean background</div>
+        <div class="seg"><span class="on">After</span><span>Before</span></div>
+      </div>
+    </div>
+    <div><div class="lbl">Name</div><div class="field ai">Seraphine</div></div>
+    <div class="chips"><span class="chip">A-line</span><span class="chip">V-neck</span><span class="chip">Long sleeve</span><span class="chip">Lace</span></div>
+    <div><div class="lbl">Description (English)</div><div class="field ai" style="font-size:12px;line-height:1.4">A flowing A-line gown with a deep V-neckline and delicate lace sleeves…</div></div>
+    <div><div class="lbl">Materials used</div><div class="chips"><span class="chip on">Crystal 4mm ×300</span><span class="chip on">Pearl 6mm</span><span class="chip">+ Add</span></div></div>
+    <div class="btn">Save dress</div>
+  </div>
+  <div class="nav"><span><i></i>Dresses</span><span class="on"><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 3 Gallery -->
+<div class="cell"><p class="cap">3 · Dress gallery</p>
+<div class="phone">
+  <div class="hero"><small>Welcome back</small><b>Your collection</b>
+    <div class="stats"><span><strong>42</strong>dresses</span><span><strong>6</strong>reserved</span><span><strong>3</strong>rented</span></div>
+  </div>
+  <div class="body">
+    <div class="chips"><span class="chip on">All</span><span class="chip">Available</span><span class="chip">Reserved</span><span class="chip">Rented</span></div>
+    <div class="grid">
+      <div class="card"><div class="ph t1"><svg><use href="#gown"/></svg></div><p>Seraphine</p><small>RF-0042 <span class="st ok">Available</span></small></div>
+      <div class="card"><div class="ph t2"><svg><use href="#gown"/></svg></div><p>Noor</p><small>RF-0041 <span class="st warn">Reserved</span></small></div>
+      <div class="card"><div class="ph t3"><svg><use href="#gown"/></svg></div><p>Layla</p><small>RF-0040 <span class="st info">Rented</span></small></div>
+      <div class="card"><div class="ph t4"><svg><use href="#gown"/></svg></div><p>Amira</p><small>RF-0039 <span class="st off">Sold</span></small></div>
+    </div>
+  </div>
+  <div class="nav"><span class="on"><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 4 Materials -->
+<div class="cell"><p class="cap">4 · Materials and accessories</p>
+<div class="phone">
+  <div class="top"><b>Materials</b><span class="chip on">+ Add</span></div>
+  <div class="body" style="gap:7px">
+    <div class="chips"><span class="chip on">All</span><span class="chip">Crystals</span><span class="chip">Beads</span><span class="chip">Fabric</span></div>
+    <div class="row"><span class="sw sw1"></span><div>Crystal 4mm<small>Swarovski · Clear</small><div class="bar"><i style="width:72%"></i></div></div><span class="st ok">1,800</span></div>
+    <div class="row"><span class="sw sw2"></span><div>Pearl 6mm<small>Ivory · Supplier A</small><div class="bar low"><i style="width:14%"></i></div></div><span class="st warn">Low · 140</span></div>
+    <div class="row"><span class="sw sw3"></span><div>Soft tulle<small>Fabric · 3 m wide</small><div class="bar"><i style="width:55%"></i></div></div><span class="st ok">38 m</span></div>
+    <div class="row"><span class="sw sw4"></span><div>French lace<small>Fabric · Ivory</small><div class="bar"><i style="width:40%"></i></div></div><span class="st ok">22 m</span></div>
+    <div class="row"><span class="sw sw5"></span><div>Bead, blush<small>Glass · 3mm</small><div class="bar"><i style="width:65%"></i></div></div><span class="st ok">5 kg</span></div>
+  </div>
+  <div class="nav"><span><i></i>Dresses</span><span><i></i>Capture</span><span class="on"><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 5 Detail + QR -->
+<div class="cell"><p class="cap">5 · Dress page and QR label</p>
+<div class="phone">
+  <div class="top"><b>Seraphine</b><span class="note">RF-0042</span></div>
+  <div class="body">
+    <div class="ph t1" style="height:168px"><svg style="width:30%"><use href="#gown"/></svg></div>
+    <div class="chips"><span class="chip on">Front</span><span class="chip">Back</span><span class="chip">Side</span><span class="chip">Detail</span></div>
+    <div class="seg"><span class="on">Available</span><span>Reserved</span><span>Rented</span><span>Sold</span></div>
+    <div class="qr">
+      <svg viewBox="0 0 21 21" width="100" height="100" shape-rendering="crispEdges"><rect width="21" height="21" fill="#fff"/><g fill="#2B1424"><path d="M0 0h7v7H0zM14 0h7v7h-7zM0 14h7v7H0z"/></g><g fill="#fff"><path d="M1 1h5v5H1zM15 1h5v5h-5zM1 15h5v5H1z"/></g><g fill="#2B1424"><path d="M2 2h3v3H2zM16 2h3v3h-3zM2 16h3v3H2z"/><path d="M8 1h2v2H8zM11 3h2v2h-2zM8 6h3v1H8zM9 9h2v2H9zM12 8h3v2h-3zM16 9h2v3h-2zM8 12h2v3H8zM12 12h2v2h-2zM15 15h3v2h-3zM11 16h2v3h-2zM18 18h2v2h-2zM14 18h2v2h-2z"/></g></svg>
+    </div>
+    <div class="btn">Print hang tag</div>
+  </div>
+  <div class="nav"><span class="on"><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 6 Settings -->
+<div class="cell"><p class="cap">6 · Control panel (admin only)</p>
+<div class="phone">
+  <div class="top"><b>Tools and APIs</b></div>
+  <div class="body">
+    <div class="api"><span class="ic" style="background:var(--c2)">🧠</span><div>Vision AI<code>Gemini · ••••8f2a</code></div><span class="tg"></span></div>
+    <div class="api"><span class="ic" style="background:var(--c1)">✨</span><div>Background removal<code>Photoroom · ••••31c9</code></div><span class="tg"></span></div>
+    <div class="api"><span class="ic" style="background:var(--c4)">☁️</span><div>Storage<code>Supabase · atelier-photos</code></div><span class="tg"></span></div>
+    <div class="api"><span class="ic" style="background:var(--c3)">🌐</span><div>Translation<code>Not set</code></div><span class="tg off"></span></div>
+    <div class="chips"><span class="chip on">Test all</span><span class="chip">+ Add another tool</span></div>
+    <p class="note">Keys are encrypted on the server and never shown in full.</p>
+  </div>
+  <div class="nav"><span><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span class="on"><i></i>Settings</span></div>
+</div></div>
+
+<!-- 7 Dashboard -->
+<div class="cell"><p class="cap">7 · Dashboard</p>
+<div class="phone">
+  <div class="hero"><small>Good morning</small><b>Today at a glance</b><div class="stats"><span><strong>42</strong>dresses</span><span><strong>2</strong>low stock</span><span><strong>5</strong>need info</span></div></div>
+  <div class="body">
+    <div class="tiles"><div class="tile t1"><strong>18</strong><small>Available</small></div><div class="tile t2"><strong>6</strong><small>Reserved</small></div><div class="tile t3"><strong>3</strong><small>Rented</small></div><div class="tile t4"><strong>15</strong><small>Sold</small></div></div>
+    <div class="att"><b>5 dresses have no description</b><span class="st warn">Fix</span></div>
+    <div class="att"><b>2 materials are running low</b><span class="st warn">View</span></div>
+    <div class="att"><b>1 dress failed to sync to ERPNext</b><span class="st bad">Retry</span></div>
+    <div class="btn">Export inventory</div>
+  </div>
+  <div class="nav"><span class=on><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 8 Table -->
+<div class="cell"><p class="cap">8 · Inventory table</p>
+<div class="phone">
+  <div class="top"><b>Dresses</b><div class="seg" style="width:116px"><span>Grid</span><span class="on">Table</span></div></div>
+  <div class="body" style="gap:4px">
+    <div class="chips"><span class="chip on">All</span><span class="chip">Available</span><span class="chip">Reserved</span></div>
+    <div class="tr"><span class="cb on"></span><span class="th t1"><svg><use href="#gown"/></svg></span><div>Seraphine<small>RF-0042 · 3,500 AED</small></div><span class="st ok">Available</span></div>
+    <div class="tr"><span class="cb on"></span><span class="th t2"><svg><use href="#gown"/></svg></span><div>Noor<small>RF-0041 · 4,200 AED</small></div><span class="st warn">Reserved</span></div>
+    <div class="tr"><span class="cb on"></span><span class="th t3"><svg><use href="#gown"/></svg></span><div>Layla<small>RF-0040 · 600 AED / day</small></div><span class="st info">Rented</span></div>
+    <div class="tr"><span class="cb"></span><span class="th t4"><svg><use href="#gown"/></svg></span><div>Amira<small>RF-0039 · 5,000 AED</small></div><span class="st off">Sold</span></div>
+    <div class="tr"><span class="cb"></span><span class="th t1"><svg><use href="#gown"/></svg></span><div>Dalia<small>RF-0038 · 2,900 AED</small></div><span class="st ok">Available</span></div>
+    <div class="selbar"><b>3 selected</b><span>Export</span><span>Sync to ERP</span></div>
+  </div>
+  <div class="nav"><span class=on><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 9 Export -->
+<div class="cell"><p class="cap">9 · Export sheet</p>
+<div class="phone">
+  <div class="top"><b>Dresses</b><span class="note">18 shown</span></div>
+  <div class="body" style="padding-bottom:0">
+    <div class="scrim"><div class="tr" style="height:44px"><span class="th t1" style="width:32px;height:32px"><svg><use href="#gown"/></svg></span><div>Seraphine</div></div><div class="tr" style="height:44px"><span class="th t2" style="width:32px;height:32px"><svg><use href="#gown"/></svg></span><div>Noor</div></div></div>
+    <div class="sheet">
+      <b style="font-family:var(--serif);font-size:18px">Export</b>
+      <div class="chips"><span class="chip on">Excel</span><span class="chip">CSV</span><span class="chip">PDF catalog</span><span class="chip">Stock report</span><span class="chip">Photos ZIP</span></div>
+      <div><div class="lbl">Language</div><div class="seg"><span>English</span><span class="on">Arabic</span><span>Both</span></div></div>
+      <div><div class="lbl">What to include</div><div class="seg"><span class="on">Current filters (18)</span><span>Selected</span><span>All</span></div></div>
+      <div class="tgrow">Show prices<span class="tg off"></span></div>
+      <div class="tgrow">Include QR codes<span class="tg"></span></div>
+      <div class="btn">Export 18 dresses</div>
+    </div>
+  </div>
+  <div class="nav"><span class=on><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 10 ERP -->
+<div class="cell"><p class="cap">10 · ERPNext sync</p>
+<div class="phone">
+  <div class="top"><b>ERPNext</b><span class="st ok">Connected</span></div>
+  <div class="body">
+    <div class="api"><span class="ic" style="background:var(--c4)">🔗</span><div>Your ERPNext<code>Warehouse: Atelier Floor · Price list: Standard Selling</code></div></div>
+    <div class="stat"><span style="background:var(--ok-bg);color:var(--ok)"><strong>38</strong>Synced</span><span style="background:var(--info-bg);color:var(--info)"><strong>3</strong>Pending</span><span style="background:var(--danger-bg);color:var(--danger)"><strong>1</strong>Error</span></div>
+    <div class="row"><span class="th t4" style="width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto"><svg style="width:55%"><use href="#gown"/></svg></span><div>Seraphine<small>RF-0042</small></div><span class="st ok">Synced</span></div>
+    <div class="row"><span class="th t3" style="width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto"><svg style="width:55%"><use href="#gown"/></svg></span><div>Noor<small>Edited after last sync</small></div><span class="st warn">Stale</span></div>
+    <div class="row"><span class="th t1" style="width:38px;height:38px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto"><svg style="width:55%"><use href="#gown"/></svg></span><div>Layla<small>Item group not found</small></div><span class="st bad">Error</span></div>
+    <div class="btn">Sync all pending</div>
+    <div class="chips" style="justify-content:center"><span class="chip">Dry run</span><span class="chip">Download import file</span></div>
+  </div>
+  <div class="nav"><span><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span class=on><i></i>Settings</span></div>
+</div></div>
+
+<!-- 11 Timeline -->
+<div class="cell"><p class="cap">11 · Where is it now</p>
+<div class="phone">
+  <div class="top"><b>Layla</b><span class="note">RF-0040</span></div>
+  <div class="body" style="gap:9px">
+    <div class="where"><span class="ph3 t3"><svg style="width:55%"><use href="#gown"/></svg></span><div>With customer<small>Since 2 Nov · due back 12 Nov</small></div><span class="st info">Rented</span></div>
+    <div style="display:flex;gap:8px"><div class="btn" style="flex:1;padding:10px">Check in</div><div class="btn alt" style="flex:1;padding:10px">Reserve</div></div>
+    <div class="lbl" style="margin:2px 0 0">History</div>
+    <div class="tl">
+      <div class="ev"><b>Out · Rental<span class="st info">With customer</span></b>Customer: Maha A. · deposit 500<br><small>2 Nov, 4:10 pm · due 12 Nov · Sara</small></div>
+      <div class="ev in"><b>In · Cleaning done<span class="st ok">In atelier</span></b>Condition: perfect, hem pressed<br><small>28 Oct, 11:30 am · Sara</small></div>
+      <div class="ev"><b>Out · Cleaning<span class="st off">Cleaning</span></b>Sent to the cleaner<br><small>24 Oct, 9:00 am · Omar</small></div>
+      <div class="ev in"><b>In · Return<span class="st ok">In atelier</span></b>Small stain on sleeve, photo saved<br><small>20 Oct, 2:45 pm · Sara</small></div>
+    </div>
+  </div>
+  <div class="nav"><span class=on><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+<!-- 12 Check-out sheet -->
+<div class="cell"><p class="cap">12 · Check-out sheet</p>
+<div class="phone">
+  <div class="top"><b>Seraphine</b><span class="st ok">In atelier</span></div>
+  <div class="body" style="padding-bottom:0">
+    <div class="scrim"><div class="where" style="opacity:.8"><span class="ph3 t1"><svg style="width:55%"><use href="#gown"/></svg></span><div>RF-0042<small>Available</small></div></div></div>
+    <div class="sheet">
+      <b style="font-family:var(--serif);font-size:18px">Check out dress</b>
+      <div><div class="lbl">Customer</div><div class="field ai">Maha A. · +971 50 000 0000</div></div>
+      <div class="chips"><span class="chip on">Rental</span><span class="chip">Sale delivery</span><span class="chip">Fitting</span><span class="chip">Alteration</span><span class="chip">Cleaning</span></div>
+      <div style="display:flex;gap:8px"><div style="flex:1"><div class="lbl">Due back</div><div class="field">12 Nov</div></div><div style="flex:1"><div class="lbl">Deposit</div><div class="field">500</div></div></div>
+      <div><div class="lbl">Condition notes and photos</div><div class="slots"><span>＋</span><span>＋</span><span>＋</span><span>＋</span></div></div>
+      <div class="btn">Check out dress</div>
+    </div>
+  </div>
+  <div class="nav"><span class=on><i></i>Dresses</span><span><i></i>Capture</span><span><i></i>Materials</span><span><i></i>Settings</span></div>
+</div></div>
+
+</div>
+</body>
+</html>

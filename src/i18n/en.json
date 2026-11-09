@@ -1,0 +1,75 @@
+{
+  "app": {
+    "name": "Atelier Inventory",
+    "tagline": "Your dresses, photos and stock in one place."
+  },
+  "nav": {
+    "dresses": "Dresses",
+    "capture": "Capture",
+    "materials": "Materials",
+    "settings": "Settings",
+    "label": "Main navigation"
+  },
+  "auth": {
+    "welcome": "Welcome back",
+    "subtitle": "Sign in to open the atelier.",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "signOut": "Sign out",
+    "invalid": "Email or password is incorrect. Check both and try again.",
+    "invalidEmail": "Enter a valid email address.",
+    "missingFields": "Enter your email and password.",
+    "roleAdmin": "Admin",
+    "roleStaff": "Staff",
+    "signedInAs": "Signed in as {{name}}"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again",
+    "language": "Language",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "setup": {
+    "title": "Connect Supabase",
+    "body": "This build has no Supabase project configured, so sign-in and data are unavailable. Copy .env.example to .env.local, add your project URL and anon key, then restart the dev server.",
+    "vars": "Required variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY",
+    "docs": "Setup steps are in README.md."
+  },
+  "screens": {
+    "dresses": {
+      "title": "Dresses",
+      "body": "The gallery, search and filters arrive in the next phase."
+    },
+    "capture": {
+      "title": "Capture",
+      "body": "Photo capture and upload arrive in the next phase."
+    },
+    "materials": {
+      "title": "Materials and accessories",
+      "body": "The materials library and stock movements arrive in a later phase."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "account": "Account",
+    "email": "Email",
+    "role": "Role",
+    "language": "Language",
+    "languageHint": "This switches the whole app between English and Arabic.",
+    "signOut": "Sign out"
+  },
+  "errors": {
+    "unknown": "Something went wrong. Try again.",
+    "profileTitle": "Could not load your profile",
+    "profileBody": "Check your connection and that the database migrations and access policies are applied.",
+    "forbiddenTitle": "This page is for admins only",
+    "forbiddenBody": "Ask the owner for an admin account, or go back to the dresses.",
+    "forbiddenBack": "Back to dresses",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "Check the link, or go back to the dresses.",
+    "notFoundBack": "Back to dresses"
+  }
+}
