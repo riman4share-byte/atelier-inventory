@@ -16,6 +16,8 @@ import {
   type DressRow,
 } from './api';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
+import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
+import { DressAiReview } from '@/features/ai/DressAiReview';
 import { PhotoGallery } from '@/features/photos/PhotoGallery';
 import { cx } from '@/lib/cx';
 
@@ -85,10 +87,13 @@ function ExistingDress({ id }: { id: string }) {
   const statusUpdate = useUpdateDress();
   const formUpdate = useUpdateDress();
   const softDelete = useSoftDeleteDress();
+  const describe = useDescribeDress();
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteFailed, setDeleteFailed] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   if (dressQuery.isLoading || photosQuery.isLoading) return <FullScreenLoader />;
 
@@ -174,6 +179,68 @@ function ExistingDress({ id }: { id: string }) {
     >
       <div className="flex flex-1 flex-col gap-5 pb-2">
         <PhotoGallery dress={dress} photos={photos} />
+
+        {aiOpen ? (
+          <DressAiReview
+            draft={describe.data!.draft}
+            pending={describe.isPending}
+            onApply={(draft) => {
+              formUpdate.mutate(
+                {
+                  id: dress.id,
+                  values: {
+                    name_en: draft.name_en,
+                    name_ar: draft.name_ar,
+                    description_en: draft.description_en,
+                    description_ar: draft.description_ar,
+                    silhouette: draft.silhouette,
+                    neckline: draft.neckline,
+                    sleeves: draft.sleeves,
+                    color: draft.color,
+                    fabrics: draft.fabrics,
+                    ai_raw: describe.data!.raw as never,
+                    ai_model: describe.data!.model,
+                  },
+                },
+                { onSuccess: () => setAiOpen(false) },
+              );
+            }}
+            onRegenerate={() => {
+              setAiError(null);
+              describe.mutate({ dress }, { onError: (error) => setAiError(aiErrorMessage(error)) });
+            }}
+            onCancel={() => setAiOpen(false)}
+          />
+        ) : (
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setAiError(null);
+                describe.mutate({ dress }, {
+                  onSuccess: () => setAiOpen(true),
+                  onError: (error) => setAiError(aiErrorMessage(error)),
+                });
+              }}
+              loading={describe.isPending}
+              disabled={photos.length === 0}
+            >
+              {t('ai.describe')}
+            </Button>
+            {photos.length === 0 ? (
+              <p className="text-note text-muted">{t('ai.needsPhotos')}</p>
+            ) : null}
+            {aiError ? (
+              <p className="text-small text-danger">
+                {aiError === 'no_key'
+                  ? t('ai.noKey')
+                  : aiError === 'no_photos'
+                    ? t('ai.needsPhotos')
+                    : t('ai.failed')}
+              </p>
+            ) : null}
+          </div>
+        )}
 
         <div>
           <span className="mb-1.5 block text-caption font-semibold text-muted">

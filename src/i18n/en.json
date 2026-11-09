@@ -235,6 +235,20 @@
     "uploadFailed": "Uploading one or more photos failed. Check your connection and try again.",
     "deleteFailed": "Removing the photo failed. Try again."
   },
+  "ai": {
+    "title": "AI draft",
+    "aiBadge": "AI",
+    "hint": "Review and edit before saving. AI only describes what is visible.",
+    "describe": "Describe with AI",
+    "needsPhotos": "Add at least one photo first.",
+    "noKey": "No vision key configured. Add one in Tools and APIs.",
+    "failed": "AI description failed. Try again.",
+    "regenerate": "Regenerate",
+    "apply": "Apply to dress",
+    "suggestedMaterials": "Suggested materials",
+    "confidence": "Confidence",
+    "modelNote": "Drafted by the active vision model."
+  },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
     "unavailableTitle": "This link is no longer available",

@@ -288,6 +288,17 @@ bulk import wrote the original Instagram files to storage. Instagram exports
 are already small and location-free, so this is acceptable for the test set,
 but the honest behaviour differs between the two paths.
 
+### G-46 · Edge Functions cannot be served locally on this machine
+
+**Status:** open · **Phase:** 5
+`supabase functions serve` fails with "failed to copy edge runtime main
+service into container: destination must be a directory" (Docker volume
+issue on this Windows setup, CLI 2.109.1). The functions deploy fine to a
+cloud project; only local testing is blocked. Phase 5's `ai-describe`
+function is code-complete but untested locally. The UI degrades gracefully
+("AI description failed") until a cloud project is available. Verify on the
+first cloud deploy.
+
 **Status:** resolved 2026-11-09 · **Phase:** 3
 Reviewed in a real (headless) Chromium: the sheet produced Excel, the stock
 report and the catalog, the share page renders signed-out, and the owner
