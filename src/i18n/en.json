@@ -310,6 +310,24 @@
     "conflict": "This dress already has an overlapping reservation.",
     "saveFailed": "Saving failed. Check your connection and try again."
   },
+  "materials": {
+    "title": "Materials",
+    "subtitle": "Crystals, beads, lace and more.",
+    "search": "Search materials",
+    "all": "All",
+    "empty": "No materials yet.",
+    "add": "Add material",
+    "save": "Save",
+    "adjust": "Adjust stock",
+    "adjustStock": "Adjust stock",
+    "low": "Low stock",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "stock": "Stock",
+    "threshold": "Low-stock threshold",
+    "cat": { "fabric": "Fabric", "lace": "Lace", "bead": "Bead", "crystal": "Crystal", "pearl": "Pearl", "thread": "Thread", "other": "Other" },
+    "reason": { "purchase": "Purchase", "used": "Used", "correction": "Correction", "loss": "Loss" }
+  },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
     "unavailableTitle": "This link is no longer available",
