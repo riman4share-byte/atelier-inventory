@@ -21,6 +21,7 @@ export function BackgroundCleaner({ dressId, photos }: BackgroundCleanerProps) {
   const [brightness, setBrightness] = useState<number>(DEFAULT_ENHANCEMENT.brightness);
   const [contrast, setContrast] = useState<number>(DEFAULT_ENHANCEMENT.contrast);
   const [saturation, setSaturation] = useState<number>(DEFAULT_ENHANCEMENT.saturation);
+  const [useBrowser, setUseBrowser] = useState<boolean>(true);
   const [errorText, setErrorText] = useState<string | null>(null);
 
   const clean = useCleanPhoto(dressId);
@@ -38,7 +39,7 @@ export function BackgroundCleaner({ dressId, photos }: BackgroundCleanerProps) {
     if (!selected) return;
     setErrorText(null);
     clean.mutate(
-      { photo: selected, background, enhancement },
+      { photo: selected, background, enhancement, useBrowser },
       { onError: () => setErrorText(t('cleanup.failed')) },
     );
   };
@@ -135,6 +136,18 @@ export function BackgroundCleaner({ dressId, photos }: BackgroundCleanerProps) {
           ))}
         </div>
       </details>
+
+      <div className="flex items-center gap-2 rounded-field bg-surface p-2">
+        <span className="text-caption font-semibold text-muted">{t('cleanup.provider')}</span>
+        <button type="button" aria-pressed={useBrowser} onClick={() => setUseBrowser(true)}
+          className={cx('min-h-tap rounded-pill px-3 text-caption font-semibold', useBrowser ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
+          {t('cleanup.providerBrowser')}
+        </button>
+        <button type="button" aria-pressed={!useBrowser} onClick={() => setUseBrowser(false)}
+          className={cx('min-h-tap rounded-pill px-3 text-caption font-semibold', !useBrowser ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
+          {t('cleanup.providerCloud')}
+        </button>
+      </div>
 
       <div className="flex gap-2">
         <Button

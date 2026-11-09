@@ -74,3 +74,13 @@ export function base64ToBlob(base64: string, mimeType: string): Blob {
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return new Blob([bytes], { type: mimeType });
 }
+
+/**
+ * Free, in-browser background removal using @imgly/background-removal (WASM).
+ * No API key, no server. Quality is decent on simple backgrounds but weaker
+ * on lace, tulle and veils than Photoroom/remove.bg.
+ */
+export async function removeBackgroundInBrowser(imageUrl: string): Promise<Blob> {
+  const mod = await import('@imgly/background-removal');
+  return mod.removeBackground(imageUrl);
+}

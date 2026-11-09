@@ -2,35 +2,46 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { DressPhotoRow } from '@/features/dresses/api';
 import { dressKeys } from '@/features/dresses/api';
-import { compositeCutout, base64ToBlob, type BackgroundChoice, type Enhancement } from './composite';
+import type { BackgroundChoice, Enhancement } from './composite';
 
 export interface CleanPhotoInput {
   photo: DressPhotoRow;
   background: BackgroundChoice;
   enhancement: Enhancement;
+  useBrowser?: boolean;
 }
 
 export function useCleanPhoto(dressId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async ({ photo, background, enhancement }: CleanPhotoInput): Promise<void> => {
+    mutationFn: async ({ photo, background, enhancement, useBrowser }: CleanPhotoInput): Promise<void> => {
       const db = supabase as NonNullable<typeof supabase>;
 
-      // 1. Get a signed URL for the original (the function fetches it).
-      const { data: signed, error: signError } = await db.storage
-        .from('dress-originals')
-        .createSignedUrl(photo.original_path, 300);
-      if (signError || !signed) throw signError ?? new Error('sign_failed');
+      let cutout: Blob;
+      if (useBrowser) {
+        const { data: signed, error: signError } = await db.storage
+          .from('dress-originals')
+          .createSignedUrl(photo.original_path, 300);
+        if (signError || !signed) throw signError ?? new Error('sign_failed');
+        const { removeBackgroundInBrowser } = await import('./composite');
+        cutout = await removeBackgroundInBrowser(signed.signedUrl);
+      } else {
+        const { data: signed, error: signError } = await db.storage
+          .from('dress-originals')
+          .createSignedUrl(photo.original_path, 300);
+        if (signError || !signed) throw signError ?? new Error('sign_failed');
 
-      // 2. Call the bg-remove Edge Function.
-      const { data: fnData, error: fnError } = await db.functions.invoke('bg-remove', {
-        body: { imageUrl: signed.signedUrl },
-      });
-      if (fnError) throw fnError;
-      if (fnData?.error) throw new Error(fnData.error);
+        const { data: fnData, error: fnError } = await db.functions.invoke('bg-remove', {
+          body: { imageUrl: signed.signedUrl },
+        });
+        if (fnError) throw fnError;
+        if (fnData?.error) throw new Error(fnData.error);
+        const { base64ToBlob } = await import('./composite');
+        cutout = base64ToBlob(fnData.cutout, fnData.mimeType ?? 'image/png');
+      }
 
       // 3. Composite onto the chosen background.
-      const cutout = base64ToBlob(fnData.cutout, fnData.mimeType ?? 'image/png');
+      const { compositeCutout } = await import('./composite');
       const composite = await compositeCutout(cutout, background, enhancement);
 
       // 4. Upload to dress-clean.
