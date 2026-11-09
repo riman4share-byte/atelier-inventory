@@ -11,6 +11,7 @@ import { MaterialsPage } from '@/features/materials/MaterialsPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { useDocumentLanguage } from '@/i18n/useDocumentLanguage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
+import { DressByCodePage } from '@/pages/DressByCodePage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SharePage } from '@/pages/SharePage';
 import { SetupPage } from '@/pages/SetupPage';
@@ -25,6 +26,8 @@ export default function App() {
       <Route path="/forbidden" element={<ForbiddenPage />} />
       {/* Share links are public by design: no login, read-only, short-lived. */}
       <Route path="/share/:token" element={<SharePage />} />
+      {/* Public QR destination: staff see the full page, others a minimal card. */}
+      <Route path="/d/:code" element={<DressByCodePage />} />
 
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>

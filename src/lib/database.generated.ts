@@ -570,9 +570,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      allocate_dress_code: { Args: never; Returns: string }
       app_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      get_public_dress: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          description_ar: string
+          description_en: string
+          name_ar: string
+          name_en: string
+        }[]
       }
       get_shared_dresses: {
         Args: { p_token: string }
@@ -588,6 +599,7 @@ export type Database = {
         }[]
       }
       is_admin: { Args: never; Returns: boolean }
+      public_qr_page_enabled: { Args: never; Returns: boolean }
       suggest_dress_code: { Args: never; Returns: string }
     }
     Enums: {

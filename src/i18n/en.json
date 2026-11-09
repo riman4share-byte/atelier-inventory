@@ -86,6 +86,11 @@
     "loadFailedBody": "Check your connection, then try again."
   },
   "dress": {
+    "publicCardSubtitle": "A closer look at one dress.",
+    "staffOnlyTitle": "Staff only",
+    "staffOnlyBody": "This code is for the atelier team. Ask them for access.",
+    "publicCardFooter": "Shared by the atelier. Prices and availability on request.",
+    "printTag": "Print hang tag",
     "newTitle": "New dress",
     "editTitle": "Edit dress",
     "edit": "Edit",

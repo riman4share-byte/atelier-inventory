@@ -87,6 +87,11 @@
     "loadFailedBody": "تحقّق من الاتصال ثم حاول مرة أخرى."
   },
   "dress": {
+    "publicCardSubtitle": "نظرة أقرب على فستان.",
+    "staffOnlyTitle": "للفريق فقط",
+    "staffOnlyBody": "هذا الكود لفريق الأتيليه. اطلب منهم الوصول.",
+    "publicCardFooter": "شاركه الأتيليه. الأسعار والتوفر عند الطلب.",
+    "printTag": "طباعة بطاقة تعليق",
     "newTitle": "فستان جديد",
     "editTitle": "تعديل الفستان",
     "edit": "تعديل",

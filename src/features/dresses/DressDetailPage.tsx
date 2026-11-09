@@ -21,6 +21,8 @@ import { DressAiReview } from '@/features/ai/DressAiReview';
 import { PhotoGallery } from '@/features/photos/PhotoGallery';
 import { BackgroundCleaner } from '@/features/cleanup/BackgroundCleaner';
 import { cx } from '@/lib/cx';
+import { buildHangTagHtml, printHtml } from '@/features/dresses/printDocument';
+import QRCode from 'qrcode';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: DressRow['status']; labelKey: string }> = [
   { value: 'available', labelKey: 'status.available' },
@@ -67,11 +69,13 @@ function CreateDress() {
                 : t('dress.errors.saveFailed')
               : null
           }
-          onSubmit={(values) =>
-            create.mutate(formToPayload(values), {
+          onSubmit={(values) => {
+            const suggestedCode = suggested.data ?? '';
+            const code = values.code.trim() === suggestedCode.trim() ? '' : values.code.trim();
+            create.mutate(formToPayload({ ...values, code }), {
               onSuccess: (dress) => navigate(`/dresses/${dress.id}`, { replace: true }),
-            })
-          }
+            });
+          }}
           onCancel={() => navigate('/dresses')}
         />
       </div>
@@ -350,6 +354,18 @@ function ExistingDress({ id }: { id: string }) {
           <p className="text-note text-muted">{t('dress.deleteWarning')}</p>
         ) : null}
         {deleteFailed ? <p className="text-small text-danger">{t('dress.errors.deleteFailed')}</p> : null}
+
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            const url = `${window.location.origin}/d/${dress.code}`;
+            const qr = await QRCode.toDataURL(url, { margin: 0, width: 240 });
+            printHtml(buildHangTagHtml(dress, t('app.name'), qr));
+          }}
+          className="w-full"
+        >
+          {t('dress.printTag')}
+        </Button>
       </div>
     </Screen>
   );

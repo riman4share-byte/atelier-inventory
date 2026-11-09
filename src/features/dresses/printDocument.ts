@@ -250,7 +250,62 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
     </body></html>`;
 }
 
-/** Open the document in a new tab and trigger print once its images have loaded. */
+export function buildHangTagHtml(dress: DressRow, atelierName: string, qrDataUrl: string | undefined): string {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+    <title>Tag ${escapeHtml(dress.code)}</title>
+    <style>
+      @page { size: 50mm 30mm; margin: 0; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { width: 50mm; height: 30mm; font-family: 'Segoe UI', system-ui, sans-serif;
+        color: #33202b; display: flex; align-items: center; padding: 2mm; }
+      .qr { width: 22mm; height: 22mm; }
+      .qr img { width: 100%; height: 100%; }
+      .info { flex: 1; padding-left: 2mm; }
+      .brand { font-size: 7pt; letter-spacing: 2px; text-transform: uppercase; color: #b398a7; }
+      .code { font-size: 11pt; font-weight: 700; color: #d81b73; margin-top: 1mm; }
+      .name { font-size: 8pt; color: #33202b; margin-top: 1mm; line-height: 1.2; }
+    </style></head>
+    <body>
+      <div class="qr">${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR">` : ''}</div>
+      <div class="info">
+        <div class="brand">${escapeHtml(atelierName)}</div>
+        <div class="code">${escapeHtml(dress.code)}</div>
+        <div class="name">${escapeHtml(dress.name_en || dress.code)}</div>
+      </div>
+    </body></html>`;
+}
+
+export function buildTagSheetHtml(dresses: DressRow[], atelierName: string, qrByCode: Record<string, string> | undefined): string {
+  const tags = dresses.map((dress) => {
+    const qr = qrByCode?.[dress.code];
+    return `<div class="tag">
+      <div class="qr">${qr ? `<img src="${qr}" alt="QR">` : ''}</div>
+      <div class="info">
+        <div class="brand">${escapeHtml(atelierName)}</div>
+        <div class="code">${escapeHtml(dress.code)}</div>
+        <div class="name">${escapeHtml(dress.name_en || dress.code)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+    <title>Tags</title>
+    <style>
+      @page { size: A4; margin: 8mm; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #33202b; }
+      .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; }
+      .tag { border: 0.3mm dashed #d8b4c4; border-radius: 2mm; padding: 2mm;
+        display: flex; align-items: center; height: 30mm; break-inside: avoid; }
+      .qr { width: 20mm; height: 20mm; flex-shrink: 0; }
+      .qr img { width: 100%; height: 100%; }
+      .info { flex: 1; padding-left: 2mm; }
+      .brand { font-size: 6pt; letter-spacing: 2px; text-transform: uppercase; color: #b398a7; }
+      .code { font-size: 9pt; font-weight: 700; color: #d81b73; margin-top: 1mm; }
+      .name { font-size: 7pt; color: #33202b; margin-top: 1mm; line-height: 1.2; }
+    </style></head>
+    <body><div class="grid">${tags}</div></body></html>`;
+}
+
 export function printHtml(html: string): boolean {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return false;

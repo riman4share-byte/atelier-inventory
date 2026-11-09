@@ -23,7 +23,7 @@ const LISTING_OPTIONS: ReadonlyArray<{ value: ListingType; labelKey: string }> =
 
 const formSchema = z
   .object({
-    code: z.string().trim().min(1).max(24),
+    code: z.string().trim().max(24),
     name_en: z.string(),
     name_ar: z.string(),
     description_en: z.string(),
