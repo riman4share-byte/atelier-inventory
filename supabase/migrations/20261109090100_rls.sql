@@ -5,14 +5,19 @@
 -- ---------------------------------------------------------------------------
 -- Grants (Supabase grants these by default; stated explicitly for clarity)
 -- ---------------------------------------------------------------------------
-grant usage on schema public to anon, authenticated;
+grant usage on schema public to anon, authenticated, service_role;
 grant select, insert, update, delete on all tables in schema public to authenticated;
 grant select on all tables in schema public to anon;
+-- The service role bypasses RLS, but still needs table grants. Used by the seed
+-- script and the Edge Functions from Phase 5 onward.
+grant select, insert, update, delete on all tables in schema public to service_role;
 
 alter default privileges in schema public
   grant select, insert, update, delete on tables to authenticated;
 alter default privileges in schema public
   grant select on tables to anon;
+alter default privileges in schema public
+  grant select, insert, update, delete on tables to service_role;
 
 -- ---------------------------------------------------------------------------
 -- Role helpers (security definer so they can read profiles under RLS)
@@ -42,8 +47,8 @@ $$;
 
 revoke all on function public.app_role() from public;
 revoke all on function public.is_admin() from public;
-grant execute on function public.app_role() to authenticated, anon;
-grant execute on function public.is_admin() to authenticated, anon;
+grant execute on function public.app_role() to authenticated, anon, service_role;
+grant execute on function public.is_admin() to authenticated, anon, service_role;
 
 -- A user may edit their own name and language, but never grant themselves admin.
 create or replace function public.guard_profile_role()

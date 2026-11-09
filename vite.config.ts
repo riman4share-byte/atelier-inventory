@@ -19,5 +19,11 @@ export default defineConfig({
     css: false,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    // Tests must not pick up a developer's .env.local; the boot test asserts
+    // the unconfigured setup screen.
+    env: {
+      VITE_SUPABASE_URL: '',
+      VITE_SUPABASE_ANON_KEY: '',
+    },
   },
 });

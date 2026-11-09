@@ -106,25 +106,7 @@ must run and keep updated.
 ### G-17 · Two-way movement sync depends on ERPNext Stock Entry behaviour
 
 **Status:** open · **Phase:** 1
-Verify Stock Entry and Stock Ledger behaviour on the sandbox before enabling.### G-18 · No live Supabase project is connected in this workspace
-**Status:** open · **Phase:** 1
-Sign-in, the auth trigger end-to-end, the storage API and the seed script have
-not run against a Supabase project. What *was* verified: the three migrations
-apply cleanly to embedded Postgres 16 (PGlite) with auth/storage stubs, creating
-11 tables, 38 policies, 8 triggers and 4 buckets, and 13 role-based RLS checks
-pass there — staff cannot read `app_settings`, `integrations`, `audit_log` or
-another profile, cannot promote themselves, and cannot hard-delete a dress;
-admin can read the admin tables; anon sees and writes nothing. Supabase-specific
-behaviour (real JWT claims, storage policies, the auth trigger) still needs
-`npm run rls:test` against the project, and its output recorded here.
-
-### G-19 · `src/lib/database.types.ts` is hand-written
-
-**Status:** open · **Phase:** 1
-It matches the Phase 1 migrations by inspection, but is not generated. After the
-project exists, replace it with
-`npx supabase gen types typescript --linked > src/lib/database.types.ts` and let
-the typechecker find drift.
+Verify Stock Entry and Stock Ledger behaviour on the sandbox before enabling.
 
 ### G-20 · Staff cannot read `app_settings` by design
 
@@ -155,13 +137,13 @@ There is no in-app light/dark override. The design system describes a
 `prefers-color-scheme` override, which is implemented; a manual toggle is not
 requested yet.
 
-### G-24 · Phase 1 was verified by typecheck, lint, tests and build only
+### G-24 · No visual review of the shell in a browser
 
 **Status:** open · **Phase:** 1
-No browser/screenshot review was performed. Light/dark, 360 px layout and RTL
-were implemented against the tokens and mockup but not visually inspected in
-this environment. This does not satisfy the “both correct” part of the
-acceptance checklist until a person opens it.
+Typecheck, lint, unit tests, build, local sign-in and the live RLS checks passed.
+Light/dark, 360 px layout and RTL were implemented against the tokens and mockup
+but not visually inspected. The API and database behaviour behind the screens is
+verified; the rendering is not.
 
 ### G-25 · No password reset or invite flow inside the app
 
@@ -211,4 +193,28 @@ those phases.
 
 ## Resolved
 
-_None yet._
+### G-18 · No live Supabase project is connected in this workspace
+
+**Status:** resolved 2026-11-09 · **Phase:** 1
+The three migrations apply to a real local Supabase stack (CLI 2.109.1,
+Postgres 17) on ports 54341/54342. `npm run seed` created the admin, five
+materials and four dresses; the seeded admin signed in with role `admin` and
+read `app_settings` and `dresses`; `npm run rls:test` passed 15/15. Cloud
+projects were not touched, but the local stack runs the same Supabase
+components. Signup stays enabled locally; a cloud project must disable it
+(G-22).
+
+### G-19 · `src/lib/database.types.ts` is hand-written
+
+**Status:** resolved 2026-11-09 · **Phase:** 1
+`src/lib/database.generated.ts` is generated from the local schema with
+`npm run types:gen`; `database.types.ts` re-exports it plus domain aliases.
+Regenerate after every migration change.
+
+### G-32 · `service_role` had no table grants under the new CLI default
+
+**Status:** resolved 2026-11-09 · **Phase:** 1
+Newer Supabase CLIs no longer auto-expose new tables, so the seed failed with
+“permission denied for table profiles” until the RLS migration granted table
+access to `service_role` explicitly (it bypasses RLS but still needs GRANTs).
+The grants are now part of `20261109090100_rls.sql`.
