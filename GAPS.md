@@ -213,11 +213,11 @@ Phase 9.
 
 ### G-35 · The photo viewer shows a placeholder until Phase 4
 
-**Status:** open · **Phase:** 2
-The dress page renders a pastel placeholder instead of photos because no
-signed-URL plumbing exists yet (photos only arrive in Phase 4). When
-`dress_photos` rows exist the page shows their count; actual images with
-signed URLs come with the capture phase.
+**Status:** resolved 2026-11-09 · **Phase:** 2
+Resolved in Phase 4: the dress page now renders real photos from the
+`dress-originals` bucket through short-lived signed URLs, with upload,
+angle tagging, reorder and delete. Pastel placeholders remain only for
+dresses with no photos.
 
 ### G-36 · Dashboard aggregates are computed in the browser
 
@@ -260,7 +260,33 @@ Table views, visible columns and export settings persist in localStorage
 (`dresses-table-views`, `dresses-table-columns`), so a phone and a laptop keep
 different views. Syncing them across devices is not built.
 
-### G-42 · Printed output and share page are not visually reviewed in a browser
+### G-43 · Offline upload queue and camera capture are not built yet
+
+**Status:** open · **Phase:** 4
+The upload path (file picker → resize → storage → row) works and is proven
+in the browser, but the Phase 4 spec also asks for: live camera through
+`getUserMedia` with the angle checklist, corner guides, shutter, and
+"Upload photos instead" fallback; and an IndexedDB queue that holds uploads
+when offline and syncs on reconnect with a visible status. Neither is built
+yet; camera permission/phone behaviour is also untested (extends G-30).
+G-08 still applies.
+
+### G-44 · Videos and non-front angles are not handled yet
+
+**Status:** open · **Phase:** 4
+The importer only accepted JPGs from the owner's Instagram folder (videos
+skipped — `dress_photos` has no video column). Angles other than the first
+photo of each post were tagged `other`; the brief's angle enum
+(front/back/side/neckline/detail) is selectable in the upload UI but not
+auto-detected. The catalog uses the first (front) photo only.
+
+### G-45 · Imported photos were uploaded as originals (not resized in the browser)
+
+**Status:** open · **Phase:** 4
+The browser upload path resizes (≤2000px, JPEG 0.85) and strips EXIF; the
+bulk import wrote the original Instagram files to storage. Instagram exports
+are already small and location-free, so this is acceptable for the test set,
+but the honest behaviour differs between the two paths.
 
 **Status:** resolved 2026-11-09 · **Phase:** 3
 Reviewed in a real (headless) Chromium: the sheet produced Excel, the stock

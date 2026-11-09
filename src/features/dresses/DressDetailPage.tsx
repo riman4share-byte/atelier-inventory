@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { GownIcon } from '@/components/icons';
 import { Button } from '@/components/ui/Button';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Screen } from '@/components/layout/Screen';
@@ -17,7 +16,7 @@ import {
   type DressRow,
 } from './api';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
-import { paletteForCode } from './StatusPill';
+import { PhotoGallery } from '@/features/photos/PhotoGallery';
 import { cx } from '@/lib/cx';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: DressRow['status']; labelKey: string }> = [
@@ -38,24 +37,6 @@ function displayName(dress: DressRow, language: string): string {
   const primary = isArabic ? dress.name_ar : dress.name_en;
   const fallback = isArabic ? dress.name_en : dress.name_ar;
   return primary || fallback || dress.code;
-}
-
-function PhotoViewer({ dress }: { dress: DressRow }) {
-  const { t } = useTranslation();
-  const palette = paletteForCode(dress.code);
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div
-        className={cx(
-          'flex aspect-[3/4] w-full max-w-[280px] items-center justify-center rounded-card',
-          palette.tile,
-        )}
-      >
-        <GownIcon className={cx('h-24 w-auto drop-shadow-md', palette.icon)} />
-      </div>
-      <p className="text-note text-muted">{t('dress.photosEmpty')}</p>
-    </div>
-  );
 }
 
 /** Create flow: /dresses/new */
@@ -192,13 +173,7 @@ function ExistingDress({ id }: { id: string }) {
       subtitle={`${dress.code} · ${t(`status.${dress.status}`)}`}
     >
       <div className="flex flex-1 flex-col gap-5 pb-2">
-        <PhotoViewer dress={dress} />
-
-        {photos.length > 0 ? (
-          <p className="text-caption text-muted">
-            {t('dress.photoCount', { count: photos.length })}
-          </p>
-        ) : null}
+        <PhotoGallery dress={dress} photos={photos} />
 
         <div>
           <span className="mb-1.5 block text-caption font-semibold text-muted">

@@ -49,8 +49,7 @@ function countByStatus(dresses: DressRow[]): Record<DressRow['status'], number> 
   return counts;
 }
 
-/** One scannable QR per dress; the target route goes live in Phase 7. */
-async function catalogQrCodes(dresses: DressRow[]): Promise<Record<string, string>> {
+/** One scannable QR per dress; the target route goes live in Phase 7. */async function catalogQrCodes(dresses: DressRow[]): Promise<Record<string, string>> {
   const origin = window.location.origin;
   const entries = await Promise.all(
     dresses.map(async (dress) => [
@@ -169,9 +168,12 @@ export function ExportSheet({
       }
       if (format === 'catalog') {
         const dresses = await resolveSelection();
-        const qrByCode = await catalogQrCodes(dresses);
+        const [qrByCode, photoUrlByCode] = await Promise.all([
+          catalogQrCodes(dresses),
+          import('@/features/photos/api').then((photos) => photos.firstPhotoUrls(dresses)),
+        ]);
         printHtml(
-          buildCatalogHtml(dresses, { perPage, showPrices, atelierName: t('app.name'), qrByCode }),
+          buildCatalogHtml(dresses, { perPage, showPrices, atelierName: t('app.name'), qrByCode, photoUrlByCode }),
         );
         onClose();
         return;

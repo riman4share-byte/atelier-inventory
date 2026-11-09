@@ -44,13 +44,16 @@ const PAGE_STYLE = `
     /* ---- photo zone: main view + back + detail slots ---- */
     .photos { display: grid; grid-template-columns: 62% 1fr; gap: 4mm;
       height: 128mm; margin-bottom: 6mm; }
-    .photos .hero { border: 1.5px solid #f3d9e4; border-radius: 4mm;
+    .photos .hero { position: relative; border: 1.5px solid #f3d9e4; border-radius: 4mm;
       background: linear-gradient(160deg, #fff1f6, #fdf6f9);
-      display: flex; align-items: flex-end; justify-content: center; }
+      display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+    .photos .hero img { position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; }
+    .photos .hero .tag, .photos .slot .tag { position: relative; z-index: 1; }
     .photos .col { display: grid; grid-template-rows: 1fr 1fr; gap: 4mm; }
-    .photos .slot { border: 1.5px solid #f3d9e4; border-radius: 4mm;
+    .photos .slot { position: relative; border: 1.5px solid #f3d9e4; border-radius: 4mm;
       background: #fbf0f5; display: flex; align-items: flex-end;
-      justify-content: center; }
+      justify-content: center; overflow: hidden; }
     .photos .tag { margin: 3mm; font-size: 7.5pt; letter-spacing: 2px;
       text-transform: uppercase; color: #b3869b; }
 
@@ -101,6 +104,8 @@ export interface CatalogOptions {
   atelierName: string;
   /** Pre-rendered QR data URLs keyed by dress code. */
   qrByCode?: Record<string, string>;
+  /** Signed display URLs (first photo per dress), keyed by dress code. */
+  photoUrlByCode?: Record<string, string>;
 }
 
 function specBlock(dress: DressRow, showPrices: boolean): string {
@@ -133,9 +138,20 @@ function qrBlock(dress: DressRow, qrByCode: CatalogOptions['qrByCode']): string 
     `<div class="kw">Scan to view online</div></div>`;
 }
 
-function photoZone(dress: DressRow): string {
-  return `<div class="photos">
+function photoZone(dress: DressRow, photoUrlByCode: CatalogOptions['photoUrlByCode']): string {
+  const url = photoUrlByCode?.[dress.code];
+  if (!url) {
+    return `<div class="photos">
       <div class="hero"><div class="tag">Front view · ${escapeHtml(dress.code)}</div></div>
+      <div class="col">
+        <div class="slot"><div class="tag">Back view</div></div>
+        <div class="slot"><div class="tag">Detail</div></div>
+      </div>
+    </div>`;
+  }
+  return `<div class="photos">
+      <div class="hero"><img src="${url}" alt="${escapeHtml(dress.code)} front view">
+        <div class="tag">Front view</div></div>
       <div class="col">
         <div class="slot"><div class="tag">Back view</div></div>
         <div class="slot"><div class="tag">Detail</div></div>
@@ -149,7 +165,7 @@ function dressPage(dress: DressRow, options: CatalogOptions): string {
         <span class="brand">${escapeHtml(options.atelierName)}</span>
         <span class="date">${new Date().toLocaleDateString('en-GB')}</span>
       </div>
-      ${photoZone(dress)}
+      ${photoZone(dress, options.photoUrlByCode)}
       <h2 class="name">${escapeHtml(dress.name_en || dress.code)}</h2>
       <div class="idline"><span class="code">${escapeHtml(dress.code)}</span> · ${escapeHtml(STATUS_LABELS[dress.status])}</div>
       ${dress.description_en ? `<p class="desc">${escapeHtml(dress.description_en)}</p>` : ''}
@@ -234,13 +250,38 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
     </body></html>`;
 }
 
-/** Open the document in a new tab and trigger print immediately. */
+/** Open the document in a new tab and trigger print once its images have loaded. */
 export function printHtml(html: string): boolean {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return false;
   printWindow.document.write(html);
   printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
+  const trigger = () => {
+    try {
+      printWindow.focus();
+      printWindow.print();
+    } catch {
+      // printing is best-effort in headless/automated contexts
+    }
+  };
+  const images = Array.from(printWindow.document.images);
+  if (images.length === 0) {
+    trigger();
+    return true;
+  }
+  let remaining = images.length;
+  const onDone = () => {
+    remaining -= 1;
+    if (remaining <= 0) trigger();
+  };
+  for (const image of images) {
+    if (image.complete) onDone();
+    else {
+      image.addEventListener('load', onDone, { once: true });
+      image.addEventListener('error', onDone, { once: true });
+    }
+  }
+  // Safety net: never leave the print dialog waiting forever.
+  setTimeout(trigger, 6000);
   return true;
 }

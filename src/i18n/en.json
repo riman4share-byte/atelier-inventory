@@ -191,8 +191,7 @@
     "currency": "{{value}}"
   },
   "export": {
-    "title": "Export",
-    "formatExcel": "Excel",
+    "title": "Export",    "formatExcel": "Excel",
     "formatCsv": "CSV",
     "formatCatalog": "PDF catalog",
     "formatReport": "Stock report",
@@ -222,6 +221,19 @@
     "failed": "Export failed. Check your connection and try again.",
     "working": "Preparing…",
     "generate": "Prepare export"
+  },
+  "photos": {
+    "empty": "No photos yet, or still uploading.",
+    "add": "Add photos",
+    "addAs": "Add as:",
+    "angle": { "front": "Front", "back": "Back", "side": "Side", "neckline": "Neckline", "detail": "Detail", "other": "Other" },
+    "thumbAlt": "{{code}} — photo {{order}}",
+    "moveUp": "Move photo earlier",
+    "moveDown": "Move photo later",
+    "removeLast": "Remove last photo",
+    "zoom": "Photo preview",
+    "uploadFailed": "Uploading one or more photos failed. Check your connection and try again.",
+    "deleteFailed": "Removing the photo failed. Try again."
   },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
