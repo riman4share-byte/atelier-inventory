@@ -342,6 +342,19 @@
     "saveFailed": "Saving failed.",
     "securityNote": "Keys are write-only: only the last 4 characters are ever shown."
   },
+  "capture": {
+    "title": "Capture",
+    "subtitle": "Photograph or upload a dress.",
+    "cameraDenied": "Camera not available. Use “Upload photos” instead.",
+    "shutter": "Take photo",
+    "upload": "Upload photos",
+    "captured": "{{count}} captured",
+    "saveDraft": "Save as draft dress",
+    "draftName": "Draft dress",
+    "saveFailed": "Saving failed. Check your connection and try again.",
+    "note": "Photos are resized in the browser. Originals are kept.",
+    "queued": "{{count}} queued for upload"
+  },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
     "unavailableTitle": "This link is no longer available",
