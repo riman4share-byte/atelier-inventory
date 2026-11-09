@@ -124,7 +124,7 @@ src/
   components/layout/    app shell, bottom navigation, screen header, guards UI
   components/ui/        button, text field, segmented control, spinner
   features/auth/        session, profile, login, route guards
-  features/dresses/     gallery (Phase 2)
+  features/dresses/     gallery, search, dress page, form, soft delete (Phase 2)
   features/capture/     camera and upload (Phase 4)
   features/materials/   materials library (Phase 9)
   features/settings/    account and language (admin)
@@ -132,7 +132,7 @@ src/
   lib/                  Supabase client, database types, env, query client
   pages/                setup, forbidden, not found
   styles/index.css      design tokens (light + dark)
-supabase/migrations/    schema, RLS, storage policies
+supabase/migrations/    schema, RLS, storage policies, code-suggestion RPC
 ```
 
 ## Design
@@ -147,7 +147,7 @@ component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
 
 | Phase | Status |
 | ---------------------------- | ------------------------------------------------- || 1 — Foundation | **Built** — schema, RLS, auth, roles, shell, i18n; migrations, seed and RLS verified on local Supabase |
-| 2 — Gallery and CRUD | Not started (screen is an empty shell) |
+| 2 — Gallery and CRUD | **Built** — hero counts, search, status filters, infinite-scroll grid, dress page with create/edit/status/soft-delete+undo; verified with 17 live checks on local Supabase |
 | 3 — Inventory views, exports | Not started |
 | 4 — Capture and upload | Not started |
 | 5 — AI draft | Not started |

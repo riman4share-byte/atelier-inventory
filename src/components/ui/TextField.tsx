@@ -3,10 +3,11 @@ import { cx } from '@/lib/cx';
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
+  hint?: string;
   error?: string;
 }
 
-export function TextField({ label, error, id, className, ...rest }: TextFieldProps) {
+export function TextField({ label, hint, error, id, className, ...rest }: TextFieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const errorId = `${inputId}-error`;
@@ -16,6 +17,7 @@ export function TextField({ label, error, id, className, ...rest }: TextFieldPro
       <label htmlFor={inputId} className="text-caption font-semibold text-muted">
         {label}
       </label>
+      {hint ? <p className="text-note text-muted">{hint}</p> : null}
       <input
         id={inputId}
         aria-invalid={error ? true : undefined}

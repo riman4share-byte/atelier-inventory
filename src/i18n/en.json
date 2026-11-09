@@ -32,6 +32,12 @@
     "english": "English",
     "arabic": "العربية"
   },
+  "status": {
+    "available": "Available",
+    "reserved": "Reserved",
+    "rented": "Rented",
+    "sold": "Sold"
+  },
   "setup": {
     "title": "Connect Supabase",
     "body": "This build has no Supabase project configured, so sign-in and data are unavailable. Copy .env.example to .env.local, add your project URL and anon key, then restart the dev server.",
@@ -40,10 +46,8 @@
   },
   "screens": {
     "dresses": {
-      "title": "Dresses",
-      "body": "The gallery, search and filters arrive in the next phase."
-    },
-    "capture": {
+      "title": "Dresses"
+    },    "capture": {
       "title": "Capture",
       "body": "Photo capture and upload arrive in the next phase."
     },
@@ -60,6 +64,73 @@
     "language": "Language",
     "languageHint": "This switches the whole app between English and Arabic.",
     "signOut": "Sign out"
+  },
+  "gallery": {
+    "add": "Add dress",
+    "heroLabel": "dresses",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Search name, code, fabric or colour",
+    "filtersLabel": "Filter by status",
+    "chipAll": "All",
+    "emptyTitle": "No dresses yet",
+    "emptyBody": "Add your first dress by hand, or photograph one in the Capture phase.",
+    "emptyFilteredTitle": "No dresses match",
+    "emptyFilteredBody": "Try another word or clear the filters.",
+    "clearFilters": "Clear filters",
+    "loadFailedTitle": "Loading dresses failed",
+    "loadFailedBody": "Check your connection, then try again."
+  },
+  "dress": {
+    "newTitle": "New dress",
+    "editTitle": "Edit dress",
+    "edit": "Edit",
+    "save": "Save dress",
+    "cancel": "Cancel",
+    "saving": "Saving…",
+    "statusLabel": "Status",
+    "listingLabel": "Listing",
+    "listingSale": "Sale",
+    "listingRent": "Rent",
+    "listingBoth": "Both",
+    "salePrice": "Sale price",
+    "rentPrice": "Rent price",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "descriptionEn": "Description (English)",
+    "descriptionAr": "Description (Arabic)",
+    "silhouette": "Silhouette",
+    "neckline": "Neckline",
+    "sleeves": "Sleeves",
+    "fabrics": "Fabrics",
+    "fabricsHint": "Separate with commas: Lace, Tulle",
+    "color": "Colour",
+    "size": "Size",
+    "notes": "Notes",
+    "code": "Code",
+    "photosEmpty": "Photos arrive later in the Capture phase.",
+    "photoCount_one": "{{count}} photo saved",
+    "photoCount_other": "{{count}} photos saved",
+    "delete": "Delete dress",
+    "confirmDelete": "Tap again to delete",
+    "deleteWarning": "The dress disappears from the gallery. You can undo for a few seconds.",
+    "errors": {
+      "codeRequired": "Enter a code for this dress.",
+      "notANumber": "Enter a number.",
+      "negative": "The price cannot be negative.",
+      "duplicateCode": "This code is already used by another dress. Pick a different code.",
+      "saveFailed": "Saving failed. Check your connection and try again.",
+      "deleteFailed": "Deleting failed. Try again.",
+      "loadFailedTitle": "This dress did not load",
+      "loadFailedBody": "Check your connection, then try again.",
+      "notFoundTitle": "No dress at this link",
+      "notFoundBody": "It may have been deleted. Check the gallery.",
+      "backToList": "Back to dresses"
+    }
+  },
+  "snack": {
+    "deleted": "{{code}} was deleted.",
+    "undo": "Undo",
+    "dismiss": "Dismiss"
   },
   "errors": {
     "unknown": "Something went wrong. Try again.",

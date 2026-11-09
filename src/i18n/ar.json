@@ -32,6 +32,12 @@
     "english": "English",
     "arabic": "العربية"
   },
+  "status": {
+    "available": "متاح",
+    "reserved": "محجوز",
+    "rented": "مستأجر",
+    "sold": "مباع"
+  },
   "setup": {
     "title": "اربط Supabase",
     "body": "هذا الإصدار لا يحتوي على مشروع Supabase مُعدّ، لذا تسجيل الدخول والبيانات غير متاحين. انسخ ‎.env.example‎ إلى ‎.env.local‎ وأضف رابط المشروع والمفتاح العام ثم أعد تشغيل الخادم.",
@@ -40,8 +46,7 @@
   },
   "screens": {
     "dresses": {
-      "title": "الفساتين",
-      "body": "المعرض والبحث والتصفية في المرحلة القادمة."
+      "title": "الفساتين"
     },
     "capture": {
       "title": "التصوير",
@@ -60,6 +65,73 @@
     "language": "اللغة",
     "languageHint": "يبدّل التطبيق كاملاً بين الإنجليزية والعربية.",
     "signOut": "تسجيل الخروج"
+  },
+  "gallery": {
+    "add": "إضافة فستان",
+    "heroLabel": "فساتين",
+    "searchLabel": "بحث",
+    "searchPlaceholder": "ابحث بالاسم أو الكود أو القماش أو اللون",
+    "filtersLabel": "تصفية حسب الحالة",
+    "chipAll": "الكل",
+    "emptyTitle": "لا توجد فساتين بعد",
+    "emptyBody": "أضف أول فستان يدوياً، أو صوّر فستاناً في شاشة التصوير.",
+    "emptyFilteredTitle": "لا توجد فساتين مطابقة",
+    "emptyFilteredBody": "جرّب كلمة أخرى أو امسح الفلاتر.",
+    "clearFilters": "مسح الفلاتر",
+    "loadFailedTitle": "فشل تحميل الفساتين",
+    "loadFailedBody": "تحقّق من الاتصال ثم حاول مرة أخرى."
+  },
+  "dress": {
+    "newTitle": "فستان جديد",
+    "editTitle": "تعديل الفستان",
+    "edit": "تعديل",
+    "save": "حفظ الفستان",
+    "cancel": "إلغاء",
+    "saving": "جارٍ الحفظ…",
+    "statusLabel": "الحالة",
+    "listingLabel": "العرض",
+    "listingSale": "بيع",
+    "listingRent": "تأجير",
+    "listingBoth": "كلاهما",
+    "salePrice": "سعر البيع",
+    "rentPrice": "سعر التأجير",
+    "nameEn": "الاسم (إنجليزي)",
+    "nameAr": "الاسم (عربي)",
+    "descriptionEn": "الوصف (إنجليزي)",
+    "descriptionAr": "الوصف (عربي)",
+    "silhouette": "القصة",
+    "neckline": "الرقبة",
+    "sleeves": "الأكمام",
+    "fabrics": "الأقمشة",
+    "fabricsHint": "افصل بينها بفواصل: دانتيل, تول",
+    "color": "اللون",
+    "size": "المقاس",
+    "notes": "ملاحظات",
+    "code": "الكود",
+    "photosEmpty": "تُضاف الصور لاحقاً في شاشة التصوير.",
+    "photoCount_one": "حُفظت صورة واحدة",
+    "photoCount_other": "حُفظت {{count}} صور",
+    "delete": "حذف الفستان",
+    "confirmDelete": "اضغط مرة أخرى للحذف",
+    "deleteWarning": "يختفي الفستان من المعرض، ويمكن التراجع خلال ثوانٍ.",
+    "errors": {
+      "codeRequired": "أدخل كوداً لهذا الفستان.",
+      "notANumber": "أدخل رقماً.",
+      "negative": "لا يمكن أن يكون السعر سالباً.",
+      "duplicateCode": "هذا الكود مستخدم لفستان آخر. اختر كوداً مختلفاً.",
+      "saveFailed": "فشل الحفظ. تحقّق من الاتصال ثم حاول مرة أخرى.",
+      "deleteFailed": "فشل الحذف. حاول مرة أخرى.",
+      "loadFailedTitle": "لم يُحمَّل هذا الفستان",
+      "loadFailedBody": "تحقّق من الاتصال ثم حاول مرة أخرى.",
+      "notFoundTitle": "لا يوجد فستان على هذا الرابط",
+      "notFoundBody": "ربما حُذف. تحقّق من المعرض.",
+      "backToList": "العودة إلى الفساتين"
+    }
+  },
+  "snack": {
+    "deleted": "حُذف {{code}}.",
+    "undo": "تراجع",
+    "dismiss": "إغلاق"
   },
   "errors": {
     "unknown": "حدث خطأ. حاول مرة أخرى.",

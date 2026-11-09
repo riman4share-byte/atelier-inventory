@@ -163,11 +163,12 @@ CI wiring is deferred.
 `vite-plugin-pwa` is not installed yet; Phase 12 covers manifest, icons and
 offline shell.
 
-### G-28 · Screens for Phases 2–9 are intentional empty shells
+### G-28 · Capture and Materials screens are intentional empty shells
 
-**Status:** open · **Phase:** 1
-Dresses, Capture and Materials render a titled empty state. They contain no
-dead buttons and no fake data. They are not the Phase 2/4/9 screens.
+**Status:** open · **Phase:** 2 (updated 2026-11-09)
+Capture and Materials render a titled empty state. They contain no dead
+buttons and no fake data. They are not the Phase 4/9 screens. (The Dresses
+screens stopped being shells in Phase 2.)
 
 ### G-29 · Branding bucket accepts SVG
 
@@ -188,6 +189,32 @@ need testing in Phase 4.
 `dresses.location` / `current_customer_id` columns, belong to Phases 8 and 11.
 They are intentionally absent from the Phase 1 migrations and will arrive with
 those phases.
+
+### G-33 · A suggested dress code is not reserved
+
+**Status:** open · **Phase:** 2
+`suggest_dress_code()` reads `app_settings` (staff-readable via the function
+only) and formats the next code, but never consumes a number. Two people
+creating a dress at the same time can get the same suggestion; the unique
+index turns the second save into a clear error message. Phase 7 replaces this
+with the transaction-safe allocation on save.
+
+### G-34 · Fabric search matches only common case variants
+
+**Status:** open · **Phase:** 2
+PostgREST array containment is case-sensitive, so the search expression adds
+the as-typed, Capitalised and lowercased variants of the term. Matching
+variants like "LaCe" or Arabic fabric names miss. The ilike fields (name, code,
+colour) are fully case-insensitive. Refined with the materials work in
+Phase 9.
+
+### G-35 · The photo viewer shows a placeholder until Phase 4
+
+**Status:** open · **Phase:** 2
+The dress page renders a pastel placeholder instead of photos because no
+signed-URL plumbing exists yet (photos only arrive in Phase 4). When
+`dress_photos` rows exist the page shows their count; actual images with
+signed URLs come with the capture phase.
 
 ---
 
