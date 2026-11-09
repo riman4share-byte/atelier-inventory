@@ -330,6 +330,20 @@
     "cat": { "fabric": "قماش", "lace": "دانتيل", "bead": "خرز", "crystal": "بلور", "pearl": "لؤلؤ", "thread": "خيط", "other": "أخرى" },
     "reason": { "purchase": "شراء", "used": "استخدام", "correction": "تصحيح", "loss": "فقد" }
   },
+  "tools": {
+    "title": "الأدوات والواجهات",
+    "hint": "للمسؤولين فقط. تُحفظ المفاتيح بأمان ولا تُعرض مجدداً.",
+    "kind": { "vision": "رؤية (ذكاء)", "background_removal": "إزالة خلفية", "translation": "ترجمة", "storage": "تخزين", "erp": "ERPNext", "custom": "مخصص" },
+    "provider": "المزوّد",
+    "model": "النموذج / نقطة النهاية",
+    "key": "مفتاح API",
+    "save": "حفظ التكامل",
+    "saved": "تم الحفظ. تلميح المفتاح: …{{hint}}",
+    "savedGeneric": "تم الحفظ.",
+    "noVault": "تخزين Vault غير متاح في هذا البيئة.",
+    "saveFailed": "فشل الحفظ.",
+    "securityNote": "المفاتيح للكتابة فقط: تُعرض آخر 4 أحرف فقط."
+  },
   "share": {
     "pageSubtitle": "نظرة خاصة على فساتين مختارة.",
     "unavailableTitle": "هذا الرابط لم يعد متاحاً",

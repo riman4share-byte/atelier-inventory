@@ -328,6 +328,20 @@
     "cat": { "fabric": "Fabric", "lace": "Lace", "bead": "Bead", "crystal": "Crystal", "pearl": "Pearl", "thread": "Thread", "other": "Other" },
     "reason": { "purchase": "Purchase", "used": "Used", "correction": "Correction", "loss": "Loss" }
   },
+  "tools": {
+    "title": "Tools and APIs",
+    "hint": "Admin only. Keys are stored securely and never shown again.",
+    "kind": { "vision": "Vision (AI)", "background_removal": "Background removal", "translation": "Translation", "storage": "Storage", "erp": "ERPNext", "custom": "Custom" },
+    "provider": "Provider",
+    "model": "Model / endpoint",
+    "key": "API key",
+    "save": "Save integration",
+    "saved": "Saved. Key hint: …{{hint}}",
+    "savedGeneric": "Saved.",
+    "noVault": "Vault storage is not available in this environment.",
+    "saveFailed": "Saving failed.",
+    "securityNote": "Keys are write-only: only the last 4 characters are ever shown."
+  },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
     "unavailableTitle": "This link is no longer available",

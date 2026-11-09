@@ -6,6 +6,8 @@ import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { useAuth } from '@/features/auth/useAuth';
 import type { LanguageCode } from '@/lib/database.types';
 
+import { ToolsPanel } from './ToolsPanel';
+
 export function SettingsPage() {
   const { t } = useTranslation();
   const { profile, session, setLanguage, signOut } = useAuth();
@@ -63,6 +65,7 @@ export function SettingsPage() {
       <Button variant="secondary" className="mt-8" loading={signingOut} onClick={() => void handleSignOut()}>
         {t('auth.signOut')}
       </Button>
+      {profile.role === 'admin' ? <ToolsPanel /> : null}
     </Screen>
   );
 }
