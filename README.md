@@ -157,10 +157,10 @@ component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
 | 6 — Background cleanup | Not started |
 | 7 — Codes, QR, labels | Not started |
 | 8 — Customers and movements | Not started (tables not created yet) |
-| 9 — Materials | Not started |
-| 10 — Control panel | Not started |
-| 11 — ERPNext | Not started |
-| 12 — Polish, PWA, deploy | Not started |
+| 9 — Materials | **Built** — materials library, stock tracking, low-stock alerts |
+| 10 — Control panel | **Built (UI)** — admin tools panel; Vault storage lands on cloud deploy |
+| 11 — ERPNext | Deferred — needs owner's ERPNext details |
+| 12 — Polish, PWA, deploy | **Partial** — PWA manifest + icons + error boundary; offline shell and CI smoke tests pending |
 
 ## Security notes
 

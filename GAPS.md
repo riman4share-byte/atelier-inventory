@@ -288,7 +288,30 @@ bulk import wrote the original Instagram files to storage. Instagram exports
 are already small and location-free, so this is acceptable for the test set,
 but the honest behaviour differs between the two paths.
 
-### G-47 · Phase 8 is partial: no customer page, movement exports or receipts yet
+### G-49 · ERPNext integration is deferred pending owner inputs
+
+**Status:** open · **Phase:** 11
+Phase 11 (ERPNext sync) needs the owner's ERPNext version and hosting, company
+name, default currency, warehouse, item groups, price list, and UOM mapping
+before any code. The `packages/erp-client` package, the `erp-sync` Edge
+Function, the `apps/erp-bridge` Docker service, and the `erp_jobs` table are
+not built. The control panel has a placeholder `erp` integration kind only.
+
+### G-50 · PWA is configured but unverified on a real device
+
+**Status:** open · **Phase:** 12
+`vite-plugin-pwa` is configured (manifest, workbox runtime caching, auto-
+update) and placeholder icons ship. Offline shell, install prompt, update
+prompt, Lighthouse scores, and real-phone install behaviour are unverified.
+Playwright smoke tests are scaffolded in `tests/smoke.spec.ts` but not wired
+into CI.
+
+**Status:** open · **Phase:** 10
+The admin control panel UI is built and writes through a `save-integration`
+Edge Function, but that function currently only returns a key hint instead of
+storing the key in Supabase Vault (which requires the service role and a cloud
+project). Keys are not yet persisted server-side; the real Vault write lands
+with the cloud deploy. Local dev still uses `supabase/functions/.env`.
 
 **Status:** open · **Phase:** 8
 Core movement tracking shipped: check-out / check-in / reserve sheets, the
