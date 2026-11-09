@@ -74,9 +74,12 @@ expire. Only the direct API path (Phase 11) can attach photos.
 
 ### G-12 · Arabic PDF rendering must be proven
 
-**Status:** open · **Phase:** 1
-The PDF approach and embedded Arabic font are not chosen yet. Phase 3 must prove
-letter shaping and RTL order with a test document.
+**Status:** resolved 2026-11-09 · **Phase:** 1
+Mooted by an owner decision on 2026-11-09: **all exports (Excel, CSV, printed
+catalog, stock report, share pages) are English-only**, so no Arabic font or
+letter-shaping proof is needed for them. The app UI itself stays bilingual and
+already renders Arabic in the browser. If Arabic exports are ever requested,
+this proof must be done first.
 
 ### G-13 · Source of truth for stock must be decided by the owner
 
@@ -215,6 +218,58 @@ The dress page renders a pastel placeholder instead of photos because no
 signed-URL plumbing exists yet (photos only arrive in Phase 4). When
 `dress_photos` rows exist the page shows their count; actual images with
 signed URLs come with the capture phase.
+
+### G-36 · Dashboard aggregates are computed in the browser
+
+**Status:** open · **Phase:** 3
+The home screen fetches every non-deleted dress row and counts/sums in
+JavaScript. Fine for hundreds of dresses; at thousands this should become a
+database function or Edge Function aggregate. Not built yet.
+
+### G-37 · Export loads rows into the browser, capped at 2000
+
+**Status:** open · **Phase:** 3
+Excel/CSV exports fetch up to `EXPORT_ROW_LIMIT` (2000) rows and build the file
+client-side; beyond that the sheet shows a friendly error. Bigger exports need
+an Edge Function that streams a file server-side. Not built yet.
+
+### G-38 · ZIP photo export is deferred until photos exist
+
+**Status:** open · **Phase:** 3
+The export sheet covers data only (no photos archive) because no photos exist
+until Phase 4. The ZIP download comes with the capture phase.
+
+### G-39 · QR URLs point at a route that does not exist yet
+
+**Status:** open · **Phase:** 3
+Exports include a "QR URL" column (`<origin>/d/<code>`), but `/d/:code` is a
+Phase 7 feature (short public code links + printed QR labels). Following the
+link before Phase 7 gives a 404. Verified in the export file shape only.
+
+### G-40 · Catalog/report header uses the i18n app name, not the atelier setting
+
+**Status:** open · **Phase:** 3
+Printed documents title themselves with `t('app.name')` because staff cannot
+read `app_settings` (same root as G-20). The owner's chosen atelier name will
+replace it once a staff-readable settings source exists.
+
+### G-41 · Saved table views and column choices live per device
+
+**Status:** open · **Phase:** 3
+Table views, visible columns and export settings persist in localStorage
+(`dresses-table-views`, `dresses-table-columns`), so a phone and a laptop keep
+different views. Syncing them across devices is not built.
+
+### G-42 · Printed output and share page are not visually reviewed in a browser
+
+**Status:** resolved 2026-11-09 · **Phase:** 3
+Reviewed in a real (headless) Chromium: the sheet produced Excel, the stock
+report and the catalog, the share page renders signed-out, and the owner
+looked at the captured PDFs. Outcome the owner approved: the default catalog
+became a magazine-style **one dress per page** layout — cover page, brand
+strip, three photo slots matching the brief's angle list (front / back /
+detail), spec sheet and a real QR code per page. Pixel-level design polish is
+deliberately deferred to the later design pass.
 
 ---
 

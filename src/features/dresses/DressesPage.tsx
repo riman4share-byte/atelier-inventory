@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { GownIcon } from '@/components/icons';
 import { Screen } from '@/components/layout/Screen';
+import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Spinner } from '@/components/ui/Spinner';
 import { STATUS_FILTERS, type StatusFilter } from './dressSearch';
-import { useDressCounts, useDresses, useRestoreDress, type DressRow } from './api';
+import {
+  useBulkSetStatus,
+  useDressCounts,
+  useDresses,
+  useRestoreDress,
+  type DressRow,
+  type TableSort,
+} from './api';
 import { paletteForCode, StatusPill } from './StatusPill';
+import { DressesTable, BulkBar } from './DressesTable';
+import { ExportSheet } from './ExportSheet';
 import { cx } from '@/lib/cx';
 
 interface UndoClaim {
@@ -66,13 +76,24 @@ export function DressesPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchInput, setSearchInput] = useState('');
+  const view = searchParams.get('view') === 'table' ? 'table' : 'grid';
+  // Dashboards and error lists can send the user into a filtered table with
+  // initialSearch; read it once and clean the URL.
+  const initialSearch = searchParams.get('initialSearch') ?? '';
+  const [searchInput, setSearchInput] = useState(initialSearch);
   const search = useDebouncedValue(searchInput, 300);
   const [status, setStatus] = useState<StatusFilter>('all');
+  const [sort, setSort] = useState<TableSort>({ column: 'created_at', dir: 'desc' });
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+  const [exportOpen, setExportOpen] = useState(false);
 
   const counts = useDressCounts();
   const dresses = useDresses({ search, status });
+  const bulkStatus = useBulkSetStatus();
+  const restore = useRestoreDress();
+
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = dresses;
 
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -97,7 +118,7 @@ export function DressesPage() {
     (location.state as { undo?: UndoClaim } | null)?.undo ?? null,
   );
   useEffect(() => {
-    navigate(location.pathname, { replace: true, state: null });
+    navigate(location.pathname + location.search, { replace: true, state: null });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
@@ -105,7 +126,6 @@ export function DressesPage() {
     const timer = setTimeout(() => setUndo(null), 7000);
     return () => clearTimeout(timer);
   }, [undo]);
-  const restore = useRestoreDress();
 
   const chips = STATUS_FILTERS.map((value) => ({
     value,
@@ -114,11 +134,17 @@ export function DressesPage() {
 
   const tiles = dresses.data?.pages.flat() ?? [];
   const hasFilters = Boolean(searchInput) || status !== 'all';
+  const setView = (next: 'grid' | 'table') => {
+    const params = new URLSearchParams(searchParams);
+    if (next === 'grid') params.delete('view');
+    else params.set('view', next);
+    setSearchParams(params, { replace: true });
+  };
 
   return (
     <Screen
       title={t('screens.dresses.title')}
-      subtitle={`${dresses.isLoading && counts.data === undefined ? '…' : counts.data?.total ?? '–'} ${t('gallery.heroLabel')}`}
+      subtitle={`${counts.isLoading ? '…' : (counts.data?.total ?? '–')} ${t('gallery.heroLabel')}`}
       action={
         <button
           type="button"
@@ -130,6 +156,16 @@ export function DressesPage() {
       }
     >
       <div className="flex flex-1 flex-col gap-4">
+        <SegmentedControl
+          label={t('gallery.viewLabel')}
+          options={[
+            { value: 'grid', label: t('gallery.viewGrid') },
+            { value: 'table', label: t('gallery.viewTable') },
+          ]}
+          value={view}
+          onChange={(value) => setView(value as 'grid' | 'table')}
+        />
+
         <input
           type="search"
           value={searchInput}
@@ -139,27 +175,42 @@ export function DressesPage() {
           className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2.5 text-input text-ink placeholder:text-muted focus:border-accent"
         />
 
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="group" aria-label={t('gallery.filtersLabel')}>
-          {chips.map((chip) => {
-            const selected = status === chip.value;
-            return (
-              <button
-                key={chip.value}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setStatus(chip.value)}
-                className={cx(
-                  'min-h-tap shrink-0 rounded-pill px-3.5 text-caption font-semibold',
-                  selected ? 'bg-accent text-accent-ink' : 'bg-soft text-ink',
-                )}
-              >
-                {chip.label}
-              </button>
-            );
-          })}
+        <div
+          className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+          role="group"
+          aria-label={t('gallery.filtersLabel')}
+        >
+          {chips.map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              aria-pressed={status === chip.value}
+              onClick={() => setStatus(chip.value)}
+              className={cx(
+                'min-h-tap shrink-0 rounded-pill px-3.5 text-caption font-semibold',
+                status === chip.value ? 'bg-accent text-accent-ink' : 'bg-soft text-ink',
+              )}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
 
-        {dresses.isError ? (
+        {view === 'table' ? (
+          <DressesTable
+            search={search}
+            status={status}
+            sort={sort}
+            onSort={setSort}
+            onApplyView={(next) => {
+              setSearchInput(next.search);
+              setStatus(next.status);
+            }}
+            selected={selected}
+            onSelectionChange={setSelected}
+            onExportSelected={() => setExportOpen(true)}
+          />
+        ) : dresses.isError ? (
           <div className="flex flex-col items-center gap-3 rounded-card bg-soft px-6 py-10 text-center">
             <p className="text-body font-semibold text-ink">{t('gallery.loadFailedTitle')}</p>
             <p className="text-small text-muted">{t('gallery.loadFailedBody')}</p>
@@ -268,6 +319,29 @@ export function DressesPage() {
           </button>
         </div>
       ) : null}
+
+      {/* Bulk bar (table selection) */}
+      <BulkBar
+        count={selected.size}
+        pending={bulkStatus.isPending}
+        onStatus={(nextStatus) =>
+          bulkStatus.mutate(
+            { ids: [...selected], status: nextStatus },
+            { onSuccess: () => setSelected(new Set()) },
+          )
+        }
+        onExport={() => setExportOpen(true)}
+        onClear={() => setSelected(new Set())}
+      />
+
+      {/* Export sheet (gallery + table share it) */}
+      <ExportSheet
+        open={exportOpen}
+        onClose={() => setExportOpen(false)}
+        search={search}
+        status={status}
+        selectedIds={[...selected]}
+      />
     </Screen>
   );
 }

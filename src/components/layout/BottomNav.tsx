@@ -1,17 +1,18 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
-import { CameraIcon, GemIcon, GownIcon, SettingsIcon } from '@/components/icons';
+import { CameraIcon, GemIcon, GownIcon, SettingsIcon, SparkleIcon } from '@/components/icons';
 import { useAuth } from '@/features/auth/useAuth';
 import { cx } from '@/lib/cx';
 import type { ComponentType, SVGProps } from 'react';
 
 interface NavItem {
   to: string;
-  labelKey: 'nav.dresses' | 'nav.capture' | 'nav.materials' | 'nav.settings';
+  labelKey: 'nav.home' | 'nav.dresses' | 'nav.capture' | 'nav.materials' | 'nav.settings';
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 const BASE_ITEMS: NavItem[] = [
+  { to: '/dashboard', labelKey: 'nav.home', Icon: SparkleIcon },
   { to: '/dresses', labelKey: 'nav.dresses', Icon: GownIcon },
   { to: '/capture', labelKey: 'nav.capture', Icon: CameraIcon },
   { to: '/materials', labelKey: 'nav.materials', Icon: GemIcon },

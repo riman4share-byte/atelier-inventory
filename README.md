@@ -3,9 +3,11 @@
 Inventory, photo capture and movement tracking for a wedding dress atelier.
 Mobile-first, installable later as a PWA, Arabic and English with full RTL.
 
-**Phase 1 (foundation) is built.** The shell, sign-in, roles, schema and access
-policies are in place. The gallery, capture, materials and admin tools arrive in
-later phases — see [Phase status](#phase-status).
+**Phase 1 (foundation) and Phase 2 (gallery) are built, and Phase 3 (inventory
+table, dashboard, exports) is built.** Schema, roles, access policies, the dress
+gallery, the table view, the dashboard and the export/share tools are in place.
+Capture, materials and admin tools arrive in later phases — see
+[Phase status](#phase-status).
 
 ## Stack
 
@@ -124,15 +126,16 @@ src/
   components/layout/    app shell, bottom navigation, screen header, guards UI
   components/ui/        button, text field, segmented control, spinner
   features/auth/        session, profile, login, route guards
-  features/dresses/     gallery, search, dress page, form, soft delete (Phase 2)
+  features/dashboard/   home screen: counts, values, attention list (Phase 3)
+  features/dresses/     gallery, table view, dress page, form, exports, share links (Phases 2–3)
   features/capture/     camera and upload (Phase 4)
   features/materials/   materials library (Phase 9)
   features/settings/    account and language (admin)
   i18n/                 en/ar strings, language detection, RTL
   lib/                  Supabase client, database types, env, query client
-  pages/                setup, forbidden, not found
+  pages/                setup, forbidden, not found, public share page
   styles/index.css      design tokens (light + dark)
-supabase/migrations/    schema, RLS, storage policies, code-suggestion RPC
+supabase/migrations/    schema, RLS, storage policies, code-suggestion and share-read RPCs
 ```
 
 ## Design
@@ -148,7 +151,7 @@ component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
 | Phase | Status |
 | ---------------------------- | ------------------------------------------------- || 1 — Foundation | **Built** — schema, RLS, auth, roles, shell, i18n; migrations, seed and RLS verified on local Supabase |
 | 2 — Gallery and CRUD | **Built** — hero counts, search, status filters, infinite-scroll grid, dress page with create/edit/status/soft-delete+undo; verified with 17 live checks on local Supabase |
-| 3 — Inventory views, exports | Not started |
+| 3 — Inventory views, exports | **Built** — table view with sort/columns/saved views/bulk status, dashboard, Excel/CSV, magazine-style per-page PDF catalog with QR, share links; verified with 16 live checks + 12 browser checks |
 | 4 — Capture and upload | Not started |
 | 5 — AI draft | Not started |
 | 6 — Background cleanup | Not started |
@@ -172,6 +175,13 @@ component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
 - `service_role` gets explicit table grants because newer Supabase CLIs no
   longer auto-expose new tables. It bypasses RLS, lives only in scripts and
   (from Phase 5) Edge Functions, and is never in the browser bundle.
+- Share links are public by design: the only public door is the
+  security-definer function `get_shared_dresses(token)`, which returns just the
+  shared dresses and never lets callers list tokens or status. Anon sessions
+  cannot read or write `share_links` rows directly (verified live).
+- Exports (Excel, CSV, printed catalog, stock report) are **English-only** by an
+  owner decision of 2026-11-09; the app UI stays bilingual. Also recorded in
+  `GAPS.md` (G-12).
 - The stock ledger has no update or delete policy: it is append-only.
 - The `profiles` trigger blocks a non-admin from changing any role, including
   their own.

@@ -199,3 +199,182 @@ export function useRestoreDress() {
     onSuccess: () => client.invalidateQueries({ queryKey: dressKeys.all }),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Phase 3: exports, table pagination and share links
+// ---------------------------------------------------------------------------
+
+/** Change the status of many dresses at once (table bulk bar). */
+export function useBulkSetStatus() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: DressRow['status'] }) => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { error } = await db.from('dresses').update({ status }).in('id', ids);
+      if (error) throw error;
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: dressKeys.all }),
+  });
+}
+
+export const EXPORT_ROW_LIMIT = 2000;
+
+export interface ExportScopeSelection {
+  search: string;
+  status: DressRow['status'] | null;
+  /** Specific ids (bulk selection); when set it replaces search/status. */
+  ids?: string[];
+}
+
+/**
+ * Every row matching the export scope, capped at EXPORT_ROW_LIMIT. Larger
+ * exports need an Edge Function (recorded in GAPS.md, not built yet).
+ */
+export async function fetchDressesForExport(selection: ExportScopeSelection): Promise<DressRow[]> {
+  const client = supabase as NonNullable<typeof supabase>;
+  const built = buildDressFilters({
+    search: selection.search,
+    status: selection.status ?? 'all',
+  });
+  let builder = client
+    .from('dresses')
+    .select('*')
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false });
+  if (selection.ids) {
+    builder = builder.in('id', selection.ids);
+  } else {
+    if (built.orExpression) builder = builder.or(built.orExpression);
+    if (built.status) builder = builder.eq('status', built.status);
+  }
+  const { data, error } = await builder.limit(EXPORT_ROW_LIMIT + 1);
+  if (error) throw error;
+  if (data.length > EXPORT_ROW_LIMIT) {
+    throw new Error('too_many_rows');
+  }
+  return data;
+}
+
+/** Server-paginated table rows with the material count per dress. */
+export interface TableSort {
+  column: 'code' | 'name_en' | 'status' | 'sale_price' | 'rent_price' | 'created_at';
+  dir: 'asc' | 'desc';
+}
+
+export const TABLE_PAGE_SIZE = 20;
+
+export function useDressesTable(filters: {
+  search: string;
+  status: StatusFilter;
+  sort: TableSort;
+  page: number;
+}) {
+  const built = buildDressFilters({ search: filters.search, status: filters.status });
+  const from = filters.page * TABLE_PAGE_SIZE;
+  return useQuery({
+    queryKey: [
+      ...dressKeys.lists(),
+      'table',
+      { search: filters.search, status: filters.status, sort: filters.sort, page: filters.page },
+    ],
+    queryFn: async () => {
+      const client = supabase as NonNullable<typeof supabase>;
+      let builder = client
+        .from('dresses')
+        .select('*, dress_materials(count)', { count: 'exact' })
+        .is('deleted_at', null)
+        .order(filters.sort.column, { ascending: filters.sort.dir === 'asc' })
+        .range(from, from + TABLE_PAGE_SIZE - 1);
+      if (built.orExpression) builder = builder.or(built.orExpression);
+      if (built.status) builder = builder.eq('status', built.status);
+      const { data, error, count } = await builder;
+      if (error) throw error;
+      return { rows: data, total: count ?? data.length };
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Share links
+// ---------------------------------------------------------------------------
+
+export type ShareLinkRow = Tables<'share_links'>;
+
+/** 16 random bytes as hex — the token is the only key to a public page. */
+export function newShareToken(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
+
+export function shareLinkUrl(token: string, origin: string): string {
+  return `${origin}/share/${token}`;
+}
+
+export function useCreateShareLink() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: TablesInsert<'share_links'>): Promise<ShareLinkRow> => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await db.from('share_links').insert(values).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: ['share_links'] }),
+  });
+}
+
+export function useShareLinks() {
+  return useQuery({
+    queryKey: ['share_links', 'recent'],
+    queryFn: async (): Promise<ShareLinkRow[]> => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await db
+        .from('share_links')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useRevokeShareLink() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { error } = await db.from('share_links').update({ revoked: true }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: ['share_links'] }),
+  });
+}
+
+/** Public (signed-out) read of one token, through the definer function. */
+export interface SharedDress {
+  id: string;
+  code: string;
+  name_en: string;
+  name_ar: string;
+  description_en: string | null;
+  description_ar: string | null;
+  sale_price: number | null;
+  rent_price: number | null;
+}
+
+export function useSharedDresses(token: string) {
+  return useQuery({
+    queryKey: ['share_links', 'public', token],
+    staleTime: 0,
+    retry: false,
+    queryFn: async (): Promise<SharedDress[]> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await client.rpc('get_shared_dresses', { p_token: token });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+

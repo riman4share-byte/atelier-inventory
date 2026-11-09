@@ -574,6 +574,19 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      get_shared_dresses: {
+        Args: { p_token: string }
+        Returns: {
+          code: string
+          description_ar: string
+          description_en: string
+          id: string
+          name_ar: string
+          name_en: string
+          rent_price: number
+          sale_price: number
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       suggest_dress_code: { Args: never; Returns: string }
     }
