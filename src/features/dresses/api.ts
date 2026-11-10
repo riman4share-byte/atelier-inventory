@@ -91,6 +91,7 @@ export function useDress(id: string) {
         .from('dresses')
         .select('*')
         .eq('id', id)
+        .is('deleted_at', null)
         .limit(1)
         .maybeSingle();
       if (error) throw error;

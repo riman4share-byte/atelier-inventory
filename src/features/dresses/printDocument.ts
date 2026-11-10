@@ -96,7 +96,16 @@ const escapeHtml = (text: string): string =>
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+
+/**
+ * The printed document is written into a same-origin blank window, so it must
+ * not be able to run scripts or pull in remote code. The policy allows only
+ * the images (signed storage URLs and QR data URLs) and inline styles.
+ */
+const PRINT_CSP =
+  '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data: https:; style-src \'unsafe-inline\'">';
 
 export interface CatalogOptions {
   perPage: 1 | 2 | 4;
@@ -204,11 +213,11 @@ export function buildCatalogHtml(
     </div>`;
 
   if (options.perPage === 1) {
-    return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
       <title>${escapeHtml(options.atelierName)} catalog</title>${PAGE_STYLE}</head>
       <body>${cover}${dresses.map((dress) => dressPage(dress, options)).join('')}</body></html>`;
   }
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>${escapeHtml(options.atelierName)} catalog</title>${PAGE_STYLE}</head>
     <body class="per${options.perPage}">
       ${dresses.map((dress) => compactCard(dress, options)).join('')}
@@ -232,7 +241,7 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
   const statusText = (status: DressRow['status']) =>
     `${STATUS_LABELS[status]}: <strong>${inputs.counts[status]}</strong>`;
 
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>${escapeHtml(inputs.atelierName)} stock report</title>${PAGE_STYLE}</head>
     <body class="per1">
       <h1>${escapeHtml(inputs.atelierName)} — stock report</h1>
@@ -251,7 +260,7 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
 }
 
 export function buildHangTagHtml(dress: DressRow, atelierName: string, qrDataUrl: string | undefined): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>Tag ${escapeHtml(dress.code)}</title>
     <style>
       @page { size: 50mm 30mm; margin: 0; }
@@ -287,7 +296,7 @@ export function buildTagSheetHtml(dresses: DressRow[], atelierName: string, qrBy
       </div>
     </div>`;
   }).join('');
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>Tags</title>
     <style>
       @page { size: A4; margin: 8mm; }
@@ -343,7 +352,7 @@ export function printHtml(html: string): boolean {
 
 export function buildReceiptHtml(movement: import('@/features/movements/api').DressMovementRow, dressCode: string, atelierName: string): string {
   const e = escapeHtml;
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>Receipt</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMaterials, useCreateMaterial, useAdjustStock } from './api';
+import { MATERIAL_CATEGORIES } from './categories';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/layout/Screen';
 import { Spinner } from '@/components/ui/Spinner';
 import { cx } from '@/lib/cx';
 
-const CATEGORIES = ['fabric', 'lace', 'bead', 'crystal', 'pearl', 'thread', 'other'] as const;
+// The list must match the database enum exactly (see categories.ts).
+const CATEGORIES = MATERIAL_CATEGORIES;
 
 export function MaterialsPage() {
   const { t } = useTranslation();

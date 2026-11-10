@@ -9,7 +9,7 @@ import {
   listedSaleValue,
   listedRentValue,
   needsAttention,
-  useDashboard,
+  useDashboardState,
 } from './api';
 import { useMovementSummary } from '@/features/movements/api';
 import { useAllMovements } from '@/features/movements/api';
@@ -17,16 +17,17 @@ import { exportMovementsToExcel } from '@/features/movements/export';
 import { cx } from '@/lib/cx';
 
 const STATUS_TILE_CLASSES: Record<string, string> = {
-  available: 'bg-c4 text-ok',
-  reserved: 'bg-c3 text-warn',
-  rented: 'bg-c2 text-info',
-  sold: 'bg-c1 text-accent',
+  available: 'bg-ok-bg text-ok',
+  reserved: 'bg-warn-bg text-warn',
+  rented: 'bg-info-bg text-info',
+  sold: 'bg-off-bg text-off',
 };
 
 export function DashboardPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const rows = useDashboard();
+  const dashboard = useDashboardState();
+  const rows = dashboard.rows;
   const movementSummary = useMovementSummary();
   const allMovements = useAllMovements({});
   const [exportOpen, setExportOpen] = useState(false);
@@ -35,6 +36,21 @@ export function DashboardPage() {
   const total = rows.length;
   const attention = needsAttention(rows, i18n.language);
   const recent = rows.slice(0, 5);
+
+  // A failed query must never look like an empty atelier.
+  if (dashboard.isError) {
+    return (
+      <Screen title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
+        <div className="flex flex-1 flex-col items-center gap-3 rounded-card bg-soft px-6 py-10 text-center">
+          <p className="text-body font-semibold text-ink">{t('gallery.loadFailedTitle')}</p>
+          <p className="text-small text-muted">{t('gallery.loadFailedBody')}</p>
+          <Button variant="secondary" className="w-auto px-4" onClick={dashboard.refetch}>
+            {t('common.retry')}
+          </Button>
+        </div>
+      </Screen>
+    );
+  }
 
   return (
     <Screen title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>

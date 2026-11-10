@@ -11,7 +11,7 @@
   --bg: #f1f5f9;
   --surface: #ffffff;
   --ink: #0f172a;
-  --muted: #64748b;
+  --muted: #475569;
   --line: #cbd5e1;
   --soft: #e2e8f0;
   --accent: #1e293b;
@@ -29,14 +29,17 @@
   --warn-bg: #fef3c7;
   --info: #1d4ed8;
   --info-bg: #dbeafe;
-  --off: #64748b;
+  --off: #475569;
   --off-bg: #e2e8f0;
-  --danger: #dc2626;
+  --danger: #b91c1c;
   --danger-bg: #fee2e2;
 
   --font-serif: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-arabic: 'Cairo Variable', 'Noto Naskh Arabic', system-ui, sans-serif;
+
+  /* Focus ring: a colour of its own, never a background token. */
+  --focus: #2563eb;
 
   color-scheme: light;
 }
@@ -109,7 +112,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
 

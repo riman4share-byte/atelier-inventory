@@ -42,11 +42,15 @@ export const DEFAULT_EXPORT_COLUMNS: ReadonlyArray<ExportColumn> = [
   { id: 'description_en', header: 'Description', get: (d) => d.description_en ?? '' },
 ];
 
-/** The QR column the brief asks for; /d/:code goes live in Phase 7. */
+/**
+ * The QR column the brief asks for. The link carries the dress's unguessable
+ * public token, never its sequential code: a code-based public link would let
+ * anyone enumerate the catalogue by incrementing a number.
+ */
 export const QR_URL_COLUMN: ExportColumn = {
   id: 'qr_url',
   header: 'QR URL',
-  get: (d, origin) => `${origin}/d/${d.code}`,
+  get: (d, origin) => `${origin}/d/${d.public_token}`,
 };
 
 export const EXPORT_DATE_COLUMN: ExportColumn = {
@@ -68,6 +72,22 @@ export function exportRows(
 }
 
 /**
+ * Excel and LibreOffice evaluate a cell that starts with =, +, -, @, tab or
+ * CR as a formula. A dress name or description pasted from a supplier could
+ * therefore run a formula on the owner's machine when the export is opened —
+ * the classic CSV injection that can exfiltrate neighbouring cells.
+ *
+ * Prefixing the value with a single quote marks it as text. Plain numbers are
+ * left alone so a negative amount stays a number.
+ */
+export function neutraliseFormula(value: string): string {
+  if (value === '') return value;
+  if (!/^[=+\-@\t\r]/.test(value)) return value;
+  if (/^-?\d+(\.\d+)?$/.test(value)) return value;
+  return `'${value}`;
+}
+
+/**
  * CSV text with every row RFC 4180-escaped. The caller owns the byte-level
  * encoding (UTF-8 + BOM) so Arabic column values survive Excel even though
  * row data is English.
@@ -76,7 +96,10 @@ export function toCsv(rows: Array<Array<string>>): string {
   return rows
     .map((row) =>
       row
-        .map((cell) => (/[",\r\n]/.test(cell) ? `"${cell.replaceAll('"', '""')}"` : cell))
+        .map((cell) => {
+          const safe = neutraliseFormula(cell);
+          return /[",\r\n]/.test(safe) ? `"${safe.replaceAll('"', '""')}"` : safe;
+        })
         .join(','),
     )
     .join('\r\n');

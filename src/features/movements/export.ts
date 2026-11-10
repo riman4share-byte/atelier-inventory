@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import type { DressMovementRow } from './api';
+import { neutraliseFormula } from '@/features/dresses/exportData';
 
 /** Movement history as Excel (English-only, per owner decision). */
 export function exportMovementsToExcel(movements: DressMovementRow[], filename: string): void {
@@ -18,7 +19,10 @@ export function exportMovementsToExcel(movements: DressMovementRow[], filename: 
       m.condition_notes ?? '',
     ]),
   ];
-  const sheet = XLSX.utils.aoa_to_sheet(rows);
+  // Neutralise spreadsheet formulas: condition notes are free text typed by
+  // staff and would otherwise be evaluated when the owner opens the file.
+  const safeRows = rows.map((row) => row.map((cell) => neutraliseFormula(cell)));
+  const sheet = XLSX.utils.aoa_to_sheet(safeRows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, sheet, 'Movements');
   XLSX.writeFile(workbook, filename);

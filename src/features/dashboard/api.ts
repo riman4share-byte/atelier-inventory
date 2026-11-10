@@ -23,7 +23,18 @@ export interface DashboardRow {
   created_at: string;
 }
 
-export function useDashboard(): DashboardRow[] {
+export interface DashboardState {
+  rows: DashboardRow[];
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => void;
+}
+
+/**
+ * The dashboard query. It exposes the error state so a failed request is
+ * never rendered as "no dresses yet" — a false statement about the business.
+ */
+export function useDashboardState(): DashboardState {
   const query = useQuery({
     queryKey: ['dashboard'],
     staleTime: 30_000,
@@ -43,7 +54,17 @@ export function useDashboard(): DashboardRow[] {
       }));
     },
   });
-  return query.data ?? [];
+  return {
+    rows: query.data ?? [],
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: () => void query.refetch(),
+  };
+}
+
+/** @deprecated use useDashboardState() — this one hides the error state. */
+export function useDashboard(): DashboardRow[] {
+  return useDashboardState().rows;
 }
 
 export function countByStatus(rows: DashboardRow[]): Record<DressStatus, number> {

@@ -69,9 +69,10 @@ npx supabase stop        # when finished
    - **With the CLI:** `npx supabase link --project-ref <ref>` then
      `npx supabase db push`.
    - **Locally:** `npx supabase start` (see above) applies them automatically.
-   - **Without the CLI:** open the SQL editor and run the three files in
-     `supabase/migrations/` in order
-     (`..._init.sql`, `..._rls.sql`, `..._storage.sql`).
+    - **Without the CLI:** open the SQL editor and run the files in
+      `supabase/migrations/` in filename order (they are numbered
+      `..._init.sql`, `..._rls.sql`, `..._storage.sql` and the later phase
+      files).
 
    The migrations create every table, enum, index, trigger, RLS policy and the
    four private storage buckets (`dress-originals`, `dress-clean`,
@@ -98,11 +99,37 @@ npx supabase stop        # when finished
    ```
 
    The script creates two temporary users (staff and admin) and a temporary
-   dress, runs the access checks through the public API, prints pass/fail and
+   dress, runs 22 access checks through the public API, prints pass/fail and
    deletes everything it created. It refuses to run without the service role key.
 
 6. Sign in at `/login` with the seed admin. Settings appears in the bottom
    navigation for admins only.
+
+7. Deploy the Edge Functions:
+
+   ```bash
+   npx supabase functions deploy ai-describe --no-verify-jwt
+   npx supabase functions deploy bg-remove --no-verify-jwt
+   npx supabase functions deploy save-integration --no-verify-jwt
+   npx supabase functions deploy erp-sync --no-verify-jwt
+   ```
+
+   `--no-verify-jwt` is required on this project: the gateway's own JWT
+   verification cannot resolve the signing keys there and answers `503 "name
+   resolution failed"`. Each function therefore validates the bearer token
+   itself in `supabase/functions/_shared/auth.ts` and only staff and admins
+   get through (`erp-sync` and `save-integration` are admin-only). Do not
+   remove that guard.
+
+8. Put the provider keys in the project as Edge Function secrets, not in the
+   repository:
+
+   ```bash
+   npx supabase secrets set GEMINI_API_KEY=...
+   ```
+
+   The admin panel stores further keys in Supabase Vault through the
+   `store_integration_secret` RPC and shows only a 4-character hint.
 
 ## Scripts
 
@@ -149,42 +176,56 @@ component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
 ## Phase status
 
 | Phase | Status |
-| ---------------------------- | ------------------------------------------------- || 1 — Foundation | **Built** — schema, RLS, auth, roles, shell, i18n; migrations, seed and RLS verified on local Supabase AND cloud project (ofnkpyzmzhxtpwwvrbci, ap-south-1): 7 migrations, 15/15 RLS, 3 Edge Functions deployed, AI function verified live |
-| 2 — Gallery and CRUD | **Built** — hero counts, search, status filters, infinite-scroll grid, dress page with create/edit/status/soft-delete+undo; verified with 17 live checks on local Supabase |
-| 3 — Inventory views, exports | **Built** — table view with sort/columns/saved views/bulk status, dashboard, Excel/CSV, magazine-style per-page PDF catalog with QR, share links; verified with 16 live checks + 12 browser checks |
-| 4 — Capture and upload | Not started |
-| 5 — AI draft | Not started |
-| 6 — Background cleanup | Not started |
-| 7 — Codes, QR, labels | Not started |
-| 8 — Customers and movements | Not started (tables not created yet) |
+| ---------------------------- | ------------------------------------------------- || 1 — Foundation | **Built** — schema, RLS, auth, roles, shell, i18n; migrations, seed and RLS verified on local Supabase AND cloud project (ofnkpyzmzhxtpwwvrbci, ap-south-1) |
+| 2 — Gallery and CRUD | **Built** — hero counts, search, status filters, infinite-scroll grid, dress page with create/edit/status/soft-delete+undo |
+| 3 — Inventory views, exports | **Built** — table view with sort/columns/saved views/bulk status, dashboard, Excel/CSV, magazine-style per-page PDF catalog with QR, share links |
+| 4 — Capture and upload | **Built** — camera capture, multi-angle tagging, in-browser resize/EXIF strip, private signed URLs |
+| 5 — AI draft | **Built** — `ai-describe` Edge Function, Gemini vision, bilingual draft reviewed in-app before it is saved |
+| 6 — Background cleanup | **Built** — three engines (in-browser WASM, self-hosted rembg, cloud), canvas compositing with background and enhancement |
+| 7 — Codes, QR, labels | **Built** — self-healing code allocation, printed hang tag, catalog QR, public dress card behind an unguessable token |
+| 8 — Customers and movements | **Built** — customer list, check-out / check-in / reserve sheets, append-only movement ledger, where-is-it-now |
 | 9 — Materials | **Built** — materials library, stock tracking, low-stock alerts |
-| 10 — Control panel | **Built (UI)** — admin tools panel; Vault storage lands on cloud deploy |
-| 11 — ERPNext | Deferred — needs owner's ERPNext details |
-| 12 — Polish, PWA, deploy | **Partial** — PWA manifest + icons + error boundary; offline shell and CI smoke tests pending |
+| 10 — Control panel | **Built** — admin tools panel; provider keys live in Supabase Vault and are never returned |
+| 11 — ERPNext | **Partial** — job queue, `erp-sync` Edge Function and the admin fields exist; blocked on the owner's ERPNext instance (see GAPS G-49) |
+| 12 — Polish, PWA, deploy | **Partial** — PWA manifest + icons + service worker + Cloudflare Pages deploy; offline queue and CI smoke tests pending (G-26, G-43) |
 
 ## Security notes
 
 - The browser bundle only ever sees `VITE_SUPABASE_URL` and
   `VITE_SUPABASE_ANON_KEY`. The service role key is used by two Node scripts and
   is never imported from `src/`.
-- Provider API keys (Phase 10) will live in Supabase Vault and be reached only
-  through Edge Functions. The `integrations` table stores a Vault secret id.
+- Provider API keys (Phase 10) live in Supabase Vault and are reached only
+  through Edge Functions. The `integrations` table stores a Vault secret id and
+  the UI shows a 4-character hint, never the key.
 - Storage buckets are private; photos are read with short-lived signed URLs.
+  The storage policies are scoped to the dress/material namespace, so a signed-in
+  staff account cannot read, overwrite or delete objects at an arbitrary path.
 - `app_settings` and `integrations` are admin-only in the database. Staff cannot
   read them even with a crafted API call.
 - `service_role` gets explicit table grants because newer Supabase CLIs no
   longer auto-expose new tables. It bypasses RLS, lives only in scripts and
-  (from Phase 5) Edge Functions, and is never in the browser bundle.
+  Edge Functions, and is never in the browser bundle.
 - Share links are public by design: the only public door is the
   security-definer function `get_shared_dresses(token)`, which returns just the
   shared dresses and never lets callers list tokens or status. Anon sessions
   cannot read or write `share_links` rows directly (verified live).
+- The public dress card is looked up by an unguessable per-dress token, never
+  by the sequential dress code, so the catalogue cannot be enumerated.
+- Every Edge Function authenticates the bearer token itself
+  (`supabase/functions/_shared/auth.ts`) and answers CORS from an allow-list.
+  The functions fetch images only from this project's own storage, so they
+  cannot be used as a server-side request forgery relay.
 - Exports (Excel, CSV, printed catalog, stock report) are **English-only** by an
   owner decision of 2026-11-09; the app UI stays bilingual. Also recorded in
   `GAPS.md` (G-12).
+- Exported cells that begin with `=`, `+`, `-` or `@` are neutralised, so a
+  dress name pasted from a supplier cannot become a live formula in the
+  owner's spreadsheet.
 - The stock ledger has no update or delete policy: it is append-only.
 - The `profiles` trigger blocks a non-admin from changing any role, including
-  their own.
+  their own, and `is_staff_or_admin()` fails closed on an unknown role.
+- `npm run rls:test` runs 22 live acceptance checks, seven of which cover the
+  paths the security review closed.
 
 ## Known limitations
 

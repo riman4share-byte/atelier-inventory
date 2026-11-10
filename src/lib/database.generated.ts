@@ -412,6 +412,7 @@ export type Database = {
           name_en: string
           neckline: string | null
           notes: string | null
+          public_token: string
           rent_price: number | null
           sale_price: number | null
           silhouette: string | null
@@ -443,6 +444,7 @@ export type Database = {
           name_en?: string
           neckline?: string | null
           notes?: string | null
+          public_token?: string
           rent_price?: number | null
           sale_price?: number | null
           silhouette?: string | null
@@ -474,6 +476,7 @@ export type Database = {
           name_en?: string
           neckline?: string | null
           notes?: string | null
+          public_token?: string
           rent_price?: number | null
           sale_price?: number | null
           silhouette?: string | null
@@ -816,7 +819,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       get_public_dress: {
-        Args: { p_code: string }
+        Args: { p_token: string }
         Returns: {
           code: string
           description_ar: string

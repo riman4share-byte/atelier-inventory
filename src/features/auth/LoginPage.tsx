@@ -20,6 +20,9 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/dresses';
+  // Only an internal, single-slash path may be used as a redirect target.
+  // "//evil.example.com" is protocol-relative and would leave the app.
+  const safeFrom = from.startsWith('/') && !from.startsWith('//') ? from : '/dresses';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,8 +30,8 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (status === 'signedIn') navigate(from, { replace: true });
-  }, [status, from, navigate]);
+    if (status === 'signedIn') navigate(safeFrom, { replace: true });
+  }, [status, safeFrom, navigate]);
 
   if (!isSupabaseConfigured) return <Navigate to="/setup" replace />;
   if (status === 'loading') return <FullScreenLoader />;

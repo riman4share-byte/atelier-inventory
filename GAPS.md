@@ -156,9 +156,17 @@ part of Phase 1 and will be needed before real staff use.
 
 ### G-26 · RLS checks are manual, not in CI
 
-**Status:** open · **Phase:** 1
+**Status:** open · **Phase:** 12
 `npm run rls:test` needs live credentials, so it is not part of `npm run test`.
 CI wiring is deferred.
+
+The script now runs 22 checks against the live project, including seven added
+by the security review: a staff member cannot write an audit row attributed
+to someone else, cannot call the code allocator directly, cannot read the
+public catalogue by guessing a code, cannot edit another user's share link,
+cannot sign a storage object outside the dress namespace, every dress carries
+a public token, and staff can still read storage inside the dress namespace.
+All 22 pass against the cloud project.
 
 ### G-27 · PWA install, offline shell and update prompt are not built
 
@@ -241,10 +249,13 @@ until Phase 4. The ZIP download comes with the capture phase.
 
 ### G-39 · QR URLs point at a route that does not exist yet
 
-**Status:** open · **Phase:** 3
-Exports include a "QR URL" column (`<origin>/d/<code>`), but `/d/:code` is a
-Phase 7 feature (short public code links + printed QR labels). Following the
-link before Phase 7 gives a 404. Verified in the export file shape only.
+**Status:** resolved 2026-11-10 · **Phase:** 7
+The `/d/:token` route exists (Phase 7) and the export sheet, the PDF catalog
+and the printed hang tag all emit a working QR. The link carries the dress's
+unguessable `public_token`, never its sequential code: dress codes are
+predictable, so a code-based public link would let anyone enumerate the whole
+catalogue. `get_public_dress(code)` was retired in favour of
+`get_public_dress(token)`.
 
 ### G-40 · Catalog/report header uses the i18n app name, not the atelier setting
 
@@ -299,6 +310,17 @@ function runs in the cloud runtime with network access. `bg-remove` and
 Photoroom/remove.bg key yet; save-integration is a stub that returns a
 key hint). Local serving is still broken (Docker volume issue), so Edge
 Function development requires a cloud deploy to test.
+
+**Update 2026-11-10 (security review).** All four functions were rewritten:
+they authenticate the bearer token themselves (`supabase/functions/_shared/auth.ts`,
+staff/admin only, admin-only for `erp-sync` and `save-integration`), answer
+CORS from an allow-list instead of `*`, and refuse to fetch any image that is
+not hosted by this project's own storage (SSRF allow-list). `save-integration`
+now writes the key to Supabase Vault through the `store_integration_secret`
+RPC and returns only a 4-character hint. The gateway's own JWT verification
+cannot resolve on this project (503 "name resolution failed"), so the
+functions deploy with `--no-verify-jwt` and do the check in code instead —
+this is recorded in `supabase/config.toml`.
 
 ### G-49 · ERPNext integration is deferred pending owner inputs
 
@@ -404,6 +426,117 @@ became a magazine-style **one dress per page** layout — cover page, brand
 strip, three photo slots matching the brief's angle list (front / back /
 detail), spec sheet and a real QR code per page. Pixel-level design polish is
 deliberately deferred to the later design pass.
+
+---
+
+### G-52 · Staff cannot sign out of the app
+
+**Status:** open · **Phase:** 12
+The only sign-out control lives in `SettingsPage`, and `/settings` is behind
+`RequireAdmin`. A staff member on a shared atelier tablet stays signed in
+indefinitely, so the next person opens the app as them and sees the customer
+list. `AuthProvider.signOut()` is also the only thing that clears the
+TanStack cache. Move sign-out into the app shell (or an account route outside
+`RequireAdmin`) and offer it on the profile-error screen too.
+
+### G-53 · The service worker caches authenticated responses by URL only
+
+**Status:** open · **Phase:** 12
+`vite.config.ts` caches every `https://*.supabase.co/*` GET with
+`NetworkFirst`. Workbox keys the cache by URL, and PostgREST answers the same
+URL for every signed-in user, so on a shared device a staff member can be
+served the previous user's cached dresses and customer rows. Signing out
+clears the query cache but not the Workbox cache. Either stop caching
+authenticated responses or key the cache by a hash of the access token and
+purge it on sign-out.
+
+### G-54 · The Excel writer is bundled into the entry chunk
+
+**Status:** open · **Phase:** 12
+`xlsx` (~860 KB raw) is imported statically by `ExportSheet` and
+`movements/export`, so the single 1 MB entry chunk ships it to every phone
+whether or not anyone exports a spreadsheet. A dynamic `await import('xlsx')`
+inside the export branch moves it into a lazy chunk. The service worker also
+precaches the onnxruntime bundles for the browser background remover, which
+most staff never use.
+
+### G-55 · The bottom sheets have no dialog semantics
+
+**Status:** open · **Phase:** 12
+`ExportSheet`, `CheckOutSheet`, `CheckInSheet`, `ReserveSheet` and the
+materials stock-adjust sheet are plain `div`s: no `role="dialog"`, no
+`aria-modal`, no focus trap, no Escape handling, and several inputs are
+identified by their placeholder alone. Extract one `Sheet` component and use
+the existing `TextField` / `TextArea` primitives, which already do labels
+and ids correctly.
+
+### G-56 · A failed query still looks like an empty inventory on two screens
+
+**Status:** open · **Phase:** 12
+The dashboard now renders an error state instead of "No dresses yet", but
+`MaterialsPage` and `CustomersPage` still show "No materials yet" / "No
+customers yet" when the request fails. During an outage the owner may
+re-create records that still exist.
+
+### G-57 · Reservation overlap is only checked in the browser
+
+**Status:** open · **Phase:** 12
+`useCreateReservation` does a SELECT for an overlapping active reservation
+and then INSERTs. Two tablets can pass the check at the same moment and
+double-book the dress, because there is no exclusion constraint in the
+database. The check-out sheet likewise has no in-flight guard, so a
+double tap creates two customers and two `out` movements.
+
+### G-58 · The old pink theme survives in the PWA shell
+
+**Status:** open · **Phase:** 12
+`vite.config.ts` still declares `theme_color: '#d81b73'` and
+`background_color: '#fdf6f9'`, `index.html` still carries the pink
+`theme-color` metas, `public/favicon.svg` is filled with the old pink, and
+the background cleaner's "blush" preset paints a pink gradient onto the
+finished photo. The installed PWA therefore opens with a pink splash and
+toolbar around an industrial grey app.
+
+### G-59 · Capture re-encodes every photo twice and leaks its object URLs
+
+**Status:** open · **Phase:** 12
+`preparePhoto` runs at capture time and again at save time, so every photo
+is decoded and re-encoded twice on the main thread. `URL.createObjectURL` is
+called inside the render body, so every re-render allocates fresh object
+URLs for every thumbnail and none are ever revoked — on a phone this grows
+until the tab is killed mid-capture, losing photos that only exist in
+memory.
+
+### G-60 · The code allocator was not self-healing
+
+**Status:** resolved 2026-11-10 · **Phase:** 7
+The counter in `app_settings.next_code_number` had drifted behind the
+highest code in use (after seeding and imports), so the allocator handed
+out a code that already existed and every new dress failed with a unique
+violation. `allocate_dress_code()` now takes the greater of the stored
+counter and the highest code actually present.
+
+### G-61 · The public catalogue could be enumerated by guessing a code
+
+**Status:** resolved 2026-11-10 · **Phase:** 7
+`get_public_dress(code)` was executable by `anon` and dress codes are
+sequential, so anyone could iterate `RF-0000`…`RF-9999` and harvest every
+name and description in the catalogue. Each dress now carries an unguessable
+`public_token`, the public card is looked up by that token only, and the
+code-based reader has been dropped.
+
+### G-62 · The audit log could be forged and the share links hijacked
+
+**Status:** resolved 2026-11-10 · **Phase:** 7
+Two permissive INSERT policies on `audit_log` were OR-combined, so a staff
+member could write a row attributed to another user (verified live before
+the fix). One policy now requires `user_id = auth.uid()`. Separately, any
+staff member could rewrite another user's share link, including un-revoking
+one the owner had killed; updates are now scoped to the creator (or an
+admin) and the creator is stamped by a trigger so it cannot be spoofed.
+`is_staff_or_admin()` also accepted any profile row rather than checking the
+role, and the storage policies scoped on the bucket alone, so a staff
+account could read, overwrite or delete objects at any path.
 
 ---
 

@@ -18,6 +18,7 @@ import {
   QR_URL_COLUMN,
   excelCompatibleCsv,
   exportRows,
+  neutraliseFormula,
 } from './exportData';
 import { buildCatalogHtml, buildStockReportHtml, printHtml } from './printDocument';
 import QRCode from 'qrcode';
@@ -49,12 +50,16 @@ function countByStatus(dresses: DressRow[]): Record<DressRow['status'], number> 
   return counts;
 }
 
-/** One scannable QR per dress; the target route goes live in Phase 7. */async function catalogQrCodes(dresses: DressRow[]): Promise<Record<string, string>> {
+/**
+ * One scannable QR per dress, keyed by dress code. The link carries the
+ * dress's unguessable public token, never its sequential code.
+ */
+async function catalogQrCodes(dresses: DressRow[]): Promise<Record<string, string>> {
   const origin = window.location.origin;
   const entries = await Promise.all(
     dresses.map(async (dress) => [
       dress.code,
-      await QRCode.toDataURL(`${origin}/d/${dress.code}`, { margin: 0, width: 240 }),
+      await QRCode.toDataURL(`${origin}/d/${dress.public_token}`, { margin: 1, width: 240 }),
     ]),
   );
   return Object.fromEntries(entries);
@@ -135,10 +140,11 @@ export function ExportSheet({
   if (!open) return null;
 
   const resolveSelection = async (): Promise<DressRow[]> => {
+    // "Everything" ignores the current filters; "selected" uses the ids.
     const ids = effectiveScope === 'selected' ? selectedIds : undefined;
     return fetchDressesForExport({
-      search,
-      status: status === 'all' ? null : status,
+      search: effectiveScope === 'all' ? '' : search,
+      status: effectiveScope === 'all' ? null : status === 'all' ? null : status,
       ids,
     });
   };
@@ -152,7 +158,9 @@ export function ExportSheet({
       if (format === 'excel') {
         const dresses = await resolveSelection();
         const rows = exportRows(dresses, [...activeColumns, QR_URL_COLUMN, EXPORT_DATE_COLUMN], origin);
-        const sheet = XLSX.utils.aoa_to_sheet(rows);
+        // Neutralise spreadsheet formulas before the values reach Excel.
+        const safeRows = rows.map((row) => row.map((cell) => neutraliseFormula(cell)));
+        const sheet = XLSX.utils.aoa_to_sheet(safeRows);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, sheet, 'Dresses');
         XLSX.writeFile(workbook, `dresses-${filenameDate}.xlsx`);

@@ -198,6 +198,80 @@ async function main() {
     const result = await adminUser.from('audit_log').select('id').limit(1);
     return result.error ? `read failed: ${result.error.message}` : true;
   });
+
+  // ---------------------------------------------------------------------
+  // Phase 7 hardening: the checks below cover the gaps the security review
+  // found. Each one is a way in that must stay closed.
+  // ---------------------------------------------------------------------
+
+  await check('staff cannot forge an audit row for another user', async () => {
+    const result = await staff
+      .from('audit_log')
+      .insert({ user_id: adminId, action: 'forged', entity: 'dress', entity_id: createdDressId })
+      .select();
+    if (result.error) return true;
+    // The row was written: clean it up and report the hole.
+    if (result.data?.[0]) await service.from('audit_log').delete().eq('id', result.data[0].id);
+    return 'staff wrote an audit row attributed to the admin';
+  });
+
+  await check('staff cannot call the code allocator directly', async () => {
+    const result = await staff.rpc('allocate_dress_code');
+    return result.error ? true : `the allocator handed out ${result.data}`;
+  });
+
+  await check('the public dress card cannot be read by code', async () => {
+    // The code-based reader was retired; a guessable code must not resolve.
+    const result = await anon.rpc('get_public_dress', { p_code: dressCode });
+    if (result.error) {
+      // The function no longer exists, which is the expected outcome.
+      return /does not exist|not found|function/i.test(result.error.message)
+        ? true
+        : `unexpected error: ${result.error.message}`;
+    }
+    return result.data?.length ? 'the catalogue was readable by code' : true;
+  });
+
+  await check('every dress carries an unguessable public token', async () => {
+    const result = await service.from('dresses').select('id, public_token').is('public_token', null);
+    return result.data?.length ? `${result.data.length} dresses have no public token` : true;
+  });
+
+  await check('staff cannot update a share link created by someone else', async () => {
+    const token = `rls-${suffix}`;
+    const { error: adminLinkError } = await service.from('share_links').insert({
+      token,
+      dress_ids: [],
+      created_by: adminId,
+    });
+    if (adminLinkError) return `could not seed the link: ${adminLinkError.message}`;
+    const result = await staff.from('share_links').update({ revoked: true }).eq('token', token).select();
+    await service.from('share_links').delete().eq('token', token);
+    return denied(result) ? true : 'staff edited the admin share link';
+  });
+
+  await check('staff cannot read storage objects outside the dress namespace', async () => {
+    const result = await staff.storage
+      .from('dress-originals')
+      .createSignedUrl('not-a-dress/not-a-photo.jpg', 60);
+    return result.error ? true : 'staff signed an object outside the namespace';
+  });
+
+  await check('staff can read storage objects inside the dress namespace', async () => {
+    if (!createdDressId) return 'the dress was not created';
+    const { error: uploadError } = await staff.storage
+      .from('dress-originals')
+      .upload(`${createdDressId}/rls-check.jpg`, new Uint8Array([0xff, 0xd8, 0xff, 0xd9]), {
+        contentType: 'image/jpeg',
+      });
+    if (uploadError) return `upload failed: ${uploadError.message}`;
+    const result = await staff.storage
+      .from('dress-originals')
+      .createSignedUrl(`${createdDressId}/rls-check.jpg`, 60);
+    await staff.storage.from('dress-originals').remove([`${createdDressId}/rls-check.jpg`]);
+    return result.error ? `sign failed: ${result.error.message}` : true;
+  });
+
 }
 
 async function cleanup() {

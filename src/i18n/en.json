@@ -32,7 +32,9 @@
     "language": "Language",
     "english": "English",
     "arabic": "العربية",
-    "close": "Close"
+    "close": "Close",
+    "cancel": "Cancel",
+    "back": "Back"
   },
   "status": {
     "available": "Available",
@@ -334,8 +336,8 @@
     "nameAr": "Name (Arabic)",
     "stock": "Stock",
     "threshold": "Low-stock threshold",
-    "cat": { "fabric": "Fabric", "lace": "Lace", "bead": "Bead", "crystal": "Crystal", "pearl": "Pearl", "thread": "Thread", "other": "Other" },
-    "reason": { "purchase": "Purchase", "used": "Used", "correction": "Correction", "loss": "Loss" }
+    "cat": { "fabric": "Fabric", "lace": "Lace", "trim": "Trim", "bead": "Bead", "crystal": "Crystal", "pearl": "Pearl", "button": "Button", "zipper": "Zipper", "other": "Other" },
+    "reason": { "purchase": "Purchase", "used": "Used", "adjustment": "Adjustment", "return": "Return" }
   },
   "tools": {
     "title": "Tools and APIs",

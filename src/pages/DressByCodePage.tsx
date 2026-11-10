@@ -10,17 +10,22 @@ import { GownIcon } from '@/components/icons';
 import { paletteForCode } from '@/features/dresses/StatusPill';
 import { cx } from '@/lib/cx';
 
-/** Resolves a dress by its code for staff (RLS allows staff to read all). */
-function useDressIdByCode(code: string, enabled: boolean) {
+/**
+ * Resolves a dress by its public token for staff (RLS allows staff to read
+ * all). The token, not the code, is what the printed QR carries: dress codes
+ * are sequential, so a code-based public page would let anyone enumerate the
+ * whole catalogue.
+ */
+function useDressIdByToken(token: string, enabled: boolean) {
   return useQuery({
-    queryKey: ['dress-by-code', code],
+    queryKey: ['dress-by-token', token],
     enabled,
     queryFn: async (): Promise<string | null> => {
       const client = supabase as NonNullable<typeof supabase>;
       const { data, error } = await client
         .from('dresses')
         .select('id')
-        .eq('code', code)
+        .eq('public_token', token)
         .is('deleted_at', null)
         .maybeSingle();
       if (error) throw error;
@@ -30,13 +35,13 @@ function useDressIdByCode(code: string, enabled: boolean) {
 }
 
 /** Minimal public card (no prices, no status). */
-function usePublicDress(code: string, enabled: boolean) {
+function usePublicDress(token: string, enabled: boolean) {
   return useQuery({
-    queryKey: ['public-dress', code],
+    queryKey: ['public-dress', token],
     enabled,
     queryFn: async () => {
       const client = supabase as NonNullable<typeof supabase>;
-      const { data, error } = await client.rpc('get_public_dress', { p_code: code });
+      const { data, error } = await client.rpc('get_public_dress', { p_token: token });
       if (error) throw error;
       return data?.[0] ?? null;
     },
@@ -46,12 +51,12 @@ function usePublicDress(code: string, enabled: boolean) {
 export function DressByCodePage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { code = '' } = useParams<{ code: string }>();
+  const { token = '' } = useParams<{ token: string }>();
   const { profile } = useAuth();
   const isStaff = Boolean(profile);
 
-  const staffLookup = useDressIdByCode(code, isStaff);
-  const publicLookup = usePublicDress(code, !isStaff);
+  const staffLookup = useDressIdByToken(token, isStaff);
+  const publicLookup = usePublicDress(token, !isStaff);
 
   useEffect(() => {
     if (isStaff && staffLookup.data) {

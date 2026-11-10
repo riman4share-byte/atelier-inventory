@@ -32,7 +32,9 @@
     "language": "اللغة",
     "english": "English",
     "arabic": "العربية",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "back": "رجوع"
   },
   "status": {
     "available": "متاح",
@@ -336,8 +338,8 @@
     "nameAr": "الاسم (عربي)",
     "stock": "المخزون",
     "threshold": "حد المخزون المنخفض",
-    "cat": { "fabric": "قماش", "lace": "دانتيل", "bead": "خرز", "crystal": "بلور", "pearl": "لؤلؤ", "thread": "خيط", "other": "أخرى" },
-    "reason": { "purchase": "شراء", "used": "استخدام", "correction": "تصحيح", "loss": "فقد" }
+    "cat": { "fabric": "قماش", "lace": "دانتيل", "trim": "حافة", "bead": "خرز", "crystal": "بلور", "pearl": "لؤلؤ", "button": "زر", "zipper": "سحّاب", "other": "أخرى" },
+    "reason": { "purchase": "شراء", "used": "استخدام", "adjustment": "تعديل", "return": "إرجاع" }
   },
   "tools": {
     "title": "الأدوات والواجهات",

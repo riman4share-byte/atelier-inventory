@@ -32,7 +32,7 @@ export default function App() {
       {/* Share links are public by design: no login, read-only, short-lived. */}
       <Route path="/share/:token" element={<SharePage />} />
       {/* Public QR destination: staff see the full page, others a minimal card. */}
-      <Route path="/d/:code" element={<DressByCodePage />} />
+      <Route path="/d/:token" element={<DressByCodePage />} />
 
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>

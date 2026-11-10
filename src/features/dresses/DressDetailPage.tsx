@@ -463,8 +463,9 @@ function ExistingDress({ id }: { id: string }) {
             <Button
               variant="secondary"
               onClick={async () => {
-                const url = `${window.location.origin}/d/${dress.code}`;
-                const qr = await QRCode.toDataURL(url, { margin: 0, width: 240 });
+                // The tag carries the unguessable public token, not the code.
+                const url = `${window.location.origin}/d/${dress.public_token}`;
+                const qr = await QRCode.toDataURL(url, { margin: 1, width: 240 });
                 printHtml(buildHangTagHtml(dress, t('app.name'), qr));
               }}
               className="w-full"
