@@ -143,6 +143,7 @@ npx supabase stop        # when finished
 | `npm run types:gen` | Regenerate `src/lib/database.generated.ts` from the local schema |
 | `npm run seed`      | Seed admin, settings, materials, dresses                         |
 | `npm run rls:test`  | Live RLS acceptance checks against your project                  |
+| `npm run deploy`    | Build and upload `dist/` to Cloudflare Pages (needs `CLOUDFLARE_API_TOKEN`) |
 
 ## Structure
 
@@ -231,3 +232,14 @@ component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
 
 See [`GAPS.md`](./GAPS.md) for the living register, including the items that
 still need a real Supabase project, a phone and real photos to verify.
+
+Two worth calling out:
+
+- **The live site is published by hand.** `atelier-inventory.pages.dev` is a
+  Cloudflare Pages Direct Upload project, so pushing to Git does not rebuild
+  it and it silently drifts. Run `npm run deploy` (or connect the repository
+  in the dashboard — see `docs/DEPLOY.md`) after every change.
+- **ERPNext sync is not live.** The queue, the Edge Function and the owner
+  fields exist, but the sync has never been run against a real ERPNext
+  instance, because the setup wizard for the sandbox site is unfinished and
+  the production site must never be used for a test (G-49).

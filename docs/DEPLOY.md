@@ -90,10 +90,25 @@ This produces `dist/` with the production bundle.
 ### Or deploy via CLI
 
 ```bash
-npx wrangler pages deploy dist --project-name=atelier-inventory
+npm run deploy
 ```
 
-Set env vars in the Cloudflare dashboard under **Settings → Environment variables**.
+That builds and uploads in one step. It needs `CLOUDFLARE_API_TOKEN` in the
+environment (see the
+[API token docs](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/))
+with the **Cloudflare Pages — Edit** permission.
+
+### Prefer a Git-connected project
+
+A **Direct Upload** project does not rebuild when you push, so the live site
+silently drifts behind the repository (this already happened once: the site
+served a build four commits old). Connect the repository instead:
+
+**Workers & Pages** → the project → **Settings** → **Builds** → **Connect to
+Git** → production branch `main` → build command `npm run build` → output
+directory `dist`. Keep `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in
+**Settings → Environment variables** (set them for both production and
+preview).
 
 ## 3. Post-deploy
 
