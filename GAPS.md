@@ -127,11 +127,10 @@ the app shows the profile error screen instead of falling back to staff access.
 
 ### G-22 · Public email signup must be turned off in Supabase
 
-**Status:** open · **Phase:** 1
-The app has no sign-up screen, but if “Allow new users to sign up” stays enabled
-in the Supabase dashboard, anyone with the public project URL can create an
-account (which the trigger would make `staff`). The README makes this a setup
-step; it cannot be enforced from the repository.
+**Status:** resolved 2026-11-10 · **Phase:** 1
+Resolved via `supabase config push`: `auth.email.enable_signup = false` and
+`auth.enable_signup = false` pushed to the cloud project
+(ofnkpyzmzhxtpwwvrbci). Signup is disabled in production.
 
 ### G-23 · Dark mode follows the operating system only
 
