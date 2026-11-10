@@ -12,6 +12,8 @@ import {
   useDashboard,
 } from './api';
 import { useMovementSummary } from '@/features/movements/api';
+import { useAllMovements } from '@/features/movements/api';
+import { exportMovementsToExcel } from '@/features/movements/export';
 import { cx } from '@/lib/cx';
 
 const STATUS_TILE_CLASSES: Record<string, string> = {
@@ -26,6 +28,7 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const rows = useDashboard();
   const movementSummary = useMovementSummary();
+  const allMovements = useAllMovements({});
   const [exportOpen, setExportOpen] = useState(false);
 
   const counts = countByStatus(rows);
@@ -171,6 +174,14 @@ export function DashboardPage() {
           data-testid="export-inventory"
         >
           {t('dashboard.export')}
+        </Button>
+        <Button
+          variant="secondary"
+          onClick={() => exportMovementsToExcel(allMovements.data ?? [], `movements-${new Date().toISOString().slice(0, 10)}.xlsx`)}
+          className="mt-1"
+          data-testid="export-movements"
+        >
+          {t('dashboard.exportMovements')}
         </Button>
       </div>
 

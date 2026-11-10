@@ -340,3 +340,32 @@ export function printHtml(html: string): boolean {
   setTimeout(trigger, 6000);
   return true;
 }
+
+export function buildReceiptHtml(movement: import('@/features/movements/api').DressMovementRow, dressCode: string, atelierName: string): string {
+  const e = escapeHtml;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+    <title>Receipt</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #33202b; padding: 12mm; max-width: 180mm; }
+      h1 { font-size: 16pt; margin-bottom: 2mm; }
+      .sub { color: #8a6b7c; font-size: 9pt; margin-bottom: 6mm; }
+      .row { display: flex; justify-content: space-between; padding: 2mm 0; border-bottom: 1px solid #f3d9e4; font-size: 10pt; }
+      .row .k { color: #8a6b7c; }
+      .row .v { font-weight: 600; }
+      .sig { margin-top: 12mm; display: flex; gap: 10mm; }
+      .sig div { flex: 1; border-top: 1px solid #33202b; padding-top: 2mm; font-size: 8pt; color: #8a6b7c; }
+    </style></head>
+    <body>
+      <h1>${e(atelierName)}</h1>
+      <p class="sub">Hand-over / return receipt &middot; ${new Date().toLocaleDateString('en-GB')}</p>
+      <div class="row"><span class="k">Dress code</span><span class="v">${e(dressCode)}</span></div>
+      <div class="row"><span class="k">Direction</span><span class="v">${e(movement.direction)}</span></div>
+      <div class="row"><span class="k">Reason</span><span class="v">${e(movement.reason)}</span></div>
+      <div class="row"><span class="k">Occurred</span><span class="v">${new Date(movement.occurred_at).toLocaleString('en-GB')}</span></div>
+      ${movement.due_at ? `<div class="row"><span class="k">Due back</span><span class="v">${new Date(movement.due_at).toLocaleDateString('en-GB')}</span></div>` : ''}
+      ${movement.deposit_amount !== null ? `<div class="row"><span class="k">Deposit</span><span class="v">${movement.deposit_amount}</span></div>` : ''}
+      ${movement.condition_notes ? `<div class="row"><span class="k">Condition</span><span class="v">${e(movement.condition_notes)}</span></div>` : ''}
+      <div class="sig"><div>Staff signature</div><div>Customer signature</div></div>
+    </body></html>`;
+}

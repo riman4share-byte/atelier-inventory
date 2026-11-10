@@ -320,6 +320,18 @@ function ExistingDress({ id }: { id: string }) {
                 {movement.condition_notes ? (
                   <p className="mt-1 text-note text-ink">{movement.condition_notes}</p>
                 ) : null}
+                {movement.direction === 'out' ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const { printHtml, buildReceiptHtml } = await import('@/features/dresses/printDocument');
+                      printHtml(buildReceiptHtml(movement, dress.code, t('app.name')));
+                    }}
+                    className="mt-1 text-caption font-semibold text-accent"
+                  >
+                    {t('movements.printReceipt')}
+                  </button>
+                ) : null}
               </div>
             ))}
           </div>
