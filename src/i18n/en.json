@@ -372,6 +372,12 @@
     "phone": "Phone",
     "email": "Email"
   },
+  "pwa": {
+    "installPrompt": "Install the atelier app on this device",
+    "install": "Install",
+    "updateAvailable": "A new version is available",
+    "reload": "Reload"
+  },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
     "unavailableTitle": "This link is no longer available",

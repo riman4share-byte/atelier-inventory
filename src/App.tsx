@@ -17,11 +17,15 @@ import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SharePage } from '@/pages/SharePage';
 import { SetupPage } from '@/pages/SetupPage';
 
+import { InstallPrompt } from '@/components/pwa/InstallPrompt';
+import { UpdatePrompt } from '@/components/pwa/UpdatePrompt';
+
 export default function App() {
   useDocumentLanguage();
 
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/setup" element={<SetupPage />} />
       <Route path="/forbidden" element={<ForbiddenPage />} />
@@ -48,5 +52,8 @@ export default function App() {
         </Route>
       </Route>
     </Routes>
+    <InstallPrompt />
+    <UpdatePrompt />
+    </>
   );
 }

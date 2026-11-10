@@ -374,6 +374,12 @@
     "phone": "الهاتف",
     "email": "البريد"
   },
+  "pwa": {
+    "installPrompt": "ثبّت تطبيق الأتيليه على هذا الجهاز",
+    "install": "تثبيت",
+    "updateAvailable": "نسخة جديدة متاحة",
+    "reload": "إعادة تحميل"
+  },
   "share": {
     "pageSubtitle": "نظرة خاصة على فساتين مختارة.",
     "unavailableTitle": "هذا الرابط لم يعد متاحاً",
