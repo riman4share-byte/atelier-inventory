@@ -288,6 +288,18 @@ bulk import wrote the original Instagram files to storage. Instagram exports
 are already small and location-free, so this is acceptable for the test set,
 but the honest behaviour differs between the two paths.
 
+### G-46 · Edge Functions cannot be served locally on this machine
+
+**Status:** resolved 2026-11-10 · **Phase:** 5
+Resolved by deploying to the cloud project. `ai-describe` is verified live:
+it fetched a photo, called Gemini 3 Flash, and returned a full bilingual
+draft (name, description, silhouette, fabrics, etc.) with status 200. The
+function runs in the cloud runtime with network access. `bg-remove` and
+`save-integration` are deployed but not yet tested with real keys (no
+Photoroom/remove.bg key yet; save-integration is a stub that returns a
+key hint). Local serving is still broken (Docker volume issue), so Edge
+Function development requires a cloud deploy to test.
+
 ### G-49 · ERPNext integration is deferred pending owner inputs
 
 **Status:** open · **Phase:** 11
@@ -385,14 +397,12 @@ deliberately deferred to the later design pass.
 
 ### G-18 · No live Supabase project is connected in this workspace
 
-**Status:** resolved 2026-11-09 · **Phase:** 1
-The three migrations apply to a real local Supabase stack (CLI 2.109.1,
-Postgres 17) on ports 54341/54342. `npm run seed` created the admin, five
-materials and four dresses; the seeded admin signed in with role `admin` and
-read `app_settings` and `dresses`; `npm run rls:test` passed 15/15. Cloud
-projects were not touched, but the local stack runs the same Supabase
-components. Signup stays enabled locally; a cloud project must disable it
-(G-22).
+**Status:** resolved 2026-11-10 · **Phase:** 1
+Local stack verified (15/15 RLS). Cloud project "atelier-inventory"
+(ref ofnkpyzmzhxtpwwvrbci, region ap-south-1) created and verified:
+all 7 migrations applied, seed ran (admin + 5 materials + 4 dresses),
+rls:test passed 15/15, 3 Edge Functions deployed, Gemini secret set,
+ai-describe function verified live (status 200, full bilingual draft).
 
 ### G-19 · `src/lib/database.types.ts` is hand-written
 

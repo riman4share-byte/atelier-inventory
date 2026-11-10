@@ -149,7 +149,7 @@ component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
 ## Phase status
 
 | Phase | Status |
-| ---------------------------- | ------------------------------------------------- || 1 — Foundation | **Built** — schema, RLS, auth, roles, shell, i18n; migrations, seed and RLS verified on local Supabase |
+| ---------------------------- | ------------------------------------------------- || 1 — Foundation | **Built** — schema, RLS, auth, roles, shell, i18n; migrations, seed and RLS verified on local Supabase AND cloud project (ofnkpyzmzhxtpwwvrbci, ap-south-1): 7 migrations, 15/15 RLS, 3 Edge Functions deployed, AI function verified live |
 | 2 — Gallery and CRUD | **Built** — hero counts, search, status filters, infinite-scroll grid, dress page with create/edit/status/soft-delete+undo; verified with 17 live checks on local Supabase |
 | 3 — Inventory views, exports | **Built** — table view with sort/columns/saved views/bulk status, dashboard, Excel/CSV, magazine-style per-page PDF catalog with QR, share links; verified with 16 live checks + 12 browser checks |
 | 4 — Capture and upload | Not started |
