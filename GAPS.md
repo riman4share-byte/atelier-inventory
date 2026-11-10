@@ -307,12 +307,17 @@ Final Products, Raw Material, etc. Price lists: Rent + Standard Selling
 (selling), Standard Buying (buying). UOM "Day" for rentals. It is on a private
 network, so the cloud app will need bridge mode (`apps/erp-bridge`).
 
-**Safety:** this is a live ERPNext with real customers and items. Per the build
-prompt, all sync development must use a sandbox with synthetic data only. A
-sandbox instance is required before Phase 11 code is written. Owner inputs
-still needed: confirm sandbox availability, default warehouse for dresses,
-item group for dresses, selling price list, and whether stock is managed in
-ERPNext or the app.
+**Inputs captured 2026-11-10 (with owner):** stock is managed in the **app**
+(source of truth); ERPNext receives Stock Entries for accounting. Created in
+ERPNext: warehouse **"Dresses - RF"** (under "All Warehouses - RF") and item
+group **"Dresses"** (under "Final Products"). Selling price list: **Standard
+Selling**; rentals: **Rent** price list. Default currency AED, company Riman
+Fashion, abbr RF. UOM "Nos" for pieces, "Day" for rentals.
+
+**Remaining before Phase 11 code:** a sandbox ERPNext instance (this one is
+live with real customers/items — never test sync against it), and the
+erp-client package + erp-sync Edge Function + erp-bridge Docker service +
+erp_jobs table. Phase 11 is the last major chunk.
 
 ### G-50 · PWA is configured but unverified on a real device
 
