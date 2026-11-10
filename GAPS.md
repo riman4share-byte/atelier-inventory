@@ -329,14 +329,16 @@ Fashion, abbr RF. UOM "Nos" for pieces, "Day" for rentals.
 control panel (Phase 10), not hard-coded — the owner picks it per deployment.
 
 **Sandbox:** created `sandbox.localhost` site on the same container with
-ERPNext 15.31.2 installed (admin password set to `sandbox123`). The site
-exists and ERPNext is installed; the first-login setup wizard (company
-creation) still needs to be completed before it's usable for testing. Access
-via Host header `sandbox.localhost` on port 8080.
+ERPNext 15.31.2 installed. The site and database exist; the first-login setup
+wizard (company, warehouses, fiscal year) still needs to be completed in the
+browser before it's usable. Access via `http://rimanserver:8080` with Host
+header `sandbox.localhost` (or add `sandbox.localhost` to /etc/hosts pointing
+at the server IP). Admin password was set to `Sandbox@2026` (the earlier
+`sandbox123` failed the password policy).
 
-**Remaining before Phase 11 code:** complete the sandbox setup wizard, then
-build erp-client package + erp-sync Edge Function + erp-bridge Docker service
-+ erp_jobs table. Phase 11 is the last major chunk.
+**Remaining before Phase 11 code:** complete the sandbox setup wizard in the
+browser, then build erp-client package + erp-sync Edge Function + erp-bridge
+Docker service + erp_jobs table. Phase 11 is the last major chunk.
 
 ### G-50 · PWA is configured but unverified on a real device
 
