@@ -299,9 +299,20 @@ not built. The control panel has a placeholder `erp` integration kind only.
 
 Discovered on 2026-11-10: ERPNext runs in a Docker container
 `erpnext-riman:v8` on host `rimanserver` (Tailscale 100.75.94.52), reachable
-at `http://rimanserver:8080` (port 8080). It is on a private network, so the
-cloud app will need bridge mode (`apps/erp-bridge`) rather than direct sync.
-Owner inputs still required before building.
+at `http://rimanserver:8080` (port 8080), logged in as riman4share@gmail.com.
+Company: **Riman Fashion** (AED, UAE, abbr RF). Warehouses: Finished Goods /
+Stores / Work In Progress / Goods In Transit (under "All Warehouses - RF").
+Item groups: Wedding (Bridal), Party (Evening), Engagement Dresses, Accessories,
+Final Products, Raw Material, etc. Price lists: Rent + Standard Selling
+(selling), Standard Buying (buying). UOM "Day" for rentals. It is on a private
+network, so the cloud app will need bridge mode (`apps/erp-bridge`).
+
+**Safety:** this is a live ERPNext with real customers and items. Per the build
+prompt, all sync development must use a sandbox with synthetic data only. A
+sandbox instance is required before Phase 11 code is written. Owner inputs
+still needed: confirm sandbox availability, default warehouse for dresses,
+item group for dresses, selling price list, and whether stock is managed in
+ERPNext or the app.
 
 ### G-50 · PWA is configured but unverified on a real device
 
