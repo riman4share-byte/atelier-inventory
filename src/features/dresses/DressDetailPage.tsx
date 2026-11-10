@@ -23,6 +23,7 @@ import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './Dres
 import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
 import { DressAiReview } from '@/features/ai/DressAiReview';
 import { PhotoGallery } from '@/features/photos/PhotoGallery';
+import { useEnqueueErpSync } from '@/features/erp/api';
 import { BackgroundCleaner } from '@/features/cleanup/BackgroundCleaner';
 import { cx } from '@/lib/cx';
 import { buildHangTagHtml, printHtml } from '@/features/dresses/printDocument';
@@ -98,6 +99,7 @@ function ExistingDress({ id }: { id: string }) {
   const formUpdate = useUpdateDress();
   const softDelete = useSoftDeleteDress();
   const describe = useDescribeDress();
+  const erpSync = useEnqueueErpSync();
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -433,6 +435,22 @@ function ExistingDress({ id }: { id: string }) {
           className="w-full"
         >
           {t('dress.printTag')}
+        </Button>
+
+        <Button
+          variant="secondary"
+          onClick={() =>
+            erpSync.mutate({
+              dressId: dress.id,
+              code: dress.code,
+              name: dress.name_en || dress.code,
+              description: dress.description_en,
+            })
+          }
+          loading={erpSync.isPending}
+          className="w-full"
+        >
+          {t('dress.syncErp')}
         </Button>
 
         <CheckOutSheet open={checkoutOpen} onClose={() => setCheckoutOpen(false)} dressId={dress.id} dressCode={dress.code} />

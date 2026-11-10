@@ -499,6 +499,42 @@ export type Database = {
           },
         ]
       }
+      erp_jobs: {
+        Row: {
+          attempts: number
+          created_at: string
+          id: string
+          last_error: string | null
+          payload: Json
+          run_after: string
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          run_after?: string
+          status?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          run_after?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       erp_sync_log: {
         Row: {
           action: Database["public"]["Enums"]["erp_action"]
