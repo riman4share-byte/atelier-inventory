@@ -344,12 +344,19 @@ with the cloud deploy. Local dev still uses `supabase/functions/.env`.
 Core movement tracking shipped: check-out / check-in / reserve sheets, the
 dress page "where is it now" + timeline, the append-only ledger trigger, and
 dashboard counters (out now, overdue, due this week, reserved this month).
-Still to build: a dedicated customer page with contact details and their
-movements, movement-history export (Excel) with date/dress/customer/reason
-filters, dress history card PDF, customer statement, hand-over/return receipt
-PDF with signature lines, a reservation calendar view, and audit_log writes on
-customer exports. The ledger itself is append-only and correcting entries work
-via `corrects_movement_id`.
+### G-47 · Phase 8 is partial: dress history card, customer statement, reservation calendar still open
+
+**Status:** open · **Phase:** 8
+Core movement tracking + exports shipped: check-out / check-in / reserve
+sheets, the dress page "where is it now" + timeline, the append-only ledger
+trigger, dashboard counters (out now, overdue, due this week, reserved this
+month), a customer list/detail page, movement-history Excel export from the
+dashboard, and a hand-over/return receipt PDF (printable, with signature
+lines) from any movement. Still to build: dress history card PDF (one dress,
+full timeline, photos), customer statement (items taken, dates, returns,
+deposits), a reservation calendar view, audit_log writes on customer exports,
+and customer create/edit UI beyond the inline add in the check-out sheet. The
+ledger is append-only and correcting entries work via `corrects_movement_id`.
 
 **Status:** open · **Phase:** 5
 `supabase functions serve` fails with "failed to copy edge runtime main
