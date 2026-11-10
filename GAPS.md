@@ -547,16 +547,25 @@ account could read, overwrite or delete objects at any path.
 ### G-63 · The live site is deployed by hand, so it drifts
 
 **Status:** open · **Phase:** 12
-`https://atelier-inventory.pages.dev` is a Cloudflare Pages **Direct Upload**
-project, not a Git-connected one: nothing rebuilds when a commit is pushed,
-and the site kept serving an old build while the repository moved on. The
-build that was live was four commits behind, which is how a capture-flow bug
-looked "unfixed" for hours. Either connect the repository in the Cloudflare
-dashboard (Workers & Pages, the project, Settings, Builds, Connect to Git,
-production branch `main`, build command `npm run build`, output directory
-`dist`) or publish with
-`npx wrangler pages deploy dist --project-name=atelier-inventory` and a
-`CLOUDFLARE_API_TOKEN`. Add a smoke check to CI so a stale deploy is caught.
+The Pages project is **already** configured for GitHub (`owner:
+riman4share-byte`, repo `atelier-inventory`, production branch `main`,
+build command `npm run build`, output `dist`), but the Cloudflare GitHub App
+authorisation has lapsed, so a push builds nothing and the site keeps serving
+whatever was uploaded last. It silently served a build four commits stale,
+which made already-fixed bugs look unfixed.
+
+Reconnect it once in the dashboard: Workers & Pages → the project → Settings
+→ Builds & deployments → Git → re-authorise the Cloudflare Pages app on the
+repository. After that, every push to `main` publishes itself and the drift
+cannot recur. Until then, publish by hand with `npm run deploy`.
+
+While in the dashboard, tidy the environment variables: both Production and
+Preview carry a junk entry `ITE_SUPABASE_URL` whose value is the literal text
+`VITE_SUPABASE_ANON_KEY`, and Preview is missing `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY` altogether. Production is correct, so `main` builds
+fine; only preview builds are affected. Note that the Pages API accepts
+`PATCH .../deployment_configs/{env}` with HTTP 200 and then ignores the
+`env_vars` change, so these have to be edited in the dashboard.
 
 ---
 
