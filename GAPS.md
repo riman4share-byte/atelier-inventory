@@ -297,6 +297,12 @@ before any code. The `packages/erp-client` package, the `erp-sync` Edge
 Function, the `apps/erp-bridge` Docker service, and the `erp_jobs` table are
 not built. The control panel has a placeholder `erp` integration kind only.
 
+Discovered on 2026-11-10: ERPNext runs in a Docker container
+`erpnext-riman:v8` on host `rimanserver` (Tailscale 100.75.94.52), reachable
+at `http://rimanserver:8080` (port 8080). It is on a private network, so the
+cloud app will need bridge mode (`apps/erp-bridge`) rather than direct sync.
+Owner inputs still required before building.
+
 ### G-50 · PWA is configured but unverified on a real device
 
 **Status:** open · **Phase:** 12
