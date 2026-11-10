@@ -109,7 +109,7 @@ export function CapturePage() {
     setSaving(true);
     setErrorText(null);
     try {
-      const dress = await createDress.mutateAsync({ code: '', name_en: t('capture.draftName'), listing_type: 'both', status: 'available' });
+      const dress = await createDress.mutateAsync({ code: null as never, name_en: t('capture.draftName'), listing_type: 'both', status: 'available' });
       // group by angle and upload
       const byAngle = new Map<PhotoAngle, File[]>();
       for (const c of captured) {
