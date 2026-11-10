@@ -314,6 +314,9 @@ group **"Dresses"** (under "Final Products"). Selling price list: **Standard
 Selling**; rentals: **Rent** price list. Default currency AED, company Riman
 Fashion, abbr RF. UOM "Nos" for pieces, "Day" for rentals.
 
+**Owner decision:** the item group for dresses is configurable in the app's
+control panel (Phase 10), not hard-coded — the owner picks it per deployment.
+
 **Sandbox:** created `sandbox.localhost` site on the same container with
 ERPNext 15.31.2 installed (admin password set to `sandbox123`). The site
 exists and ERPNext is installed; the first-login setup wizard (company
