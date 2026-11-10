@@ -1,18 +1,30 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { authenticate, jsonError, allowedOrigin, corsHeaders } from "../_shared/auth.ts";
 
 const ERP_BASE = Deno.env.get("ERP_BASE_URL");
 const ERP_KEY = Deno.env.get("ERP_API_KEY");
 const ERP_SECRET = Deno.env.get("ERP_API_SECRET");
 
 Deno.serve(async (req) => {
+  const origin = allowedOrigin(req);
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: { "Access-Control-Allow-Origin": "*" } });
+    return new Response(null, { headers: corsHeaders(origin) });
+  }
+
+  const caller = await authenticate(req);
+  if (!caller) {
+    return jsonError(401, { error: "unauthorized", message: "Sign in to use this feature." }, origin);
+  }
+  if (caller.role !== "admin") {
+    return jsonError(403, { error: "forbidden", message: "Only an admin can run ERP sync." }, origin);
   }
 
   if (!ERP_BASE || !ERP_KEY || !ERP_SECRET) {
-    return new Response(JSON.stringify({ error: "no_erp_config", message: "ERPNext credentials not configured. Add them in Tools and APIs." }), {
-      status: 400, headers: { "Content-Type": "application/json" },
-    });
+    return jsonError(
+      400,
+      { error: "no_erp_config", message: "ERPNext credentials not configured. Add them in Tools and APIs." },
+      origin,
+    );
   }
 
   const headers = {
@@ -23,7 +35,11 @@ Deno.serve(async (req) => {
 
   // Process up to 10 pending jobs
   const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
 
   const { data: jobs, error: jobsError } = await supabase
     .from("erp_jobs")
@@ -34,9 +50,7 @@ Deno.serve(async (req) => {
     .limit(10);
 
   if (jobsError) {
-    return new Response(JSON.stringify({ error: "db_error", message: jobsError.message }), {
-      status: 500, headers: { "Content-Type": "application/json" },
-    });
+    return jsonError(500, { error: "db_error", message: jobsError.message }, origin);
   }
 
   const results = [];
@@ -44,7 +58,6 @@ Deno.serve(async (req) => {
     try {
       await supabase.from("erp_jobs").update({ status: "processing", attempts: job.attempts + 1 }).eq("id", job.id);
 
-      // Create an Item in ERPNext for a dress
       if (job.type === "create_dress_item") {
         const payload = job.payload as { code: string; name: string; description?: string };
         const itemRes = await fetch(`${ERP_BASE}/api/resource/Item`, {
@@ -62,8 +75,17 @@ Deno.serve(async (req) => {
         const itemData = await itemRes.json();
         if (!itemRes.ok) throw new Error(JSON.stringify(itemData));
 
-        await supabase.from("dresses").update({ erp_item_code: payload.code, erp_sync_status: "synced", erp_synced_at: new Date().toISOString() }).eq("code", payload.code);
-        await supabase.from("erp_sync_log").insert({ job_id: job.id, entity: "dress", action: "create_item", status: "success", message: `Created ${payload.code}` });
+        await supabase
+          .from("dresses")
+          .update({ erp_item_code: payload.code, erp_sync_status: "synced", erp_synced_at: new Date().toISOString() })
+          .eq("code", payload.code);
+        await supabase.from("erp_sync_log").insert({
+          entity: "dress",
+          entity_id: job.payload && "dressId" in job.payload ? (job.payload as { dressId: string }).dressId : null,
+          action: "create",
+          http_status: itemRes.status,
+          message: `Created ${payload.code}`,
+        });
         await supabase.from("erp_jobs").update({ status: "done" }).eq("id", job.id);
         results.push({ id: job.id, status: "done" });
       } else {
@@ -71,13 +93,24 @@ Deno.serve(async (req) => {
         results.push({ id: job.id, status: "failed", error: "unknown job type" });
       }
     } catch (e) {
-      await supabase.from("erp_jobs").update({ status: "pending", last_error: String(e).slice(0, 500), run_after: new Date(Date.now() + 60000).toISOString() }).eq("id", job.id);
-      await supabase.from("erp_sync_log").insert({ job_id: job.id, entity: "dress", action: job.type, status: "failed", message: String(e).slice(0, 500) });
-      results.push({ id: job.id, status: "failed", error: String(e).slice(0, 200) });
+      const message = String(e).slice(0, 500);
+      await supabase
+        .from("erp_jobs")
+        .update({ status: "pending", last_error: message, run_after: new Date(Date.now() + 60000).toISOString() })
+        .eq("id", job.id);
+      await supabase.from("erp_sync_log").insert({
+        entity: "dress",
+        entity_id: null,
+        action: "error",
+        http_status: null,
+        message,
+      });
+      results.push({ id: job.id, status: "failed", error: message.slice(0, 200) });
     }
   }
 
   return new Response(JSON.stringify({ processed: results.length, results }), {
-    status: 200, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    status: 200,
+    headers: { ...corsHeaders(origin), "Content-Type": "application/json" },
   });
 });

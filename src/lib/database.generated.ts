@@ -841,6 +841,14 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_staff_or_admin: { Args: never; Returns: boolean }
       public_qr_page_enabled: { Args: never; Returns: boolean }
+      read_integration_secret: {
+        Args: { p_secret_name: string }
+        Returns: string
+      }
+      store_integration_secret: {
+        Args: { p_secret_name: string; p_secret_value: string }
+        Returns: string
+      }
       suggest_dress_code: { Args: never; Returns: string }
     }
     Enums: {

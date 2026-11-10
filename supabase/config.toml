@@ -57,6 +57,28 @@ max_client_conn = 100
 # [db.vault]
 # secret_key = "env(SECRET_VALUE)"
 
+# ---------------------------------------------------------------------------
+# Edge Functions.
+#
+# JWT verification at the gateway does not resolve on this project (503
+# "name resolution failed"), so every function runs with --no-verify-jwt and
+# authenticates the bearer token itself in `supabase/functions/_shared/auth.ts`
+# (Supabase Auth + the profiles table, staff/admin only). Deploy with:
+#
+#   npx supabase functions deploy <name> --no-verify-jwt
+#
+[functions.ai-describe]
+verify_jwt = false
+
+[functions.bg-remove]
+verify_jwt = false
+
+[functions.save-integration]
+verify_jwt = false
+
+[functions.erp-sync]
+verify_jwt = false
+
 [db.migrations]
 # If disabled, migrations will be skipped during a db push or reset.
 enabled = true
@@ -157,9 +179,9 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:5173"
+site_url = "https://atelier-inventory.pages.dev"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
-# external_url = ""
+external_url = "https://ofnkpyzmzhxtpwwvrbci.supabase.co"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = ["http://127.0.0.1:5173", "http://localhost:5173"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
