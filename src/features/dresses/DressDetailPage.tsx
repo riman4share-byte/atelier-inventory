@@ -107,6 +107,9 @@ function ExistingDress({ id }: { id: string }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteFailed, setDeleteFailed] = useState(false);
   const [aiOpen, setAiOpen] = useState(isDraft);
+  const [aiDraft, setAiDraft] = useState<import('@/features/ai/api').DressDraft | null>(null);
+  const [aiRaw, setAiRaw] = useState<unknown>(null);
+  const [aiModel, setAiModel] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkinOpen, setCheckinOpen] = useState(false);
@@ -123,7 +126,7 @@ function ExistingDress({ id }: { id: string }) {
     if (describe.isPending || describe.data) return;
     setAiError(null);
     describe.mutate({ dress }, {
-      onSuccess: () => setAiOpen(true),
+      onSuccess: (result) => { setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true); },
       onError: (error) => setAiError(aiErrorMessage(error)),
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -222,9 +225,9 @@ function ExistingDress({ id }: { id: string }) {
 
         {photos.length > 0 && !isDraft ? <BackgroundCleaner dressId={dress.id} photos={photos} /> : null}
 
-        {aiOpen ? (
+        {aiOpen && aiDraft ? (
           <DressAiReview
-            draft={describe.data!.draft}
+            draft={aiDraft}
             pending={describe.isPending}
             onApply={(draft) => {
               formUpdate.mutate(
@@ -240,8 +243,8 @@ function ExistingDress({ id }: { id: string }) {
                     sleeves: draft.sleeves,
                     color: draft.color,
                     fabrics: draft.fabrics,
-                    ai_raw: describe.data!.raw as never,
-                    ai_model: describe.data!.model,
+                    ai_raw: aiRaw as never,
+                    ai_model: aiModel,
                   },
                 },
                 { onSuccess: () => { setAiOpen(false); navigate(`/dresses/${dress.id}`, { replace: true }); } },
@@ -260,7 +263,7 @@ function ExistingDress({ id }: { id: string }) {
               onClick={() => {
                 setAiError(null);
                 describe.mutate({ dress }, {
-                  onSuccess: () => setAiOpen(true),
+                  onSuccess: (result) => { setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true); },
                   onError: (error) => setAiError(aiErrorMessage(error)),
                 });
               }}
