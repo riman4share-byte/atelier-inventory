@@ -22,6 +22,7 @@ export function BackgroundCleaner({ dressId, photos }: BackgroundCleanerProps) {
   const [contrast, setContrast] = useState<number>(DEFAULT_ENHANCEMENT.contrast);
   const [saturation, setSaturation] = useState<number>(DEFAULT_ENHANCEMENT.saturation);
   const [useBrowser, setUseBrowser] = useState<boolean>(true);
+  const [rembgEndpoint, setRembgEndpoint] = useState<string>(() => localStorage.getItem('rembg-endpoint') ?? '');
   const [errorText, setErrorText] = useState<string | null>(null);
 
   const clean = useCleanPhoto(dressId);
@@ -39,7 +40,7 @@ export function BackgroundCleaner({ dressId, photos }: BackgroundCleanerProps) {
     if (!selected) return;
     setErrorText(null);
     clean.mutate(
-      { photo: selected, background, enhancement, useBrowser },
+      { photo: selected, background, enhancement, useBrowser, rembgEndpoint: rembgEndpoint.trim() || null },
       { onError: () => setErrorText(t('cleanup.failed')) },
     );
   };
@@ -139,15 +140,28 @@ export function BackgroundCleaner({ dressId, photos }: BackgroundCleanerProps) {
 
       <div className="flex items-center gap-2 rounded-field bg-surface p-2">
         <span className="text-caption font-semibold text-muted">{t('cleanup.provider')}</span>
-        <button type="button" aria-pressed={useBrowser} onClick={() => setUseBrowser(true)}
-          className={cx('min-h-tap rounded-pill px-3 text-caption font-semibold', useBrowser ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
+        <button type="button" aria-pressed={useBrowser && !rembgEndpoint.trim()} onClick={() => { setUseBrowser(true); setRembgEndpoint(''); localStorage.removeItem('rembg-endpoint'); }}
+          className={cx('min-h-tap rounded-pill px-3 text-caption font-semibold', useBrowser && !rembgEndpoint.trim() ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
           {t('cleanup.providerBrowser')}
         </button>
-        <button type="button" aria-pressed={!useBrowser} onClick={() => setUseBrowser(false)}
-          className={cx('min-h-tap rounded-pill px-3 text-caption font-semibold', !useBrowser ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
+        <button type="button" aria-pressed={rembgEndpoint.trim() !== ''} onClick={() => { setUseBrowser(false); }}
+          className={cx('min-h-tap rounded-pill px-3 text-caption font-semibold', rembgEndpoint.trim() !== '' ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
+          {t('cleanup.providerRembg')}
+        </button>
+        <button type="button" aria-pressed={!useBrowser && !rembgEndpoint.trim()} onClick={() => { setUseBrowser(false); setRembgEndpoint(''); localStorage.removeItem('rembg-endpoint'); }}
+          className={cx('min-h-tap rounded-pill px-3 text-caption font-semibold', (!useBrowser && !rembgEndpoint.trim()) ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
           {t('cleanup.providerCloud')}
         </button>
       </div>
+
+      {rembgEndpoint.trim() ? (
+        <input
+          value={rembgEndpoint}
+          onChange={(event) => { setRembgEndpoint(event.target.value); localStorage.setItem('rembg-endpoint', event.target.value); }}
+          placeholder={t('cleanup.rembgEndpoint')}
+          className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink placeholder:text-muted"
+        />
+      ) : null}
 
       <div className="flex gap-2">
         <Button

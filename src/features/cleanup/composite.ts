@@ -84,3 +84,19 @@ export async function removeBackgroundInBrowser(imageUrl: string): Promise<Blob>
   const mod = await import('@imgly/background-removal');
   return mod.removeBackground(imageUrl);
 }
+
+
+/**
+ * Free, self-hosted background removal via a rembg server (no API key).
+ * POSTs the image to the rembg endpoint and returns the cutout PNG.
+ */
+export async function removeBackgroundViaRembg(imageUrl: string, endpoint: string): Promise<Blob> {
+  const imgRes = await fetch(imageUrl);
+  if (!imgRes.ok) throw new Error('image_fetch_failed');
+  const blob = await imgRes.blob();
+  const form = new FormData();
+  form.append('file', blob, 'image.jpg');
+  const res = await fetch(endpoint, { method: 'POST', body: form });
+  if (!res.ok) throw new Error('rembg_failed_' + res.status);
+  return res.blob();
+}

@@ -9,16 +9,24 @@ export interface CleanPhotoInput {
   background: BackgroundChoice;
   enhancement: Enhancement;
   useBrowser?: boolean;
+  rembgEndpoint?: string | null;
 }
 
 export function useCleanPhoto(dressId: string) {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async ({ photo, background, enhancement, useBrowser }: CleanPhotoInput): Promise<void> => {
+    mutationFn: async ({ photo, background, enhancement, useBrowser, rembgEndpoint }: CleanPhotoInput): Promise<void> => {
       const db = supabase as NonNullable<typeof supabase>;
 
       let cutout: Blob;
-      if (useBrowser) {
+      if (rembgEndpoint) {
+        const { data: signed, error: signError } = await db.storage
+          .from('dress-originals')
+          .createSignedUrl(photo.original_path, 300);
+        if (signError || !signed) throw signError ?? new Error('sign_failed');
+        const { removeBackgroundViaRembg } = await import('./composite');
+        cutout = await removeBackgroundViaRembg(signed.signedUrl, rembgEndpoint);
+      } else if (useBrowser) {
         const { data: signed, error: signError } = await db.storage
           .from('dress-originals')
           .createSignedUrl(photo.original_path, 300);
