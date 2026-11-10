@@ -130,7 +130,8 @@ the app shows the profile error screen instead of falling back to staff access.
 **Status:** resolved 2026-11-10 · **Phase:** 1
 Resolved via `supabase config push`: `auth.email.enable_signup = false` and
 `auth.enable_signup = false` pushed to the cloud project
-(ofnkpyzmzhxtpwwvrbci). Signup is disabled in production.
+(ofnkpyzmzhxtpwwvrbci). Signup is disabled in production. Login verified
+working after the push.
 
 ### G-23 · Dark mode follows the operating system only
 
