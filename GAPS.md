@@ -546,26 +546,29 @@ account could read, overwrite or delete objects at any path.
 
 ### G-63 · The live site is deployed by hand, so it drifts
 
-**Status:** open · **Phase:** 12
-The Pages project is **already** configured for GitHub (`owner:
-riman4share-byte`, repo `atelier-inventory`, production branch `main`,
-build command `npm run build`, output `dist`), but the Cloudflare GitHub App
-authorisation has lapsed, so a push builds nothing and the site keeps serving
-whatever was uploaded last. It silently served a build four commits stale,
-which made already-fixed bugs look unfixed.
+**Status:** resolved 2026-11-10 · **Phase:** 12
+The Pages project was configured for GitHub (`owner: riman4share-byte`, repo
+`atelier-inventory`, production branch `main`, build command `npm run build`,
+output `dist`), but the Cloudflare GitHub App authorisation had lapsed, so a
+push built nothing and the site kept serving whatever was uploaded last. It
+silently served a build four commits stale, which made already-fixed bugs
+look unfixed.
 
-Reconnect it once in the dashboard: Workers & Pages → the project → Settings
-→ Builds & deployments → Git → re-authorise the Cloudflare Pages app on the
-repository. After that, every push to `main` publishes itself and the drift
-cannot recur. Until then, publish by hand with `npm run deploy`.
+Re-authorising the Cloudflare Pages app on the repository closed the loop. A
+push to `main` now triggers `github:push`, Cloudflare builds the app on its
+own infrastructure and publishes it; the deployment at 17:50 was produced
+that way, and the capture -> AI -> save flow was verified in a browser
+against that auto-built bundle. `npm run deploy` stays available as the
+manual fallback.
 
-While in the dashboard, tidy the environment variables: both Production and
-Preview carry a junk entry `ITE_SUPABASE_URL` whose value is the literal text
-`VITE_SUPABASE_ANON_KEY`, and Preview is missing `VITE_SUPABASE_URL` and
-`VITE_SUPABASE_ANON_KEY` altogether. Production is correct, so `main` builds
-fine; only preview builds are affected. Note that the Pages API accepts
-`PATCH .../deployment_configs/{env}` with HTTP 200 and then ignores the
-`env_vars` change, so these have to be edited in the dashboard.
+The environment variables still need tidying in the dashboard: both
+Production and Preview carry a junk entry `ITE_SUPABASE_URL` whose value is
+the literal text `VITE_SUPABASE_ANON_KEY`, and Preview is missing
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` altogether. Production is
+correct, so `main` builds work; only preview builds are affected. Note that
+the Pages API accepts `PATCH .../deployment_configs/{env}` with HTTP 200 and
+then ignores the `env_vars` change, so these have to be edited in the
+dashboard.
 
 ---
 
