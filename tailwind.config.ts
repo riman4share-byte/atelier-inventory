@@ -1,9 +1,9 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Design tokens live as CSS variables in src/styles/index.css (Appendix A).
- * Everything here maps to a token so light/dark and future themes need no
- * component changes and no hex value ever appears in a className.
+ * Industrial design tokens — neutral, dense, no decoration.
+ * Components use semantic classes (bg-surface, text-ink, rounded-card, ...)
+ * so changing tokens here re-themes the whole app.
  */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -48,7 +48,7 @@ export default {
         },
       },
       fontFamily: {
-        serif: ['Fraunces Variable', 'Iowan Old Style', 'Palatino Linotype', 'Palatino', 'Georgia', 'serif'],
+        serif: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
         sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
         arabic: ['Cairo Variable', 'Noto Naskh Arabic', 'system-ui', 'sans-serif'],
       },
@@ -58,29 +58,29 @@ export default {
         small: ['13px', { lineHeight: '1.45' }],
         body: ['14px', { lineHeight: '1.5' }],
         input: ['16px', { lineHeight: '1.4' }],
-        title: ['20px', { lineHeight: '1.3' }],
-        hero: ['24px', { lineHeight: '1.2' }],
+        title: ['18px', { lineHeight: '1.3' }],
+        hero: ['22px', { lineHeight: '1.2' }],
       },
       borderRadius: {
-        pill: '99px',
-        field: '12px',
-        btn: '16px',
-        tile: '18px',
-        card: '20px',
-        sheet: '30px',
+        pill: '4px',
+        field: '4px',
+        btn: '4px',
+        tile: '4px',
+        card: '4px',
+        sheet: '8px',
       },
       boxShadow: {
-        btn: '0 8px 16px -10px var(--accent)',
-        frame: '0 14px 34px -18px var(--accent)',
+        btn: '0 1px 2px rgba(0,0,0,0.08)',
+        frame: '0 2px 8px rgba(0,0,0,0.12)',
       },
       spacing: {
         4.5: '1.125rem',
       },
       minHeight: {
-        tap: '44px',
+        tap: '40px',
       },
       minWidth: {
-        tap: '44px',
+        tap: '40px',
       },
       backgroundImage: {
         brand: 'linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%)',

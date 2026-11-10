@@ -3,38 +3,38 @@
 @tailwind utilities;
 
 /*
- * Atelier Inventory design tokens (Appendix A).
- * Components must use the Tailwind token classes (bg-surface, text-muted,
- * rounded-btn, text-title ...) — never a raw hex value.
+ * Industrial design tokens — neutral palette, sharp corners, no decoration.
+ * Components use semantic Tailwind classes (bg-surface, text-muted,
+ * rounded-btn, text-title ...) so re-theming needs no component changes.
  */
 :root {
-  --bg: #fdeff4;
+  --bg: #f1f5f9;
   --surface: #ffffff;
-  --ink: #2b1424;
-  --muted: #8a6b7c;
-  --line: #f3d9e4;
-  --soft: #fff1f6;
-  --accent: #d81b73;
-  --accent2: #7b3fe4;
-  --gold: #e0a526;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #cbd5e1;
+  --soft: #e2e8f0;
+  --accent: #1e293b;
+  --accent2: #475569;
+  --gold: #d97706;
   --accent-ink: #ffffff;
-  --c1: #ffd9e6;
-  --c2: #e6dcff;
-  --c3: #ffe8c7;
-  --c4: #d3f2e4;
+  --c1: #e2e8f0;
+  --c2: #cbd5e1;
+  --c3: #94a3b8;
+  --c4: #64748b;
 
-  --ok: #14804f;
-  --ok-bg: #d3f2e4;
-  --warn: #a15c00;
-  --warn-bg: #ffe8c7;
-  --info: #5a2fc4;
-  --info-bg: #e6dcff;
-  --off: #6e5a66;
-  --off-bg: #eee3e9;
-  --danger: #b3261e;
-  --danger-bg: #fde0e0;
+  --ok: #15803d;
+  --ok-bg: #dcfce7;
+  --warn: #b45309;
+  --warn-bg: #fef3c7;
+  --info: #1d4ed8;
+  --info-bg: #dbeafe;
+  --off: #64748b;
+  --off-bg: #e2e8f0;
+  --danger: #dc2626;
+  --danger-bg: #fee2e2;
 
-  --font-serif: 'Fraunces Variable', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  --font-serif: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-arabic: 'Cairo Variable', 'Noto Naskh Arabic', system-ui, sans-serif;
 
@@ -43,31 +43,31 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1a0f18;
-    --surface: #27161f;
-    --ink: #fff0f6;
-    --muted: #c9a3b6;
-    --line: #43283a;
-    --soft: #33202b;
-    --accent: #ff5ca8;
-    --accent2: #a98bff;
-    --gold: #f2c14e;
-    --accent-ink: #2b1424;
-    --c1: #5a2a42;
-    --c2: #3f3068;
-    --c3: #5c4220;
-    --c4: #1f4a38;
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --ink: #f1f5f9;
+    --muted: #94a3b8;
+    --line: #334155;
+    --soft: #1e293b;
+    --accent: #f1f5f9;
+    --accent2: #94a3b8;
+    --gold: #fbbf24;
+    --accent-ink: #0f172a;
+    --c1: #334155;
+    --c2: #475569;
+    --c3: #64748b;
+    --c4: #94a3b8;
 
-    --ok: #7fe0ae;
-    --ok-bg: #1f4a38;
-    --warn: #ffc978;
-    --warn-bg: #5c4220;
-    --info: #c3b0ff;
-    --info-bg: #3f3068;
-    --off: #d5bbc9;
-    --off-bg: #3a2733;
-    --danger: #ff9a94;
-    --danger-bg: #4a2020;
+    --ok: #4ade80;
+    --ok-bg: #14532d;
+    --warn: #fbbf24;
+    --warn-bg: #78350f;
+    --info: #60a5fa;
+    --info-bg: #1e3a8a;
+    --off: #94a3b8;
+    --off-bg: #334155;
+    --danger: #f87171;
+    --danger-bg: #7f1d1d;
 
     color-scheme: dark;
   }
@@ -88,12 +88,10 @@
   h1,
   h2,
   h3 {
-    @apply font-serif;
+    @apply font-sans;
     font-weight: 600;
   }
 
-  /* Arabic is a first-class language: Cairo everywhere, no letter spacing,
-     and the extra line height Arabic needs. */
   html[lang='ar'] body,
   html[lang='ar'] h1,
   html[lang='ar'] h2,
@@ -107,7 +105,6 @@
   input,
   select,
   textarea {
-    /* Never below 16px on mobile, otherwise iOS zooms on focus. */
     font-size: 16px;
   }
 
