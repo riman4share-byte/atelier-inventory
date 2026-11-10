@@ -360,6 +360,16 @@
     "note": "Photos are resized in the browser. Originals are kept.",
     "queued": "{{count}} queued for upload"
   },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "People who take dresses.",
+    "search": "Search customers",
+    "empty": "No customers yet.",
+    "noMovements": "No movements yet.",
+    "movements": "Movements",
+    "phone": "Phone",
+    "email": "Email"
+  },
   "share": {
     "pageSubtitle": "A private look at selected dresses.",
     "unavailableTitle": "This link is no longer available",

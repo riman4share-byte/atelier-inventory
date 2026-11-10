@@ -204,3 +204,19 @@ export function useMovementSummary() {
     },
   });
 }
+
+export function useCustomerMovements(customerId: string) {
+  return useQuery({
+    queryKey: ['movements', 'customer', customerId],
+    queryFn: async (): Promise<DressMovementRow[]> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await client
+        .from('dress_movements')
+        .select('*')
+        .eq('customer_id', customerId)
+        .order('occurred_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}

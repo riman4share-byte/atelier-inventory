@@ -5,6 +5,7 @@ import { LoginPage } from '@/features/auth/LoginPage';
 import { RequireAdmin } from '@/features/auth/RequireAdmin';
 import { RequireAuth } from '@/features/auth/RequireAuth';
 import { CapturePage } from '@/features/capture/CapturePage';
+import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DressesPage } from '@/features/dresses/DressesPage';
 import { DressDetailPage } from '@/features/dresses/DressDetailPage';
 import { MaterialsPage } from '@/features/materials/MaterialsPage';
@@ -38,6 +39,8 @@ export default function App() {
           <Route path="dresses/:id" element={<DressDetailPage />} />
           <Route path="capture" element={<CapturePage />} />
           <Route path="materials" element={<MaterialsPage />} />
+          <Route path="customers" element={<CustomersPage />} />
+          <Route path="customers/:id" element={<CustomersPage />} />
           <Route path="settings" element={<RequireAdmin />}>
             <Route index element={<SettingsPage />} />
           </Route>
