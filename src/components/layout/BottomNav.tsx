@@ -1,13 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
-import { CameraIcon, GemIcon, GownIcon, SettingsIcon, SparkleIcon } from '@/components/icons';
-import { useAuth } from '@/features/auth/useAuth';
+import { CameraIcon, GemIcon, GownIcon, PersonIcon, SparkleIcon } from '@/components/icons';
 import { cx } from '@/lib/cx';
 import type { ComponentType, SVGProps } from 'react';
 
 interface NavItem {
   to: string;
-  labelKey: 'nav.home' | 'nav.dresses' | 'nav.capture' | 'nav.materials' | 'nav.settings';
+  labelKey: 'nav.home' | 'nav.dresses' | 'nav.capture' | 'nav.materials' | 'nav.account';
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
@@ -18,12 +17,13 @@ const BASE_ITEMS: NavItem[] = [
   { to: '/materials', labelKey: 'nav.materials', Icon: GemIcon },
 ];
 
-const SETTINGS_ITEM: NavItem = { to: '/settings', labelKey: 'nav.settings', Icon: SettingsIcon };
+// Every role gets the account tab: it is where sign-out lives, and a staff
+// member on a shared tablet must always be able to lock the app.
+const ACCOUNT_ITEM: NavItem = { to: '/account', labelKey: 'nav.account', Icon: PersonIcon };
 
 export function BottomNav() {
   const { t } = useTranslation();
-  const { profile } = useAuth();
-  const items = profile?.role === 'admin' ? [...BASE_ITEMS, SETTINGS_ITEM] : BASE_ITEMS;
+  const items = [...BASE_ITEMS, ACCOUNT_ITEM];
 
   return (
     <nav

@@ -13,10 +13,11 @@ export default defineConfig({
         name: 'Atelier Inventory',
         short_name: 'Atelier',
         description: 'Inventory, photo capture and movement tracking for a wedding dress atelier.',
-        theme_color: '#d81b73',
-        background_color: '#fdf6f9',
+        // The industrial palette: neutral slate, no pink splash screen.
+        theme_color: '#f1f5f9',
+        background_color: '#ffffff',
         display: 'standalone',
-        orientation: 'portrait',
+        orientation: 'any',
         start_url: '/',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },

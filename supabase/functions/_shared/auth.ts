@@ -68,13 +68,19 @@ export function jsonError(
   });
 }
 
-/** The allowed browser origin(s) for this app. */
+/**
+ * The allowed browser origin(s) for this app. A request from another origin
+ * gets no CORS header, so the browser cannot read the response — the function
+ * still authenticates and runs, so this is hygiene, not the security gate.
+ */
 export function allowedOrigin(req: Request): string {
   const origin = req.headers.get("Origin") ?? "";
   const allowed = [
     "https://atelier-inventory.pages.dev",
-    "http://localhost:5173",
+    "http://localhost:5173", // vite dev
     "http://127.0.0.1:5173",
+    "http://localhost:4173", // vite preview
+    "http://127.0.0.1:4173",
   ];
   return allowed.includes(origin) ? origin : "";
 }

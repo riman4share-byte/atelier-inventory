@@ -58,12 +58,34 @@ export function useDescribeDress() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      // A 200 with no usable body is a failure, not a draft: without this
+      // guard the caller would read `.draft` off undefined and crash the page.
+      if (!data || typeof data !== 'object' || !('draft' in data)) {
+        throw new Error('bad_response');
+      }
       return data as AiDescribeResult;
     },
   });
 }
 
+/**
+ * Turn a failure into a code the UI can translate.
+ *
+ * The Edge Function answers with `{ error: 'no_key' | 'no_images' | ... }`.
+ * For a non-2xx status supabase-js puts the raw response in `context`, so the
+ * specific code is read from there; the message is only a fallback.
+ */
 export function aiErrorMessage(error: unknown): string {
+  const context = (error as { context?: { body?: unknown } } | null)?.context;
+  const raw = context?.body;
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw) as { error?: unknown };
+      if (typeof parsed.error === 'string') return parsed.error;
+    } catch {
+      // not JSON, fall through to the message
+    }
+  }
   const message = error instanceof Error ? error.message : String(error);
   if (message === 'no_photos') return 'no_photos';
   if (message === 'no_key') return 'no_key';

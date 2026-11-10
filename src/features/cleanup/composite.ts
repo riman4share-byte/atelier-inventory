@@ -6,12 +6,14 @@
 
 export type BackgroundChoice =
   | { kind: 'solid'; color: string }
+  | { kind: 'gradient' }
+  /** The old preset name, kept so existing rows still composite. */
   | { kind: 'blush' };
 
 export const PRESET_BACKGROUNDS: Array<{ id: string; label: string; choice: BackgroundChoice }> = [
   { id: 'white', label: 'Studio white', choice: { kind: 'solid', color: '#ffffff' } },
   { id: 'gray', label: 'Soft gray', choice: { kind: 'solid', color: '#f3f4f6' } },
-  { id: 'blush', label: 'Blush gradient', choice: { kind: 'blush' } },
+  { id: 'studio', label: 'Studio gradient', choice: { kind: 'gradient' } },
 ];
 
 export interface Enhancement {
@@ -42,10 +44,13 @@ export async function compositeCutout(
     if (!ctx) throw new Error('canvas_unavailable');
 
     // Background fill
-    if (background.kind === 'blush') {
+    if (background.kind === 'gradient' || background.kind === 'blush') {
+      // Neutral studio gradient, matching the app's industrial palette.
+      // 'blush' is the old preset name and is still accepted so photos
+      // cleaned before the re-theme still re-composite correctly.
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#fdf2f8');
-      gradient.addColorStop(1, '#fce7f3');
+      gradient.addColorStop(0, '#f8fafc');
+      gradient.addColorStop(1, '#e2e8f0');
       ctx.fillStyle = gradient;
     } else {
       ctx.fillStyle = background.color;

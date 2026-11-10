@@ -431,13 +431,16 @@ deliberately deferred to the later design pass.
 
 ### G-52 · Staff cannot sign out of the app
 
-**Status:** open · **Phase:** 12
-The only sign-out control lives in `SettingsPage`, and `/settings` is behind
-`RequireAdmin`. A staff member on a shared atelier tablet stays signed in
-indefinitely, so the next person opens the app as them and sees the customer
-list. `AuthProvider.signOut()` is also the only thing that clears the
-TanStack cache. Move sign-out into the app shell (or an account route outside
-`RequireAdmin`) and offer it on the profile-error screen too.
+**Status:** resolved 2026-11-10 · **Phase:** 12
+The only sign-out control lived in `SettingsPage`, and `/settings` was behind
+`RequireAdmin`, so a staff member on a shared atelier tablet stayed signed in
+indefinitely and the next person opened the app as them. Every role now has
+an **Account** tab in the bottom navigation with the account details, the
+language switch and a sign-out button. The owner-only settings stay behind
+their own route guard and are reachable from the Account page for admins
+only. Verified with a real staff account in a browser: the Account tab is
+present, `/settings` still refuses a staff member, and sign-out returns to
+the login screen.
 
 ### G-53 · The service worker caches authenticated responses by URL only
 
@@ -489,13 +492,16 @@ double tap creates two customers and two `out` movements.
 
 ### G-58 · The old pink theme survives in the PWA shell
 
-**Status:** open · **Phase:** 12
-`vite.config.ts` still declares `theme_color: '#d81b73'` and
-`background_color: '#fdf6f9'`, `index.html` still carries the pink
-`theme-color` metas, `public/favicon.svg` is filled with the old pink, and
-the background cleaner's "blush" preset paints a pink gradient onto the
-finished photo. The installed PWA therefore opens with a pink splash and
-toolbar around an industrial grey app.
+**Status:** resolved 2026-11-10 · **Phase:** 12
+`vite.config.ts` still declared `theme_color: '#d81b73'` and
+`background_color: '#fdf6f9'`, `index.html` still carried the pink
+`theme-color` metas, `public/favicon.svg` was filled with the old pink, and
+the background cleaner's "blush" preset painted a pink gradient onto the
+finished photo. The installed PWA therefore opened with a pink splash and
+toolbar around an industrial grey app. The manifest and the metas now use the
+slate palette (`#f1f5f9` / `#0f172a`), the favicon is slate, and the preset
+is a neutral "Studio gradient". The manifest orientation is `any` so a
+10-inch tablet is not forced into portrait.
 
 ### G-59 · Capture re-encodes every photo twice and leaks its object URLs
 
@@ -537,6 +543,20 @@ admin) and the creator is stamped by a trigger so it cannot be spoofed.
 `is_staff_or_admin()` also accepted any profile row rather than checking the
 role, and the storage policies scoped on the bucket alone, so a staff
 account could read, overwrite or delete objects at any path.
+
+### G-63 · The live site is deployed by hand, so it drifts
+
+**Status:** open · **Phase:** 12
+`https://atelier-inventory.pages.dev` is a Cloudflare Pages **Direct Upload**
+project, not a Git-connected one: nothing rebuilds when a commit is pushed,
+and the site kept serving an old build while the repository moved on. The
+build that was live was four commits behind, which is how a capture-flow bug
+looked "unfixed" for hours. Either connect the repository in the Cloudflare
+dashboard (Workers & Pages, the project, Settings, Builds, Connect to Git,
+production branch `main`, build command `npm run build`, output directory
+`dist`) or publish with
+`npx wrangler pages deploy dist --project-name=atelier-inventory` and a
+`CLOUDFLARE_API_TOKEN`. Add a smoke check to CI so a stale deploy is caught.
 
 ---
 

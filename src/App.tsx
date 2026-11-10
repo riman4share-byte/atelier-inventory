@@ -13,6 +13,7 @@ import { SettingsPage } from '@/features/settings/SettingsPage';
 import { useDocumentLanguage } from '@/i18n/useDocumentLanguage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
 import { DressByCodePage } from '@/pages/DressByCodePage';
+import { AccountPage } from '@/pages/AccountPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SharePage } from '@/pages/SharePage';
 import { SetupPage } from '@/pages/SetupPage';
@@ -45,6 +46,7 @@ export default function App() {
           <Route path="materials" element={<MaterialsPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="customers/:id" element={<CustomersPage />} />
+          <Route path="account" element={<AccountPage />} />
           <Route path="settings" element={<RequireAdmin />}>
             <Route index element={<SettingsPage />} />
           </Route>

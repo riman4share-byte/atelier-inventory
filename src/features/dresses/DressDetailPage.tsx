@@ -126,7 +126,11 @@ function ExistingDress({ id }: { id: string }) {
     if (describe.isPending || describe.data) return;
     setAiError(null);
     describe.mutate({ dress }, {
-      onSuccess: (result) => { setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true); },
+      onSuccess: (result) => {
+          // A malformed answer must not crash the page.
+          if (!result?.draft) { setAiError('unknown'); return; }
+          setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
+        },
       onError: (error) => setAiError(aiErrorMessage(error)),
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -263,7 +267,11 @@ function ExistingDress({ id }: { id: string }) {
               onClick={() => {
                 setAiError(null);
                 describe.mutate({ dress }, {
-                  onSuccess: (result) => { setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true); },
+                  onSuccess: (result) => {
+          // A malformed answer must not crash the page.
+          if (!result?.draft) { setAiError('unknown'); return; }
+          setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
+        },
                   onError: (error) => setAiError(aiErrorMessage(error)),
                 });
               }}
@@ -276,12 +284,20 @@ function ExistingDress({ id }: { id: string }) {
               <p className="text-note text-muted">{t('ai.needsPhotos')}</p>
             ) : null}
             {aiError ? (
-              <p className="text-small text-danger">
+              <p className="text-small text-danger" role="alert">
                 {aiError === 'no_key'
                   ? t('ai.noKey')
                   : aiError === 'no_photos'
                     ? t('ai.needsPhotos')
-                    : t('ai.failed')}
+                    : aiError === 'unauthorized'
+                      ? t('ai.notSignedIn')
+                      : aiError === 'bad_image'
+                        ? t('ai.badImage')
+                        : aiError === 'parse_error'
+                          ? t('ai.parseFailed')
+                          : aiError === 'provider_error' || aiError === 'network_error'
+                            ? t('ai.providerFailed')
+                            : t('ai.failed')}
               </p>
             ) : null}
           </div>

@@ -9,6 +9,7 @@
     "capture": "Capture",
     "materials": "Materials",
     "settings": "Settings",
+    "account": "Account",
     "label": "Main navigation"
   },
   "auth": {
@@ -59,6 +60,10 @@
       "title": "Materials and accessories",
       "body": "The materials library and stock movements arrive in a later phase."
     }
+  },
+  "account": {
+    "title": "Account",
+    "adminTools": "Owner settings"
   },
   "settings": {
     "title": "Settings",
@@ -256,6 +261,10 @@
     "describe": "Describe with AI",
     "needsPhotos": "Add at least one photo first.",
     "noKey": "No vision key configured. Add one in Tools and APIs.",
+    "notSignedIn": "Your session expired. Sign in again and retry.",
+    "badImage": "The photos could not be read. Upload them again and retry.",
+    "providerFailed": "The AI service did not answer. Try again in a moment.",
+    "parseFailed": "The AI answer could not be read. Try again.",
     "failed": "AI description failed. Try again.",
     "regenerate": "Regenerate",
     "apply": "Apply to dress",
@@ -346,6 +355,13 @@
     "provider": "Provider",
     "model": "Model / endpoint",
     "key": "API key",
+    "kindLabel": "What is this key for?",
+    "publicPageTitle": "Public dress page",
+    "publicPageHint": "When on, a customer who scans the QR on a hang tag sees the dress card and description. Nothing else is public.",
+    "publicPageOn": "On — the QR link shows the dress",
+    "publicPageOff": "Off — the QR link shows nothing",
+    "publicPageLoadFailed": "The setting could not be read.",
+    "publicPageSaveFailed": "The setting could not be saved.",
     "save": "Save integration",
     "saved": "Saved. Key hint: …{{hint}}",
     "savedGeneric": "Saved.",
