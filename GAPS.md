@@ -339,7 +339,20 @@ the browser before it's usable. Access via `http://sandboxriman:8080` (add
 browser, then build erp-client package + erp-sync Edge Function + erp-bridge
 Docker service + erp_jobs table. Phase 11 is the last major chunk.
 
-### G-50 · PWA is configured but unverified on a real device
+### G-51 · Phase 11 is partial: only dress-item creation is wired
+
+**Status:** open · **Phase:** 11
+Shipped: `erp_jobs` + `erp_sync_log` tables, an `erp-sync` Edge
+Function that creates Item records in ERPNext (using the captured config:
+company Riman Fashion, item group Dresses, UOM Nos, Standard Selling price
+list), and a "Sync to ERPNext" button on the dress page. Not built yet:
+the `packages/erp-client` TS package, the `apps/erp-bridge` Docker service for
+the private-network instance, sync for customers/materials, Stock Entries on
+check-out/check-in, the control panel erp fields (base URL, API key/secret,
+company, warehouse, item groups, price list, UOM mapping, mode direct/bridge),
+dry-run, progress, retries, and the production-mode confirmation guard. The
+function uses direct mode (public URL) and has not been tested against the
+sandbox.
 
 **Status:** open · **Phase:** 12
 `vite-plugin-pwa` is configured (manifest, workbox runtime caching, auto-
