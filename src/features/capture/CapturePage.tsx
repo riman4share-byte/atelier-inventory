@@ -138,7 +138,7 @@ export function CapturePage() {
         }
       }
       stream?.getTracks().forEach((track) => track.stop());
-      navigate(`/dresses/${dress.id}`, { replace: true });
+      navigate(`/dresses/${dress.id}?draft=1`, { replace: true });
     } catch (error) {
       console.error(error);
       setErrorText(t('capture.saveFailed'));

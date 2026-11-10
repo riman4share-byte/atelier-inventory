@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
@@ -92,6 +92,8 @@ function CreateDress() {
 function ExistingDress({ id }: { id: string }) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isDraft = searchParams.get('draft') === '1';
   const dressQuery = useDress(id);
   const photosQuery = useDressPhotos(id, { enabled: dressQuery.data?.found === true });
   const movementsQuery = useDressMovements(id);
@@ -104,11 +106,28 @@ function ExistingDress({ id }: { id: string }) {
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteFailed, setDeleteFailed] = useState(false);
-  const [aiOpen, setAiOpen] = useState(false);
+  const [aiOpen, setAiOpen] = useState(isDraft);
   const [aiError, setAiError] = useState<string | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
+
+  // Auto-trigger AI on draft dresses with photos and no name yet
+  useEffect(() => {
+    if (!isDraft) return;
+    if (!dressQuery.data?.found || !dressQuery.data.dress) return;
+    const dress = dressQuery.data.dress;
+    if (dress.name_en || dress.description_en) return;
+    if (photosQuery.isLoading) return;
+    if ((photosQuery.data ?? []).length === 0) return;
+    if (describe.isPending || describe.data) return;
+    setAiError(null);
+    describe.mutate({ dress }, {
+      onSuccess: () => setAiOpen(true),
+      onError: (error) => setAiError(aiErrorMessage(error)),
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDraft, dressQuery.data, photosQuery.data, photosQuery.isLoading]);
 
   if (dressQuery.isLoading || photosQuery.isLoading) return <FullScreenLoader />;
 
@@ -195,7 +214,13 @@ function ExistingDress({ id }: { id: string }) {
       <div className="flex flex-1 flex-col gap-5 pb-2">
         <PhotoGallery dress={dress} photos={photos} />
 
-        {photos.length > 0 ? <BackgroundCleaner dressId={dress.id} photos={photos} /> : null}
+        {isDraft ? (
+          <div className="rounded-card bg-accent/10 p-3 text-small text-ink">
+            {t('dress.draftBanner')}
+          </div>
+        ) : null}
+
+        {photos.length > 0 && !isDraft ? <BackgroundCleaner dressId={dress.id} photos={photos} /> : null}
 
         {aiOpen ? (
           <DressAiReview
@@ -219,7 +244,7 @@ function ExistingDress({ id }: { id: string }) {
                     ai_model: describe.data!.model,
                   },
                 },
-                { onSuccess: () => setAiOpen(false) },
+                { onSuccess: () => { setAiOpen(false); navigate(`/dresses/${dress.id}`, { replace: true }); } },
               );
             }}
             onRegenerate={() => {
@@ -279,6 +304,8 @@ function ExistingDress({ id }: { id: string }) {
           ) : null}
         </div>
 
+        {!isDraft ? (
+          <>
         {/* Where is it now + movement actions */}
         <div className="rounded-card bg-soft p-4" data-testid="where-now">
           <p className="text-caption font-semibold text-muted">{t('movements.whereNow')}</p>
@@ -337,6 +364,9 @@ function ExistingDress({ id }: { id: string }) {
               </div>
             ))}
           </div>
+        ) : null}
+
+        </>
         ) : null}
 
         <div className="rounded-card bg-soft p-4">
@@ -425,33 +455,37 @@ function ExistingDress({ id }: { id: string }) {
         ) : null}
         {deleteFailed ? <p className="text-small text-danger">{t('dress.errors.deleteFailed')}</p> : null}
 
-        <Button
-          variant="secondary"
-          onClick={async () => {
-            const url = `${window.location.origin}/d/${dress.code}`;
-            const qr = await QRCode.toDataURL(url, { margin: 0, width: 240 });
-            printHtml(buildHangTagHtml(dress, t('app.name'), qr));
-          }}
-          className="w-full"
-        >
-          {t('dress.printTag')}
-        </Button>
+        {!isDraft ? (
+          <>
+            <Button
+              variant="secondary"
+              onClick={async () => {
+                const url = `${window.location.origin}/d/${dress.code}`;
+                const qr = await QRCode.toDataURL(url, { margin: 0, width: 240 });
+                printHtml(buildHangTagHtml(dress, t('app.name'), qr));
+              }}
+              className="w-full"
+            >
+              {t('dress.printTag')}
+            </Button>
 
-        <Button
-          variant="secondary"
-          onClick={() =>
-            erpSync.mutate({
-              dressId: dress.id,
-              code: dress.code,
-              name: dress.name_en || dress.code,
-              description: dress.description_en,
-            })
-          }
-          loading={erpSync.isPending}
-          className="w-full"
-        >
-          {t('dress.syncErp')}
-        </Button>
+            <Button
+              variant="secondary"
+              onClick={() =>
+                erpSync.mutate({
+                  dressId: dress.id,
+                  code: dress.code,
+                  name: dress.name_en || dress.code,
+                  description: dress.description_en,
+                })
+              }
+              loading={erpSync.isPending}
+              className="w-full"
+            >
+              {t('dress.syncErp')}
+            </Button>
+          </>
+        ) : null}
 
         <CheckOutSheet open={checkoutOpen} onClose={() => setCheckoutOpen(false)} dressId={dress.id} dressCode={dress.code} />
         <CheckInSheet open={checkinOpen} onClose={() => setCheckinOpen(false)} dressId={dress.id} dressCode={dress.code} currentCustomerId={dress.current_customer_id} />
