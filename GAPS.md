@@ -314,10 +314,15 @@ group **"Dresses"** (under "Final Products"). Selling price list: **Standard
 Selling**; rentals: **Rent** price list. Default currency AED, company Riman
 Fashion, abbr RF. UOM "Nos" for pieces, "Day" for rentals.
 
-**Remaining before Phase 11 code:** a sandbox ERPNext instance (this one is
-live with real customers/items — never test sync against it), and the
-erp-client package + erp-sync Edge Function + erp-bridge Docker service +
-erp_jobs table. Phase 11 is the last major chunk.
+**Sandbox:** created `sandbox.localhost` site on the same container with
+ERPNext 15.31.2 installed (admin password set to `sandbox123`). The site
+exists and ERPNext is installed; the first-login setup wizard (company
+creation) still needs to be completed before it's usable for testing. Access
+via Host header `sandbox.localhost` on port 8080.
+
+**Remaining before Phase 11 code:** complete the sandbox setup wizard, then
+build erp-client package + erp-sync Edge Function + erp-bridge Docker service
++ erp_jobs table. Phase 11 is the last major chunk.
 
 ### G-50 · PWA is configured but unverified on a real device
 
