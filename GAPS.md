@@ -328,13 +328,12 @@ Fashion, abbr RF. UOM "Nos" for pieces, "Day" for rentals.
 **Owner decision:** the item group for dresses is configurable in the app's
 control panel (Phase 10), not hard-coded — the owner picks it per deployment.
 
-**Sandbox:** created `sandbox.localhost` site on the same container with
-ERPNext 15.31.2 installed. The site and database exist; the first-login setup
-wizard (company, warehouses, fiscal year) still needs to be completed in the
-browser before it's usable. Access via `http://rimanserver:8080` with Host
-header `sandbox.localhost` (or add `sandbox.localhost` to /etc/hosts pointing
-at the server IP). Admin password was set to `Sandbox@2026` (the earlier
-`sandbox123` failed the password policy).
+**Sandbox:** created `sandboxriman` site on the same container with
+ERPNext 15.31.2 installed. The site and ERPNext are installed; the first-login
+setup wizard (company, warehouses, fiscal year) still needs to be completed in
+the browser before it's usable. Access via `http://sandboxriman:8080` (add
+`100.75.94.52 sandboxriman` to your hosts file). Admin password is
+`Sandbox@2026`.
 
 **Remaining before Phase 11 code:** complete the sandbox setup wizard in the
 browser, then build erp-client package + erp-sync Edge Function + erp-bridge
