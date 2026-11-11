@@ -5,10 +5,10 @@ import { CameraIcon, GownIcon, UploadIcon, XIcon } from '@/components/icons';
 import { Button } from '@/components/ui/Button';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Screen } from '@/components/layout/Screen';
-import { useSuggestedCode, useCreateDress } from '@/features/dresses/api';
-import { supabase } from '@/lib/supabase';
+import { useSuggestedCode } from '@/features/dresses/api';
 import { PHOTO_ANGLE_VALUES, type PhotoAngle } from '@/features/photos/api';
 import { preparePhoto } from '@/features/photos/photoPipeline';
+import { saveCaptureBatch } from '@/features/offline/saveCapture';
 import { cx } from '@/lib/cx';
 
 type Captured = { id: string; blob: Blob; angle: PhotoAngle; width: number; height: number };
@@ -36,7 +36,6 @@ export function CapturePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const suggested = useSuggestedCode(true);
-  const createDress = useCreateDress();
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -48,6 +47,7 @@ export function CapturePage() {
   const [angle, setAngle] = useState<PhotoAngle>('front');
   const [saving, setSaving] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
+  const [queued, setQueued] = useState(false);
 
   // Open camera on mount
   useEffect(() => {
@@ -109,38 +109,31 @@ export function CapturePage() {
     if (captured.length === 0) return;
     setSaving(true);
     setErrorText(null);
+    setQueued(false);
     try {
-      // name_en stays empty so the detail page's auto-describe trigger fires;
-      // the UI shows a "Draft dress" placeholder until AI fills it in.
-      const dress = await createDress.mutateAsync({ code: null as never, name_en: '', listing_type: 'both', status: 'available' });
-      // group by angle and upload
-      const byAngle = new Map<PhotoAngle, File[]>();
-      for (const c of captured) {
-        const file = new File([c.blob], `${c.id}.jpg`, { type: 'image/jpeg' });
-        if (!byAngle.has(c.angle)) byAngle.set(c.angle, []);
-        byAngle.get(c.angle)!.push(file);
+      // The photos are written to the device first and only then uploaded, so
+      // a dropped connection in the back room costs nothing.
+      const result = await saveCaptureBatch(
+        captured.map((c) => ({
+          id: c.id,
+          angle: c.angle,
+          blob: c.blob,
+          width: c.width,
+          height: c.height,
+        })),
+      );
+
+      if (result.queued) {
+        // Saved on the device; it goes up as soon as there is a connection.
+        stream?.getTracks().forEach((track) => track.stop());
+        setCaptured([]);
+        setQueued(true);
+        return;
       }
-      const addPhotos = /* use mutation via hook */ null;
-      void addPhotos;
-      // We'll upload per angle group using a direct approach
-      const db = supabase as NonNullable<typeof supabase>;
-      for (const [a, files] of byAngle) {
-        // upload each file
-        for (const file of files) {
-          const prepared = await preparePhoto(file);
-          const rowId = crypto.randomUUID();
-          const path = `${dress.id}/${rowId}.jpg`;
-          const { error: upErr } = await db.storage.from('dress-originals').upload(path, prepared.blob, { contentType: 'image/jpeg' });
-          if (upErr) throw upErr;
-          const { error: insErr } = await db.from('dress_photos').insert({
-            id: rowId, dress_id: dress.id, angle: a, original_path: path,
-            width: prepared.width, height: prepared.height, sort_order: 0,
-          });
-          if (insErr) throw insErr;
-        }
-      }
+      if (result.error) throw new Error(result.error);
+
       stream?.getTracks().forEach((track) => track.stop());
-      navigate(`/dresses/${dress.id}?draft=1`, { replace: true });
+      navigate(`/dresses/${result.dressId}?draft=1`, { replace: true });
     } catch (error) {
       console.error(error);
       setErrorText(t('capture.saveFailed'));
@@ -154,6 +147,17 @@ export function CapturePage() {
   return (
     <Screen title={t('capture.title')} subtitle={t('capture.subtitle')}>
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-3 pb-4" data-testid="capture-page">
+        {queued ? (
+          <div
+            className="rounded-card border border-warn-line bg-warn-bg px-3 py-2.5"
+            role="status"
+            data-testid="queued-notice"
+          >
+            <span className="eyebrow mb-1 block text-warn">{t('capture.queuedTitle')}</span>
+            <p className="text-small text-ink">{t('capture.queuedBody')}</p>
+          </div>
+        ) : null}
+
         {/* Viewfinder — a flat frame, no shadow. The hairline marks the
             working area of the camera without adding chrome. */}
         <div className="overflow-hidden rounded-card border border-line bg-surface">

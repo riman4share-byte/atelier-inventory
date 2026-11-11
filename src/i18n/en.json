@@ -61,6 +61,11 @@
       "body": "The materials library and stock movements arrive in a later phase."
     }
   },
+  "offline": {
+    "pendingTitle": "Waiting to upload",
+    "pendingBody": "{{count}} capture saved on this device, waiting for a connection.",
+    "retry": "Upload now"
+  },
   "theme": {
     "label": "Theme",
     "light": "Light",
@@ -390,6 +395,8 @@
     "saveDraft": "Save as draft dress",
     "draftName": "Draft dress",
     "saveFailed": "Saving failed. Check your connection and try again.",
+    "queuedTitle": "Saved on this device",
+    "queuedBody": "There is no connection right now, so these photos are waiting on the tablet. They will upload automatically when the signal comes back.",
     "note": "Photos are resized in the browser. Originals are kept.",
     "queued": "{{count}} queued for upload"
   },

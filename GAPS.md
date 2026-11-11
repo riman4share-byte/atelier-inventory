@@ -277,15 +277,21 @@ different views. Syncing them across devices is not built.
 
 ### G-43 · Offline upload queue and camera capture are not built yet
 
-**Status:** open · **Phase:** 4
-The upload path (file picker → resize → storage → row) works and is proven
-in the browser, but the Phase 4 spec also asks for: live camera through
-`getUserMedia` with the angle checklist, corner guides, shutter, and
-"Upload photos instead" fallback; and an IndexedDB queue that holds uploads
-when offline and syncs on reconnect with a visible status. Neither is built
-yet; camera permission/phone behaviour is also untested (extends G-30).
-G-08 still applies.
+**Status:** resolved 2026-11-11 · **Phase:** 12
+There is now an offline queue. A capture is written to IndexedDB **before**
+the network is touched, so the photos exist on the device even if the
+connection drops or the tab closes mid-upload. The batch uploads when the
+device is back online (the worker runs on start, on the `online` event and
+every 20 seconds), and a strip above the navigation shows how many captures
+are waiting with a button to try immediately.
 
+Verified in a browser with the network cut: capture while offline, the
+batch is queued, the "Saved on this device" notice appears, the queue drains
+two seconds after the signal returns, and the dress is in the gallery. The
+normal online path was checked too and is unchanged.
+
+Still open: the camera itself has never been used on a real device (G-30),
+so the capture half of this is proven only for the upload path.
 ### G-44 · Videos and non-front angles are not handled yet
 
 **Status:** open · **Phase:** 4
@@ -448,25 +454,25 @@ the login screen.
 
 ### G-53 · The service worker caches authenticated responses by URL only
 
-**Status:** open · **Phase:** 12
-`vite.config.ts` caches every `https://*.supabase.co/*` GET with
-`NetworkFirst`. Workbox keys the cache by URL, and PostgREST answers the same
-URL for every signed-in user, so on a shared device a staff member can be
-served the previous user's cached dresses and customer rows. Signing out
-clears the query cache but not the Workbox cache. Either stop caching
-authenticated responses or key the cache by a hash of the access token and
-purge it on sign-out.
+**Status:** resolved 2026-11-11 · **Phase:** 12
+The service worker no longer caches the Supabase API at all. Only the public
+share reader is cached, because the cache key is the URL and PostgREST answers
+the same URL for every signed-in user - on a shared tablet one staff member
+could be served another member's dresses and customer rows.
 
+Signing out also deletes every cache the worker holds, except the precache
+(the app shell), so nothing from one session survives into the next.
 ### G-54 · The Excel writer is bundled into the entry chunk
 
-**Status:** open · **Phase:** 12
-`xlsx` (~860 KB raw) is imported statically by `ExportSheet` and
-`movements/export`, so the single 1 MB entry chunk ships it to every phone
-whether or not anyone exports a spreadsheet. A dynamic `await import('xlsx')`
-inside the export branch moves it into a lazy chunk. The service worker also
-precaches the onnxruntime bundles for the browser background remover, which
-most staff never use.
+**Status:** resolved 2026-11-11 · **Phase:** 12
+`xlsx` (~420 KB) and the QR library are now imported on demand, so they are
+not in the first download. The onnxruntime bundles for the in-browser
+background remover are no longer precached either - they belong to a feature
+only the owner uses.
 
+Measured on the real builds, the install payload for a staff member went
+from 2,149 KB raw (773 KB gzipped) to 952 KB raw (388 KB gzipped), and the
+entry chunk from 1,033 KB to 732 KB raw (307 KB to 205 KB gzipped).
 ### G-55 · The bottom sheets have no dialog semantics
 
 **Status:** open · **Phase:** 12
@@ -487,13 +493,18 @@ re-create records that still exist.
 
 ### G-57 · Reservation overlap is only checked in the browser
 
-**Status:** open · **Phase:** 12
-`useCreateReservation` does a SELECT for an overlapping active reservation
-and then INSERTs. Two tablets can pass the check at the same moment and
-double-book the dress, because there is no exclusion constraint in the
-database. The check-out sheet likewise has no in-flight guard, so a
-double tap creates two customers and two `out` movements.
+**Status:** resolved 2026-11-11 · **Phase:** 12
+The rule now lives in the database: an exclusion constraint over
+`daterange(from_date, to_date)` on `dress_reservations`, for active
+reservations only, so two tablets cannot double-book a dress even if they
+pass the app's check at the same moment. The app reads the constraint's
+error and shows the same "this dress already has an overlapping reservation"
+message it showed before.
 
+Verified against the live database: a first booking is accepted, an
+overlapping one is refused, two simultaneous bookings are won by exactly
+one, a later booking on the same dress is still accepted, and cancelling a
+reservation frees the slot.
 ### G-58 · The old pink theme survives in the PWA shell
 
 **Status:** resolved 2026-11-10 · **Phase:** 12

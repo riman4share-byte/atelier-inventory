@@ -148,7 +148,16 @@ export function useCreateReservation() {
       if (conflictError) throw conflictError;
       if (conflicts && conflicts.length > 0) throw new Error('conflict');
       const { error } = await db.from('dress_reservations').insert(values);
-      if (error) throw error;
+      // The database also refuses an overlap (exclusion constraint), which
+      // catches the case where two tablets pass the check above at the same
+      // moment. Report it the same way as the check, not as a raw database
+      // error.
+      if (error) {
+        if (error.code === '23P01' || error.message.includes('dress_reservations_no_overlap')) {
+          throw new Error('conflict');
+        }
+        throw error;
+      }
     },
     onSuccess: (_data, variables) => {
       client.invalidateQueries({ queryKey: ['reservations', variables.dress_id] });

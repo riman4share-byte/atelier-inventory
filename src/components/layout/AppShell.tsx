@@ -2,6 +2,8 @@ import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/features/auth/useAuth';
 import { BottomNav } from './BottomNav';
 import { ProfileError } from './ProfileError';
+import { PendingUploads } from './PendingUploads';
+import { useOfflineSync } from '@/features/offline/useQueue';
 
 /**
  * Application shell.
@@ -16,6 +18,8 @@ import { ProfileError } from './ProfileError';
  */
 export function AppShell() {
   const { profileStatus, reloadProfile } = useAuth();
+  // Drains anything that was captured while the device was offline.
+  useOfflineSync();
 
   return (
     <div className="flex h-dvh flex-col-reverse overflow-hidden bg-bg md:flex-row">
@@ -24,6 +28,7 @@ export function AppShell() {
         <main className="flex-1 overflow-y-auto overscroll-contain">
           {profileStatus === 'error' ? <ProfileError onRetry={() => void reloadProfile()} /> : <Outlet />}
         </main>
+        <PendingUploads />
       </div>
     </div>
   );

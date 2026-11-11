@@ -106,6 +106,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     queryClient.clear();
+    // Anything the service worker cached for this session must go with it:
+    // on a shared tablet the next person must not be served the previous
+    // one's rows. The precache (the app shell itself) is kept so the app
+    // still opens offline.
+    if (typeof caches !== 'undefined') {
+      const names = await caches.keys();
+      await Promise.all(
+        names
+          .filter((name) => !name.includes('precache'))
+          .map((name) => caches.delete(name)),
+      );
+    }
     if (!supabase) return;
     await supabase.auth.signOut();
   }, []);
