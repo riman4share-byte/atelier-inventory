@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -29,12 +29,9 @@ export function LoginPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (status === 'signedIn') navigate(safeFrom, { replace: true });
-  }, [status, safeFrom, navigate]);
-
   if (!isSupabaseConfigured) return <Navigate to="/setup" replace />;
   if (status === 'loading') return <FullScreenLoader />;
+  if (status === 'signedIn') navigate(safeFrom, { replace: true });
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -42,10 +39,7 @@ export function LoginPage() {
 
     const parsed = credentialsSchema.safeParse({ email, password });
     if (!parsed.success) {
-      const emailInvalid = parsed.error.issues.some(
-        (issue) => issue.path[0] === 'email' && issue.code === 'invalid_string',
-      );
-      setFormError(t(emailInvalid ? 'auth.invalidEmail' : 'auth.missingFields'));
+      setFormError(t('auth.missingFields'));
       return;
     }
 
@@ -57,21 +51,25 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-bg md:grid md:place-items-center md:p-6">
-      <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-surface md:min-h-0 md:rounded-sheet md:border md:border-line md:shadow-frame">
-        <header className="bg-brand px-6 pb-12 pt-safe text-white">
-          <div className="flex justify-end pt-3">
-            <LanguageToggle tone="onBrand" />
+    <div className="flex min-h-dvh flex-col bg-bg">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 pt-safe">
+        <div className="flex items-baseline gap-2">
+          <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent">
+            Atelier
+          </span>
+          <span className="text-note text-muted">{t('app.tagline')}</span>
+        </div>
+        <LanguageToggle />
+      </header>
+
+      <main className="flex flex-1 items-start justify-center px-4 py-8 md:items-center">
+        <div className="w-full max-w-sm rounded-card border border-line bg-surface">
+          <div className="border-b border-line px-5 py-4">
+            <h1 className="text-title font-semibold tracking-tight text-ink">{t('auth.welcome')}</h1>
+            <p className="mt-0.5 text-note text-muted">{t('auth.subtitle')}</p>
           </div>
-          <h1 className="mt-8 text-hero text-white">{t('app.name')}</h1>
-          <p className="mt-1 text-small text-white/85">{t('app.tagline')}</p>
-        </header>
 
-        <main className="-mt-6 flex flex-1 flex-col rounded-t-sheet bg-surface px-6 pb-10 pt-7">
-          <h2 className="text-title">{t('auth.welcome')}</h2>
-          <p className="mt-1 text-small text-muted">{t('auth.subtitle')}</p>
-
-          <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+          <form className="flex flex-col gap-3.5 px-5 py-5" onSubmit={handleSubmit} noValidate>
             <TextField
               label={t('auth.email')}
               type="email"
@@ -95,17 +93,17 @@ export function LoginPage() {
             />
 
             {formError ? (
-              <p role="alert" className="rounded-field bg-danger-bg px-3 py-2 text-small text-danger">
+              <p role="alert" className="rounded-field border border-danger-line bg-danger-bg px-2.5 py-1.5 text-small text-danger">
                 {formError}
               </p>
             ) : null}
 
-            <Button type="submit" loading={submitting}>
+            <Button type="submit" loading={submitting} className="mt-1">
               {submitting ? t('auth.signingIn') : t('auth.signIn')}
             </Button>
           </form>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Screen } from '@/components/layout/Screen';
 import { Button } from '@/components/ui/Button';
+import { Panel } from '@/components/ui/Panel';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { ChevronRightIcon, PersonIcon } from '@/components/icons';
 import { useAuth } from '@/features/auth/useAuth';
 import type { LanguageCode } from '@/lib/database.types';
 
@@ -27,30 +29,35 @@ export function AccountPage() {
 
   return (
     <Screen title={t('account.title')}>
-      <section className="rounded-card border border-line p-4">
-        <h2 className="text-caption font-semibold text-muted">{t('settings.account')}</h2>
-        <p className="mt-2 text-title">{profile?.full_name || email}</p>
-        <dl className="mt-3 space-y-2 text-small">
-          <div className="flex items-start justify-between gap-3">
-            <dt className="text-muted">{t('settings.email')}</dt>
-            <dd className="min-w-0 truncate text-ink" dir="ltr">
-              {email}
-            </dd>
+      <div className="flex flex-1 flex-col gap-3">
+        <Panel title={t('settings.account')}>
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-field bg-surface-2 text-muted">
+              <PersonIcon className="h-4 w-4" />
+            </span>
+            <p className="min-w-0 truncate text-title font-semibold tracking-tight text-ink">
+              {profile?.full_name || email}
+            </p>
           </div>
-          <div className="flex items-start justify-between gap-3">
-            <dt className="text-muted">{t('settings.role')}</dt>
-            <dd>
-              <span className="rounded-pill bg-soft px-2.5 py-1 text-note font-bold text-accent">
-                {roleLabel}
-              </span>
-            </dd>
-          </div>
-        </dl>
-      </section>
+          <dl className="mt-3 flex flex-col gap-2 border-t border-line pt-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <dt className="eyebrow">{t('settings.email')}</dt>
+              <dd className="min-w-0 truncate font-mono text-small tracking-tight text-ink" dir="ltr">
+                {email}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="eyebrow">{t('settings.role')}</dt>
+              <dd>
+                <span className="inline-flex items-center rounded-pill border border-accent-line bg-accent-bg px-2 py-0.5 font-mono text-micro font-semibold uppercase tracking-widest text-accent">
+                  {roleLabel}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        </Panel>
 
-      <section className="mt-6">
-        <h2 className="text-caption font-semibold text-muted">{t('settings.language')}</h2>
-        <div className="mt-2">
+        <Panel title={t('settings.language')}>
           <SegmentedControl<LanguageCode>
             label={t('settings.language')}
             value={profile?.language ?? 'en'}
@@ -60,29 +67,33 @@ export function AccountPage() {
               { value: 'ar', label: t('common.arabic') },
             ]}
           />
-        </div>
-        <p className="mt-2 text-caption text-muted">{t('settings.languageHint')}</p>
-      </section>
+          <p className="mt-2 text-note text-muted">{t('settings.languageHint')}</p>
+        </Panel>
 
-      {profile?.role === 'admin' ? (
-        <section className="mt-6">
-          <Link
-            to="/settings"
-            className="inline-flex min-h-tap items-center rounded-field border-[1.5px] border-line bg-surface px-4 text-body text-ink"
+        {profile?.role === 'admin' ? (
+          <Panel title={t('account.adminTools')}>
+            <Link
+              to="/settings"
+              className="flex h-9 items-center justify-between gap-2 rounded-field border border-line bg-surface-2 px-2.5 text-small font-semibold text-ink transition-colors hover:border-line-strong hover:bg-surface-3"
+            >
+              {t('account.adminTools')}
+              <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted" />
+            </Link>
+          </Panel>
+        ) : null}
+
+        <Panel>
+          <Button
+            variant="secondary"
+            fullWidth={false}
+            className="px-4"
+            loading={signingOut}
+            onClick={() => void handleSignOut()}
           >
-            {t('account.adminTools')}
-          </Link>
-        </section>
-      ) : null}
-
-      <Button
-        variant="secondary"
-        className="mt-8"
-        loading={signingOut}
-        onClick={() => void handleSignOut()}
-      >
-        {t('auth.signOut')}
-      </Button>
+            {t('auth.signOut')}
+          </Button>
+        </Panel>
+      </div>
     </Screen>
   );
 }

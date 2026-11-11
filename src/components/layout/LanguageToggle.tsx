@@ -6,9 +6,10 @@ import { cx } from '@/lib/cx';
 
 interface LanguageToggleProps {
   className?: string;
-  tone?: 'default' | 'onBrand';
+  tone?: 'default' | 'onAccent';
 }
 
+/** Compact EN/AR switch, styled as a labelled toggle rather than a chip. */
 export function LanguageToggle({ className, tone = 'default' }: LanguageToggleProps) {
   const { i18n, t } = useTranslation();
   const { setLanguage } = useAuth();
@@ -22,13 +23,17 @@ export function LanguageToggle({ className, tone = 'default' }: LanguageTogglePr
       aria-label={`${t('common.language')}: ${nextLabel}`}
       onClick={() => void setLanguage(next)}
       className={cx(
-        'inline-flex min-h-tap items-center gap-1.5 rounded-pill px-3 text-caption font-semibold',
-        tone === 'onBrand' ? 'bg-white/20 text-white' : 'bg-soft text-accent',
+        'inline-flex h-8 items-center gap-1.5 rounded-field border px-2 text-caption font-semibold tracking-tight transition-colors',
+        tone === 'onAccent'
+          ? 'border-accent-ink/40 bg-accent-ink/10 text-accent-ink'
+          : 'border-line bg-surface-2 text-muted hover:border-line-strong hover:text-ink',
         className,
       )}
     >
-      <GlobeIcon className="h-4 w-4" />
-      <span>{next === 'ar' ? 'العربية' : 'EN'}</span>
+      <GlobeIcon className="h-3.5 w-3.5" />
+      <span className="font-mono text-[11px] tracking-tight">
+        {next === 'ar' ? 'ع' : 'EN'}
+      </span>
     </button>
   );
 }

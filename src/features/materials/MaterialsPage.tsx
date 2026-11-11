@@ -5,6 +5,9 @@ import { MATERIAL_CATEGORIES } from './categories';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/layout/Screen';
 import { Spinner } from '@/components/ui/Spinner';
+import { TextField } from '@/components/ui/TextField';
+import { Panel } from '@/components/ui/Panel';
+import { PlusIcon } from '@/components/icons';
 import { cx } from '@/lib/cx';
 
 // The list must match the database enum exactly (see categories.ts).
@@ -44,95 +47,246 @@ export function MaterialsPage() {
 
   return (
     <Screen title={t('materials.title')} subtitle={t('materials.subtitle')}>
-      <div className="flex flex-1 flex-col gap-4" data-testid="materials-page">
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder={t('materials.search')}
-          className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2.5 text-input text-ink placeholder:text-muted"
-        />
-        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
-          <button type="button" onClick={() => setCategory('all')}
-            className={cx('min-h-tap shrink-0 rounded-pill px-3 text-caption font-semibold', category === 'all' ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
+      <div className="flex flex-1 flex-col gap-3" data-testid="materials-page">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <TextField
+              label={t('materials.search')}
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <Button
+            variant={showForm ? 'ghost' : 'secondary'}
+            fullWidth={false}
+            onClick={() => setShowForm((v) => !v)}
+          >
+            <PlusIcon className="h-4 w-4" />
+            {showForm ? t('common.close') : t('materials.add')}
+          </Button>
+        </div>
+
+        {/* Category filter — a row of cells, the active one in accent. */}
+        <div
+          role="group"
+          aria-label={t('materials.title')}
+          className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4"
+        >
+          <button
+            type="button"
+            aria-pressed={category === 'all'}
+            onClick={() => setCategory('all')}
+            className={cx(
+              'h-8 shrink-0 rounded-field border px-2.5 text-caption font-semibold tracking-tight transition-colors',
+              category === 'all'
+                ? 'border-accent bg-accent text-accent-ink'
+                : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
+            )}
+          >
             {t('materials.all')}
           </button>
           {CATEGORIES.map((c) => (
-            <button key={c} type="button" onClick={() => setCategory(c)}
-              className={cx('min-h-tap shrink-0 rounded-pill px-3 text-caption font-semibold', category === c ? 'bg-accent text-accent-ink' : 'bg-soft text-ink')}>
+            <button
+              key={c}
+              type="button"
+              aria-pressed={category === c}
+              onClick={() => setCategory(c)}
+              className={cx(
+                'h-8 shrink-0 rounded-field border px-2.5 text-caption font-semibold tracking-tight transition-colors',
+                category === c
+                  ? 'border-accent bg-accent text-accent-ink'
+                  : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
+              )}
+            >
               {t(`materials.cat.${c}`)}
             </button>
           ))}
         </div>
 
         {materials.isLoading ? (
-          <div className="flex justify-center py-8"><Spinner className="h-6 w-6 text-accent" /></div>
-        ) : (materials.data ?? []).length === 0 ? (
-          <p className="rounded-card bg-soft p-4 text-small text-muted">{t('materials.empty')}</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {(materials.data ?? []).map((m) => {
-              const low = Number(m.stock_qty) <= Number(m.low_stock_threshold);
-              return (
-                <div key={m.id} className="flex items-center gap-3 rounded-card bg-surface p-3" data-testid="material-row">
-                  <div className="flex-1">
-                    <p className="text-small font-semibold text-ink">{m.name_en}</p>
-                    <p className="text-note text-muted">{m.category} · {m.stock_qty} {m.unit}</p>
-                  </div>
-                  {low ? <span className="rounded-pill bg-warn-bg px-2 py-0.5 text-note font-bold text-warn">{t('materials.low')}</span> : null}
-                  <button type="button" onClick={() => setAdjustId(m.id)}
-                    className="min-h-tap rounded-pill bg-soft px-3 text-caption font-semibold text-ink">
-                    {t('materials.adjust')}
-                  </button>
-                </div>
-              );
-            })}
+          <div className="flex justify-center py-8">
+            <Spinner className="h-5 w-5 text-accent" />
           </div>
+        ) : (materials.data ?? []).length === 0 ? (
+          <Panel className="px-3 py-6 text-center">
+            <p className="text-small text-muted">{t('materials.empty')}</p>
+          </Panel>
+        ) : (
+          <Panel flush>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[520px] border-collapse">
+                <thead>
+                  <tr className="border-b border-line">
+                    <th scope="col" className="px-3 py-1.5 text-start">
+                      <span className="eyebrow">{t('table.colName')}</span>
+                    </th>
+                    <th scope="col" className="px-3 py-1.5 text-end">
+                      <span className="eyebrow">{t('materials.stock')}</span>
+                    </th>
+                    <th scope="col" className="px-3 py-1.5 text-start">
+                      <span className="eyebrow">{t('table.colStatus')}</span>
+                    </th>
+                    <th scope="col" className="px-3 py-1.5" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {(materials.data ?? []).map((m) => {
+                    const low = Number(m.stock_qty) <= Number(m.low_stock_threshold);
+                    return (
+                      <tr
+                        key={m.id}
+                        data-testid="material-row"
+                        className="border-b border-line transition-colors last:border-b-0 hover:bg-surface-2"
+                      >
+                        <td className="max-w-[240px] px-3 py-2 align-middle">
+                          <span className="block truncate text-small font-semibold text-ink">
+                            {m.name_en}
+                          </span>
+                          <span className="mt-0.5 block truncate font-mono text-micro uppercase tracking-widest text-muted">
+                            {m.category}
+                          </span>
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2 text-end align-middle">
+                          <span className="font-mono text-body font-semibold tracking-tight text-ink">
+                            {m.stock_qty}
+                          </span>
+                          <span className="ms-1 font-mono text-note text-faint">{m.unit}</span>
+                        </td>
+                        <td className="px-3 py-2 align-middle">
+                          {low ? (
+                            <span className="inline-flex items-center rounded-pill border border-warn-line bg-warn-bg px-1.5 py-0.5 font-mono text-micro font-semibold uppercase tracking-widest text-warn">
+                              {t('materials.low')}
+                            </span>
+                          ) : (
+                            <span className="font-mono text-note text-faint">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-end align-middle">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            fullWidth={false}
+                            className="px-2.5"
+                            onClick={() => setAdjustId(m.id)}
+                          >
+                            {t('materials.adjust')}
+                          </Button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Panel>
         )}
 
-        <Button variant="secondary" onClick={() => setShowForm((v) => !v)} className="w-full">
-          {showForm ? t('common.close') : t('materials.add')}
-        </Button>
-
         {showForm ? (
-          <div className="flex flex-col gap-2 rounded-card bg-soft p-4">
-            <input value={nameEn} onChange={(e) => setNameEn(e.target.value)} placeholder={t('materials.nameEn')}
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink" />
-            <input value={nameAr} onChange={(e) => setNameAr(e.target.value)} placeholder={t('materials.nameAr')}
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink" />
-            <select value={cat} onChange={(e) => setCat(e.target.value)}
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink">
-              {CATEGORIES.map((c) => <option key={c} value={c}>{t(`materials.cat.${c}`)}</option>)}
-            </select>
-            <div className="grid grid-cols-2 gap-2">
-              <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} placeholder={t('materials.stock')}
-                className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink" />
-              <input type="number" value={threshold} onChange={(e) => setThreshold(e.target.value)} placeholder={t('materials.threshold')}
-                className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink" />
+          <Panel title={t('materials.add')}>
+            <div className="flex flex-col gap-2.5">
+              <TextField
+                label={t('materials.nameEn')}
+                value={nameEn}
+                onChange={(event) => setNameEn(event.target.value)}
+                dir="ltr"
+              />
+              <TextField
+                label={t('materials.nameAr')}
+                value={nameAr}
+                onChange={(event) => setNameAr(event.target.value)}
+                dir="rtl"
+              />
+              {/* Category — a labelled select, matching the field rhythm. */}
+              <div className="flex flex-col gap-1">
+                <label htmlFor="material-category" className="eyebrow">
+                  {t('materials.title')}
+                </label>
+                <select
+                  id="material-category"
+                  value={cat}
+                  onChange={(event) => setCat(event.target.value)}
+                  className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {t(`materials.cat.${c}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <TextField
+                  label={t('materials.stock')}
+                  type="number"
+                  value={stock}
+                  onChange={(event) => setStock(event.target.value)}
+                  mono
+                />
+                <TextField
+                  label={t('materials.threshold')}
+                  type="number"
+                  value={threshold}
+                  onChange={(event) => setThreshold(event.target.value)}
+                  mono
+                />
+              </div>
+              <Button onClick={() => void submitNew()} loading={create.isPending}>
+                {t('materials.save')}
+              </Button>
             </div>
-            <Button onClick={() => void submitNew()} loading={create.isPending} className="w-full">{t('materials.save')}</Button>
-          </div>
+          </Panel>
         ) : null}
 
         {adjustId ? (
-          <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4" data-testid="adjust-sheet">
-            <div className="w-full max-w-sm rounded-card bg-surface p-4">
-              <h3 className="mb-2 text-title">{t('materials.adjustStock')}</h3>
-              <input type="number" value={adjustDelta} onChange={(e) => setAdjustDelta(e.target.value)}
-                className="min-h-tap mb-2 w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink" />
-              <select value={adjustReason} onChange={(e) => setAdjustReason(e.target.value)}
-                className="min-h-tap mb-3 w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink">
-                <option value="purchase">{t('materials.reason.purchase')}</option>
-                <option value="used">{t('materials.reason.used')}</option>
-                <option value="adjustment">{t('materials.reason.adjustment')}</option>
-                <option value="return">{t('materials.reason.return')}</option>
-              </select>
-              <div className="flex gap-2">
-                <Button variant="secondary" onClick={() => setAdjustId(null)} className="flex-1">{t('common.close')}</Button>
-                <Button onClick={async () => {
-                  await adjust.mutateAsync({ materialId: adjustId, delta: Number(adjustDelta), reason: adjustReason as 'purchase' | 'used' | 'adjustment' | 'return' });
-                  setAdjustId(null); setAdjustDelta('1');
-                }} loading={adjust.isPending} className="flex-1">{t('materials.save')}</Button>
+          <div
+            className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
+            data-testid="adjust-sheet"
+          >
+            <div className="w-full max-w-sm rounded-card border border-line bg-surface p-3">
+              <p className="eyebrow mb-2">{t('materials.adjustStock')}</p>
+              <div className="flex flex-col gap-2.5">
+                <TextField
+                  label={t('materials.stock')}
+                  type="number"
+                  value={adjustDelta}
+                  onChange={(event) => setAdjustDelta(event.target.value)}
+                  mono
+                />
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="adjust-reason" className="eyebrow">
+                    {t('movements.reasonLabel')}
+                  </label>
+                  <select
+                    id="adjust-reason"
+                    value={adjustReason}
+                    onChange={(event) => setAdjustReason(event.target.value)}
+                    className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
+                  >
+                    <option value="purchase">{t('materials.reason.purchase')}</option>
+                    <option value="used">{t('materials.reason.used')}</option>
+                    <option value="adjustment">{t('materials.reason.adjustment')}</option>
+                    <option value="return">{t('materials.reason.return')}</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button variant="secondary" onClick={() => setAdjustId(null)}>
+                  {t('common.close')}
+                </Button>
+                <Button
+                  onClick={async () => {
+                    await adjust.mutateAsync({
+                      materialId: adjustId,
+                      delta: Number(adjustDelta),
+                      reason: adjustReason as 'purchase' | 'used' | 'adjustment' | 'return',
+                    });
+                    setAdjustId(null); setAdjustDelta('1');
+                  }}
+                  loading={adjust.isPending}
+                >
+                  {t('materials.save')}
+                </Button>
               </div>
             </div>
           </div>

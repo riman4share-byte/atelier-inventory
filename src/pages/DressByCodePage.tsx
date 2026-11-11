@@ -94,10 +94,12 @@ export function DressByCodePage() {
   const dress = publicLookup.data;
   if (!dress) {
     return (
-      <div className="mx-auto flex min-h-dvh max-w-sm flex-col items-center justify-center gap-3 px-5 text-center">
-        <GownIcon className="h-16 w-auto text-accent opacity-60" />
-        <h1 className="text-title font-serif font-semibold text-ink">{t('dress.staffOnlyTitle')}</h1>
-        <p className="text-small text-muted">{t('dress.staffOnlyBody')}</p>
+      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-3 px-5 text-center">
+        <span className="grid h-12 w-12 place-items-center rounded-field border border-line bg-surface-2 text-muted">
+          <GownIcon className="h-6 w-6" />
+        </span>
+        <h1 className="text-title font-semibold tracking-tight text-ink">{t('dress.staffOnlyTitle')}</h1>
+        <p className="max-w-[36ch] text-small text-muted">{t('dress.staffOnlyBody')}</p>
       </div>
     );
   }
@@ -108,21 +110,28 @@ export function DressByCodePage() {
   const palette = paletteForCode(dress.code);
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-sm flex-col px-5 py-10">
+    <div
+      className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-10"
+      dir={isArabic ? 'rtl' : 'ltr'}
+    >
       <header className="pb-6">
-        <h1 className="text-hero font-serif font-semibold text-ink">{t('app.name')}</h1>
-        <p className="mt-1 text-small text-muted">{t('dress.publicCardSubtitle')}</p>
+        <h1 className="text-hero font-semibold tracking-tight text-ink">{t('app.name')}</h1>
+        <p className="mt-1.5 text-small text-muted">{t('dress.publicCardSubtitle')}</p>
       </header>
       <main className="flex flex-1 flex-col gap-4">
-        <div className={cx('flex aspect-[3/4] w-full items-center justify-center rounded-card', palette.tile)}>
-          <GownIcon className={cx('h-20 w-auto drop-shadow-md', palette.icon)} />
-        </div>
-        <div>
-          <h2 className="text-title font-serif font-semibold text-ink">{name}</h2>
-          <p className="mt-0.5 text-note text-muted">{dress.code}</p>
-        </div>
-        {description ? <p className="text-small text-ink">{description}</p> : null}
-        <p className="mt-4 text-note text-muted">{t('dress.publicCardFooter')}</p>
+        <article className="overflow-hidden rounded-card border border-line bg-surface">
+          <div className={cx('flex aspect-[3/4] w-full items-center justify-center', palette.tile)}>
+            <GownIcon className={cx('h-20 w-auto', palette.icon)} />
+          </div>
+          <div className="border-t border-line p-4">
+            <h2 className="text-title font-semibold tracking-tight text-ink">{name}</h2>
+            <p className="mt-1 font-mono text-caption tracking-tight text-muted">{dress.code}</p>
+            {description ? (
+              <p className="mt-3 text-small leading-relaxed text-ink">{description}</p>
+            ) : null}
+          </div>
+        </article>
+        <p className="mt-1 text-note text-faint">{t('dress.publicCardFooter')}</p>
       </main>
     </div>
   );

@@ -16,71 +16,77 @@ import type { DressRow } from './api';
 const PAGE_STYLE = `
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; color: #0f172a; }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: #0b0d0f; }
     .page { page-break-after: always; }
     .page:last-child { page-break-after: auto; }
+    .mono { font-family: 'Consolas', 'SF Mono', ui-monospace, monospace; }
 
     /* ---- cover ---- */
     .cover { display: flex; flex-direction: column; min-height: 255mm;
-      padding: 20mm 16mm; background: #f8fafc; }
-    .cover .rule { width: 42mm; border-top: 2px solid #1e293b; margin: 8mm 0; }
-    .cover h1 { font-size: 34pt; line-height: 1.15; color: #0f172a; }
-    .cover .collection { margin-top: 6mm; font-size: 13pt; letter-spacing: 3px;
-      text-transform: uppercase; color: #1e293b; }
-    .cover .meta { margin-top: 8mm; font-size: 10pt; color: #64748b;
-      display: flex; justify-content: space-between; }
-    .cover .frame-fill { flex: 1; border: 1.5px solid #cbd5e1; border-radius: 6mm;
-      margin-top: 10mm; background:
-        radial-gradient(circle at 20% 20%, #f1f5f9 0, #f8fafc 55%); }
+      padding: 20mm 16mm; background: #f8f9fa; }
+    .cover .rule { width: 42mm; border-top: 1.5px solid #0b0d0f; margin: 8mm 0; }
+    .cover h1 { font-size: 34pt; line-height: 1.15; color: #0b0d0f; letter-spacing: -0.02em; }
+    .cover .collection { margin-top: 6mm; font-size: 10pt; letter-spacing: 3px;
+      text-transform: uppercase; color: #5b6470; font-family: Consolas, ui-monospace, monospace; }
+    .cover .meta { margin-top: 8mm; font-size: 8.5pt; color: #8b939f;
+      display: flex; justify-content: space-between;
+      font-family: Consolas, ui-monospace, monospace; letter-spacing: 0.4px; }
+    .cover .frame-fill { flex: 1; border: 1px solid #e2e4e9; border-radius: 0;
+      margin-top: 10mm; background: #ffffff; }
 
     /* ---- editorial header shared by dress pages ---- */
     .dress-page { padding: 10mm 12mm 8mm; }
     .strip { display: flex; justify-content: space-between; align-items: baseline;
-      border-bottom: 1.5px solid #cbd5e1; padding-bottom: 3mm; margin-bottom: 6mm; }
-    .strip .brand { font-size: 9pt; letter-spacing: 3px; text-transform: uppercase;
-      color: #0f172a; font-weight: 700; }
-    .strip .date { font-size: 8pt; color: #94a3b8; }
+      border-bottom: 1px solid #e2e4e9; padding-bottom: 3mm; margin-bottom: 6mm; }
+    .strip .brand { font-size: 8.5pt; letter-spacing: 3px; text-transform: uppercase;
+      color: #0b0d0f; font-weight: 700; font-family: Consolas, ui-monospace, monospace; }
+    .strip .date { font-size: 8pt; color: #8b939f;
+      font-family: Consolas, ui-monospace, monospace; }
 
     /* ---- photo zone: main view + back + detail slots ---- */
     .photos { display: grid; grid-template-columns: 62% 1fr; gap: 4mm;
       height: 128mm; margin-bottom: 6mm; }
-    .photos .hero { position: relative; border: 1.5px solid #cbd5e1; border-radius: 4mm;
-      background: linear-gradient(160deg, #f1f5f9, #f8fafc);
+    .photos .hero { position: relative; border: 1px solid #e2e4e9; border-radius: 0;
+      background: #f3f4f6;
       display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
     .photos .hero img { position: absolute; inset: 0; width: 100%; height: 100%;
       object-fit: cover; }
     .photos .hero .tag, .photos .slot .tag { position: relative; z-index: 1; }
     .photos .col { display: grid; grid-template-rows: 1fr 1fr; gap: 4mm; }
-    .photos .slot { position: relative; border: 1.5px solid #cbd5e1; border-radius: 4mm;
-      background: #f1f5f9; display: flex; align-items: flex-end;
+    .photos .slot { position: relative; border: 1px solid #e2e4e9; border-radius: 0;
+      background: #f3f4f6; display: flex; align-items: flex-end;
       justify-content: center; overflow: hidden; }
-    .photos .tag { margin: 3mm; font-size: 7.5pt; letter-spacing: 2px;
-      text-transform: uppercase; color: #64748b; }
+    .photos .tag { margin: 3mm; font-size: 7pt; letter-spacing: 2px;
+      text-transform: uppercase; color: #8b939f;
+      font-family: Consolas, ui-monospace, monospace; }
 
     /* ---- caption ---- */
-    .name { font-size: 17pt; color: #0f172a; }
+    .name { font-size: 17pt; color: #0b0d0f; letter-spacing: -0.02em; }
     .idline { margin-top: 1.5mm; font-size: 8.5pt; letter-spacing: 1px;
-      color: #64748b; }
-    .idline .code { color: #1e293b; font-weight: 700; }
-    .desc { margin-top: 3.5mm; font-size: 9.5pt; line-height: 1.5;
-      color: #475569; max-width: 150mm; }
+      color: #5b6470; font-family: Consolas, ui-monospace, monospace; }
+    .idline .code { color: #0b0d0f; font-weight: 700; }
+    .desc { margin-top: 3.5mm; font-size: 9.5pt; line-height: 1.55;
+      color: #5b6470; max-width: 150mm; }
 
     .specrow { display: flex; flex-wrap: wrap; gap: 0 8mm; margin-top: 4.5mm; }
-    .spec { min-width: 30mm; padding: 2.2mm 0; border-top: 1px solid #cbd5e1; }
-    .spec .k { font-size: 7pt; letter-spacing: 2px; text-transform: uppercase;
-      color: #94a3b8; }
-    .spec .v { font-size: 9.5pt; font-weight: 600; color: #0f172a; }
-    .spec .v.price { font-size: 11pt; font-weight: 700; color: #1e293b; }
+    .spec { min-width: 30mm; padding: 2.2mm 0; border-top: 1px solid #e2e4e9; }
+    .spec .k { font-size: 6.5pt; letter-spacing: 2px; text-transform: uppercase;
+      color: #8b939f; font-family: Consolas, ui-monospace, monospace; }
+    .spec .v { font-size: 9.5pt; font-weight: 600; color: #0b0d0f; }
+    .spec .v.price { font-size: 11pt; font-weight: 700; color: #0b0d0f;
+      font-family: Consolas, ui-monospace, monospace; }
 
     /* ---- footer row: QR right, code left ---- */
     .foot { margin-top: 6mm; display: flex; align-items: flex-end;
-      justify-content: space-between; border-top: 1.5px solid #cbd5e1;
+      justify-content: space-between; border-top: 1px solid #e2e4e9;
       padding-top: 4mm; }
-    .foot .follio { font-size: 8pt; color: #64748b; }
+    .foot .follio { font-size: 8pt; color: #5b6470;
+      font-family: Consolas, ui-monospace, monospace; }
     .qr-holder { text-align: center; }
     .qr-holder img { width: 20mm; height: 20mm; }
     .qr-holder .kw { font-size: 6.5pt; letter-spacing: 1.5px;
-      text-transform: uppercase; color: #64748b; margin-top: 1mm; }
+      text-transform: uppercase; color: #8b939f; margin-top: 1mm;
+      font-family: Consolas, ui-monospace, monospace; }
 
     /* compact variants kept for quick internal copies */
     .per2 { column-count: 2; column-gap: 8mm; } .per2 .card .photos.duo { height: 90mm; }
@@ -266,13 +272,15 @@ export function buildHangTagHtml(dress: DressRow, atelierName: string, qrDataUrl
       @page { size: 50mm 30mm; margin: 0; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { width: 50mm; height: 30mm; font-family: 'Segoe UI', system-ui, sans-serif;
-        color: #0f172a; display: flex; align-items: center; padding: 2mm; }
+        color: #0b0d0f; display: flex; align-items: center; padding: 2mm; }
       .qr { width: 22mm; height: 22mm; }
       .qr img { width: 100%; height: 100%; }
       .info { flex: 1; padding-left: 2mm; }
-      .brand { font-size: 7pt; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; }
-      .code { font-size: 11pt; font-weight: 700; color: #1e293b; margin-top: 1mm; }
-      .name { font-size: 8pt; color: #0f172a; margin-top: 1mm; line-height: 1.2; }
+      .brand { font-size: 7pt; letter-spacing: 2px; text-transform: uppercase; color: #8b939f;
+        font-family: Consolas, ui-monospace, monospace; }
+      .code { font-size: 11pt; font-weight: 700; color: #0b0d0f; margin-top: 1mm;
+        font-family: Consolas, ui-monospace, monospace; }
+      .name { font-size: 8pt; color: #0b0d0f; margin-top: 1mm; line-height: 1.2; }
     </style></head>
     <body>
       <div class="qr">${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR">` : ''}</div>
@@ -301,16 +309,18 @@ export function buildTagSheetHtml(dresses: DressRow[], atelierName: string, qrBy
     <style>
       @page { size: A4; margin: 8mm; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #0f172a; }
+      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #0b0d0f; }
       .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3mm; }
-      .tag { border: 0.3mm dashed #d8b4c4; border-radius: 2mm; padding: 2mm;
+      .tag { border: 0.3mm dashed #c9cdd4; border-radius: 0; padding: 2mm;
         display: flex; align-items: center; height: 30mm; break-inside: avoid; }
       .qr { width: 20mm; height: 20mm; flex-shrink: 0; }
       .qr img { width: 100%; height: 100%; }
       .info { flex: 1; padding-left: 2mm; }
-      .brand { font-size: 6pt; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; }
-      .code { font-size: 9pt; font-weight: 700; color: #1e293b; margin-top: 1mm; }
-      .name { font-size: 7pt; color: #0f172a; margin-top: 1mm; line-height: 1.2; }
+      .brand { font-size: 6pt; letter-spacing: 2px; text-transform: uppercase; color: #8b939f;
+        font-family: Consolas, ui-monospace, monospace; }
+      .code { font-size: 9pt; font-weight: 700; color: #0b0d0f; margin-top: 1mm;
+        font-family: Consolas, ui-monospace, monospace; }
+      .name { font-size: 7pt; color: #0b0d0f; margin-top: 1mm; line-height: 1.2; }
     </style></head>
     <body><div class="grid">${tags}</div></body></html>`;
 }
@@ -356,14 +366,14 @@ export function buildReceiptHtml(movement: import('@/features/movements/api').Dr
     <title>Receipt</title>
     <style>
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #0f172a; padding: 12mm; max-width: 180mm; }
+      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #0b0d0f; padding: 12mm; max-width: 180mm; }
       h1 { font-size: 16pt; margin-bottom: 2mm; }
-      .sub { color: #64748b; font-size: 9pt; margin-bottom: 6mm; }
-      .row { display: flex; justify-content: space-between; padding: 2mm 0; border-bottom: 1px solid #cbd5e1; font-size: 10pt; }
-      .row .k { color: #64748b; }
+      .sub { color: #5b6470; font-size: 9pt; margin-bottom: 6mm; }
+      .row { display: flex; justify-content: space-between; padding: 2mm 0; border-bottom: 1px solid #e2e4e9; font-size: 10pt; }
+      .row .k { color: #5b6470; }
       .row .v { font-weight: 600; }
       .sig { margin-top: 12mm; display: flex; gap: 10mm; }
-      .sig div { flex: 1; border-top: 1px solid #0f172a; padding-top: 2mm; font-size: 8pt; color: #64748b; }
+      .sig div { flex: 1; border-top: 1px solid #0b0d0f; padding-top: 2mm; font-size: 8pt; color: #5b6470; }
     </style></head>
     <body>
       <h1>${e(atelierName)}</h1>

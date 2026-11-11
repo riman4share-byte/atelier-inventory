@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/Button';
+import { Panel } from '@/components/ui/Panel';
 import { TextField } from '@/components/ui/TextField';
+import { CheckIcon, AlertIcon } from '@/components/icons';
 
 const KINDS = ['vision', 'background_removal', 'translation', 'storage', 'erp', 'custom'] as const;
 
@@ -76,60 +78,106 @@ export function ToolsPanel() {
   };
 
   return (
-    <section className="mt-6 rounded-card border border-line p-4" data-testid="tools-panel">
-      <h2 className="text-caption font-semibold text-muted">{t('tools.title')}</h2>
-      <p className="mt-1 text-note text-muted">{t('tools.hint')}</p>
-      <div className="mt-3 flex flex-col gap-2">
-        <label className="text-caption font-semibold text-muted" htmlFor="tools-kind">
-          {t('tools.kindLabel')}
-        </label>
-        <select id="tools-kind" value={kind} onChange={(e) => setKind(e.target.value)}
-          className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink">
-          {KINDS.map((k) => <option key={k} value={k}>{t(`tools.kind.${k}`)}</option>)}
-        </select>
-        <TextField label={t('tools.provider')} value={provider} onChange={(e) => setProvider(e.target.value)} />
-        <TextField label={t('tools.model')} value={model} onChange={(e) => setModel(e.target.value)} />
-        <TextField
-          label={t('tools.key')}
-          type="password"
-          value={key}
-          onChange={(e) => setKey(e.target.value)}
-          autoComplete="off"
-        />
-        <Button onClick={() => void save()} loading={saving} disabled={!key.trim()} className="w-full">
-          {t('tools.save')}
-        </Button>
-        {status ? (
-          <p className={`text-small ${status.ok ? 'text-ok' : 'text-danger'}`} role={status.ok ? 'status' : 'alert'}>
-            {status.text}
-          </p>
-        ) : null}
-      </div>
-      <p className="mt-3 text-note text-muted">{t('tools.securityNote')}</p>
+    <div data-testid="tools-panel">
+      <Panel title={t('tools.title')}>
+        <p className="text-note text-muted">{t('tools.hint')}</p>
 
-      <div className="mt-5 border-t border-line pt-4">
-        <h3 className="text-caption font-semibold text-muted">{t('tools.publicPageTitle')}</h3>
-        <p className="mt-1 text-note text-muted">{t('tools.publicPageHint')}</p>
-        <div className="mt-3 flex items-center gap-3">
-          <Button
-            variant="secondary"
-            className="w-auto px-4"
-            loading={publicPageSaving}
-            disabled={publicPage === null}
-            onClick={() => void togglePublicPage()}
-          >
-            {publicPage ? t('tools.publicPageOn') : t('tools.publicPageOff')}
+        <div className="mt-3 flex flex-col gap-2.5">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="tools-kind" className="eyebrow">
+              {t('tools.kindLabel')}
+            </label>
+            <select
+              id="tools-kind"
+              value={kind}
+              onChange={(e) => setKind(e.target.value)}
+              className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
+            >
+              {KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {t(`tools.kind.${k}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <TextField
+            label={t('tools.provider')}
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
+            mono
+          />
+          <TextField
+            label={t('tools.model')}
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            mono
+          />
+          <TextField
+            label={t('tools.key')}
+            type="password"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            autoComplete="off"
+            mono
+          />
+
+          <Button onClick={() => void save()} loading={saving} disabled={!key.trim()}>
+            {t('tools.save')}
           </Button>
-          <span className="text-note text-muted" aria-live="polite">
-            {publicPage === null ? t('common.loading') : ''}
-          </span>
+
+          {status ? (
+            status.ok ? (
+              <p
+                role="status"
+                className="flex items-start gap-2 rounded-field border border-ok-line bg-ok-bg px-2.5 py-1.5 text-small text-ok"
+              >
+                <CheckIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span className="min-w-0 break-words">{status.text}</span>
+              </p>
+            ) : (
+              <p
+                role="alert"
+                className="flex items-start gap-2 rounded-field border border-danger-line bg-danger-bg px-2.5 py-1.5 text-small text-danger"
+              >
+                <AlertIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span className="min-w-0 break-words">{status.text}</span>
+              </p>
+            )
+          ) : null}
+
+          <p className="text-note text-faint">{t('tools.securityNote')}</p>
         </div>
-        {publicPageError ? (
-          <p className="mt-2 text-small text-danger" role="alert">
-            {publicPageError}
-          </p>
-        ) : null}
-      </div>
-    </section>
+
+        <div className="mt-3 border-t border-line pt-3">
+          <p className="eyebrow">{t('tools.publicPageTitle')}</p>
+          <p className="mt-1 text-note text-muted">{t('tools.publicPageHint')}</p>
+          <div className="mt-2 flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              fullWidth={false}
+              className="px-3"
+              loading={publicPageSaving}
+              disabled={publicPage === null}
+              onClick={() => void togglePublicPage()}
+            >
+              {publicPage ? t('tools.publicPageOn') : t('tools.publicPageOff')}
+            </Button>
+            <span className="text-note text-muted" aria-live="polite">
+              {publicPage === null ? t('common.loading') : ''}
+            </span>
+          </div>
+          {publicPageError ? (
+            <p
+              role="alert"
+              className="mt-2 rounded-field border border-danger-line bg-danger-bg px-2.5 py-1.5 text-small text-danger"
+            >
+              {publicPageError}
+            </p>
+          ) : null}
+        </div>
+      </Panel>
+    </div>
   );
 }

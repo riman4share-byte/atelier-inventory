@@ -3,42 +3,69 @@
 @tailwind utilities;
 
 /*
- * Industrial design tokens — neutral palette, sharp corners, no decoration.
- * Components use semantic Tailwind classes (bg-surface, text-muted,
- * rounded-btn, text-title ...) so re-theming needs no component changes.
+ * INSTRUMENT — design tokens.
+ *
+ * A high-density operations console. Two constraints drive every value here:
+ *   1. Flat surfaces separated by 1px hairlines. No shadows, no gradients,
+ *      no glass. Depth comes from tonal steps, not blur.
+ *   2. One accent hue (cobalt) reserved for primary actions and active
+ *      state. Everything else is neutral; status colours only ever appear on
+ *      status.
+ *
+ * Components use semantic classes (bg-surface, text-muted, border-line,
+ * rounded-card) so the whole app re-themes from this file alone.
  */
+
 :root {
-  --bg: #f1f5f9;
+  /* Surfaces: four tonal steps, each a hairline apart. */
+  --bg: #f8f9fa;
   --surface: #ffffff;
-  --ink: #0f172a;
-  --muted: #475569;
-  --line: #cbd5e1;
-  --soft: #e2e8f0;
-  --accent: #1e293b;
-  --accent2: #475569;
-  --gold: #d97706;
+  --surface-2: #f3f4f6;
+  --surface-3: #eceef1;
+
+  /* Structure */
+  --ink: #0b0d0f;
+  --muted: #5b6470;
+  --faint: #8b939f;
+  --line: #e2e4e9;
+  --line-strong: #c9cdd4;
+
+  /* The single accent hue. */
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
   --accent-ink: #ffffff;
-  --c1: #e2e8f0;
-  --c2: #cbd5e1;
-  --c3: #94a3b8;
-  --c4: #64748b;
+  --accent-bg: #eaf0fe;
+  --accent-line: #b9ccf7;
 
-  --ok: #15803d;
-  --ok-bg: #dcfce7;
-  --warn: #b45309;
-  --warn-bg: #fef3c7;
-  --info: #1d4ed8;
-  --info-bg: #dbeafe;
-  --off: #475569;
-  --off-bg: #e2e8f0;
-  --danger: #b91c1c;
-  --danger-bg: #fee2e2;
+  /* Status — only ever on status. */
+  --ok: #059669;
+  --ok-bg: #e6f5ef;
+  --ok-line: #a7d9c4;
+  --warn: #d97706;
+  --warn-bg: #fdf1e0;
+  --warn-line: #f0cd97;
+  --danger: #dc2626;
+  --danger-bg: #fdeaea;
+  --danger-line: #f2b8b8;
+  --info: #2563eb;
+  --info-bg: #eaf0fe;
+  --info-line: #b9ccf7;
+  --off: #5b6470;
+  --off-bg: #eceef1;
+  --off-line: #d3d6dc;
 
-  --font-serif: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Icon tile ramp for the gallery, in order of visual weight. */
+  --c1: #eceef1;
+  --c2: #e0e3e8;
+  --c3: #d2d6dd;
+  --c4: #c3c8d1;
+
+  /* Type */
+  --font-sans: 'Plus Jakarta Sans Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'SFMono-Regular', ui-monospace, 'Cascadia Mono', monospace;
   --font-arabic: 'Cairo Variable', 'Noto Naskh Arabic', system-ui, sans-serif;
 
-  /* Focus ring: a colour of its own, never a background token. */
+  /* Focus ring: its own hue, never a background token. */
   --focus: #2563eb;
 
   color-scheme: light;
@@ -46,31 +73,45 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f172a;
-    --surface: #1e293b;
-    --ink: #f1f5f9;
-    --muted: #94a3b8;
-    --line: #334155;
-    --soft: #1e293b;
-    --accent: #f1f5f9;
-    --accent2: #94a3b8;
-    --gold: #fbbf24;
-    --accent-ink: #0f172a;
-    --c1: #334155;
-    --c2: #475569;
-    --c3: #64748b;
-    --c4: #94a3b8;
+    --bg: #0a0a0c;
+    --surface: #111114;
+    --surface-2: #16161a;
+    --surface-3: #1c1c21;
 
-    --ok: #4ade80;
-    --ok-bg: #14532d;
-    --warn: #fbbf24;
-    --warn-bg: #78350f;
-    --info: #60a5fa;
-    --info-bg: #1e3a8a;
-    --off: #94a3b8;
-    --off-bg: #334155;
+    --ink: #e7e9ec;
+    --muted: #8a919e;
+    --faint: #646b77;
+    --line: #222226;
+    --line-strong: #32323a;
+
+    --accent: #3b82f6;
+    --accent-hover: #60a5fa;
+    --accent-ink: #ffffff;
+    --accent-bg: #10182b;
+    --accent-line: #1e2f52;
+
+    --ok: #10b981;
+    --ok-bg: #0d1f1a;
+    --ok-line: #16463a;
+    --warn: #f59e0b;
+    --warn-bg: #241a0c;
+    --warn-line: #4d3812;
     --danger: #f87171;
-    --danger-bg: #7f1d1d;
+    --danger-bg: #2a1214;
+    --danger-line: #5c2226;
+    --info: #60a5fa;
+    --info-bg: #10182b;
+    --info-line: #1e2f52;
+    --off: #8a919e;
+    --off-bg: #1c1c21;
+    --off-line: #32323a;
+
+    --c1: #1c1c21;
+    --c2: #24242a;
+    --c3: #2d2d34;
+    --c4: #37373f;
+
+    --focus: #60a5fa;
 
     color-scheme: dark;
   }
@@ -86,6 +127,8 @@
     @apply bg-bg font-sans text-ink antialiased;
     min-height: 100dvh;
     -webkit-tap-highlight-color: transparent;
+    /* Tabular figures everywhere numbers can appear. */
+    font-variant-numeric: tabular-nums;
   }
 
   h1,
@@ -93,13 +136,15 @@
   h3 {
     @apply font-sans;
     font-weight: 600;
+    /* Tight, architectural headings. */
+    letter-spacing: -0.02em;
   }
 
+  /* Arabic keeps its own script metrics; tracking must be zero. */
   html[lang='ar'] body,
   html[lang='ar'] h1,
   html[lang='ar'] h2,
-  html[lang='ar'] h3,
-  html[lang='ar'] .font-serif {
+  html[lang='ar'] h3 {
     font-family: var(--font-arabic);
     letter-spacing: 0;
     line-height: 1.5;
@@ -108,17 +153,24 @@
   input,
   select,
   textarea {
+    /* 16px keeps iOS from zooming the viewport on focus. */
     font-size: 16px;
   }
 
   :focus-visible {
     outline: 2px solid var(--focus);
-    outline-offset: 2px;
+    outline-offset: 1px;
   }
 
   ::placeholder {
-    color: var(--muted);
+    color: var(--faint);
     opacity: 1;
+  }
+
+  /* Native controls, restyled to match the console. */
+  select {
+    background-image: none;
+    appearance: none;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -145,5 +197,33 @@
   }
   .pt-safe {
     padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Section eyebrow: small, uppercase, wide tracking. The label that makes a
+     dense interface legible without extra chrome. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* Monospaced numeric run inside prose. */
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  /* Hairline grid backdrop for the app shell. */
+  .grid-lines {
+    background-image:
+      linear-gradient(to right, var(--line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    background-position: -1px -1px;
   }
 }

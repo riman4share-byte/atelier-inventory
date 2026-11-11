@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { GownIcon } from '@/components/icons';
+import { GownIcon, PlusIcon, SearchIcon, XIcon } from '@/components/icons';
 import { Screen } from '@/components/layout/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Spinner } from '@/components/ui/Spinner';
+import { Button } from '@/components/ui/Button';
 import { STATUS_FILTERS, type StatusFilter } from './dressSearch';
 import {
   useBulkSetStatus,
@@ -39,23 +40,23 @@ function DressTile({ dress, language, onOpen }: { dress: DressRow; language: str
     <button
       type="button"
       onClick={onOpen}
-      className="flex flex-col rounded-tile bg-surface p-0 text-start"
+      className="group flex flex-col overflow-hidden rounded-card border border-line bg-surface text-start transition-colors hover:border-line-strong"
       data-testid="dress-tile"
     >
       <span
         className={cx(
-          'flex aspect-[3/4] w-full items-center justify-center rounded-tile',
+          'flex aspect-[3/4] w-full items-center justify-center border-b border-line',
           palette.tile,
         )}
       >
-        <GownIcon className={cx('h-14 w-auto drop-shadow-md', palette.icon)} />
+        <GownIcon className={cx('h-10 w-auto', palette.icon)} />
       </span>
-      <span className="px-1 pb-2 pt-2">
-        <span className="block truncate text-body font-serif font-semibold text-ink">
+      <span className="flex flex-1 flex-col gap-1 px-2.5 py-2">
+        <span className="block truncate text-small font-semibold leading-snug text-ink">
           {displayName(dress, language)}
         </span>
-        <span className="mt-1 flex items-center gap-2">
-          <span className="text-note text-muted">{dress.code}</span>
+        <span className="mt-auto flex items-center justify-between gap-2">
+          <span className="font-mono text-[11px] tracking-tight text-muted">{dress.code}</span>
           <StatusPill status={dress.status} label={t(`status.${dress.status}`)} />
         </span>
       </span>
@@ -118,7 +119,7 @@ export function DressesPage() {
     (location.state as { undo?: UndoClaim } | null)?.undo ?? null,
   );
   useEffect(() => {
-    navigate(location.pathname + location.search, { replace: true, state: null });
+    navigate(location.pathname + location.search, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
@@ -143,40 +144,42 @@ export function DressesPage() {
 
   return (
     <Screen
+      eyebrow={t('nav.dresses')}
       title={t('screens.dresses.title')}
       subtitle={`${counts.isLoading ? '…' : (counts.data?.total ?? '–')} ${t('gallery.heroLabel')}`}
       action={
-        <button
-          type="button"
-          onClick={() => navigate('/dresses/new')}
-          className="min-h-tap rounded-pill bg-brand px-4 text-body font-bold text-white shadow-btn"
-        >
+        <Button size="sm" className="w-auto px-2.5" onClick={() => navigate('/dresses/new')}>
+          <PlusIcon className="h-3.5 w-3.5" />
           {t('gallery.add')}
-        </button>
+        </Button>
       }
     >
-      <div className="flex flex-1 flex-col gap-4">
-        <SegmentedControl
-          label={t('gallery.viewLabel')}
-          options={[
-            { value: 'grid', label: t('gallery.viewGrid') },
-            { value: 'table', label: t('gallery.viewTable') },
-          ]}
-          value={view}
-          onChange={(value) => setView(value as 'grid' | 'table')}
-        />
-
-        <input
-          type="search"
-          value={searchInput}
-          onChange={(event) => setSearchInput(event.target.value)}
-          aria-label={t('gallery.searchLabel')}
-          placeholder={t('gallery.searchPlaceholder')}
-          className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2.5 text-input text-ink placeholder:text-muted focus:border-accent"
-        />
+      <div className="flex flex-1 flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <SegmentedControl
+            label={t('gallery.viewLabel')}
+            options={[
+              { value: 'grid', label: t('gallery.viewGrid') },
+              { value: 'table', label: t('gallery.viewTable') },
+            ]}
+            value={view}
+            onChange={(value) => setView(value as 'grid' | 'table')}
+          />
+          <div className="relative min-w-[180px] flex-1">
+            <SearchIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" />
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              aria-label={t('gallery.searchLabel')}
+              placeholder={t('gallery.searchPlaceholder')}
+              className="h-8 w-full rounded-field border border-line bg-surface pl-7 pr-2 text-body text-ink placeholder:text-faint focus:border-accent"
+            />
+          </div>
+        </div>
 
         <div
-          className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+          className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5"
           role="group"
           aria-label={t('gallery.filtersLabel')}
         >
@@ -187,8 +190,10 @@ export function DressesPage() {
               aria-pressed={status === chip.value}
               onClick={() => setStatus(chip.value)}
               className={cx(
-                'min-h-tap shrink-0 rounded-pill px-3.5 text-caption font-semibold',
-                status === chip.value ? 'bg-accent text-accent-ink' : 'bg-soft text-ink',
+                'h-7 shrink-0 rounded-field border px-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors',
+                status === chip.value
+                  ? 'border-accent bg-accent text-accent-ink'
+                  : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
               )}
             >
               {chip.label}
@@ -211,34 +216,30 @@ export function DressesPage() {
             onExportSelected={() => setExportOpen(true)}
           />
         ) : dresses.isError ? (
-          <div className="flex flex-col items-center gap-3 rounded-card bg-soft px-6 py-10 text-center">
+          <div className="flex flex-col items-center gap-3 rounded-card border border-line bg-surface-2 px-6 py-10 text-center">
             <p className="text-body font-semibold text-ink">{t('gallery.loadFailedTitle')}</p>
             <p className="text-small text-muted">{t('gallery.loadFailedBody')}</p>
-            <button
-              type="button"
-              onClick={() => void dresses.refetch()}
-              className="min-h-tap rounded-pill bg-accent px-4 text-body font-bold text-accent-ink"
-            >
+            <Button variant="secondary" className="w-auto px-4" onClick={() => void dresses.refetch()}>
               {t('common.retry')}
-            </button>
+            </Button>
           </div>
         ) : tiles.length === 0 && dresses.isSuccess ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-card bg-soft px-6 py-10 text-center">
-            <GownIcon className="h-20 w-auto text-accent opacity-70" />
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-card border border-line bg-surface-2 px-6 py-10 text-center">
+            <GownIcon className="h-16 w-auto text-faint" />
             {hasFilters ? (
               <>
                 <p className="text-body font-semibold text-ink">{t('gallery.emptyFilteredTitle')}</p>
                 <p className="text-small text-muted">{t('gallery.emptyFilteredBody')}</p>
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  className="w-auto px-4"
                   onClick={() => {
                     setSearchInput('');
                     setStatus('all');
                   }}
-                  className="min-h-tap rounded-pill bg-accent px-4 text-body font-bold text-accent-ink"
                 >
                   {t('gallery.clearFilters')}
-                </button>
+                </Button>
               </>
             ) : (
               <>
@@ -246,25 +247,22 @@ export function DressesPage() {
                   {t('gallery.emptyTitle')}
                 </p>
                 <p className="max-w-[34ch] text-small text-muted">{t('gallery.emptyBody')}</p>
-                <button
-                  type="button"
-                  onClick={() => navigate('/dresses/new')}
-                  className="min-h-tap rounded-pill bg-accent px-4 text-body font-bold text-accent-ink"
-                >
+                <Button className="w-auto px-4" onClick={() => navigate('/dresses/new')}>
+                  <PlusIcon className="h-3.5 w-3.5" />
                   {t('gallery.add')}
-                </button>
+                </Button>
               </>
             )}
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {dresses.isLoading
                 ? Array.from({ length: 4 }, (_, index) => (
                     <div
                       key={index}
-                      className="animate-pulse rounded-tile bg-soft"
-                      style={{ aspectRatio: '3 / 4' }}
+                      className="animate-pulse rounded-card border border-line bg-surface-2"
+                      style={{ aspectRatio: '4 / 5' }}
                       aria-hidden="true"
                     />
                   ))
@@ -280,7 +278,7 @@ export function DressesPage() {
             <div ref={sentinelRef} aria-hidden="true" className="h-4" />
             {dresses.isFetchingNextPage ? (
               <div className="flex justify-center py-2">
-                <Spinner className="h-5 w-5 text-accent" />
+                <Spinner className="h-4 w-4 text-accent" />
               </div>
             ) : null}
           </>
@@ -290,32 +288,33 @@ export function DressesPage() {
       {/* Undo snackbar after a soft delete on the detail page */}
       {undo ? (
         <div
-          className="pb-safe fixed inset-x-3 bottom-24 z-20 flex items-center gap-2 rounded-btn bg-gradient-to-r from-accent to-accent2 px-4 py-2 text-white shadow-frame"
+          className="pb-safe fixed inset-x-3 bottom-20 z-20 flex items-center gap-2 rounded-card border border-line bg-surface px-3 py-2"
           role="status"
           data-testid="undo-snackbar"
         >
-          <span className="flex-1 text-small font-semibold">
+          <span className="flex-1 truncate text-small text-ink">
             {t('snack.deleted', { code: undo.code })}
           </span>
-          <button
-            type="button"
+          <Button
+            size="sm"
+            variant="secondary"
+            className="w-auto px-2.5"
             onClick={() => {
               restore.mutate(undo.id, {
                 onSuccess: () => setUndo(null),
                 onError: () => setUndo(null),
               });
             }}
-            className="min-h-tap rounded-pill bg-white/25 px-3 text-caption font-bold text-white"
           >
             {t('snack.undo')}
-          </button>
+          </Button>
           <button
             type="button"
             aria-label={t('snack.dismiss')}
             onClick={() => setUndo(null)}
-            className="min-h-tap px-1 text-caption font-bold text-white/80"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-field text-muted transition-colors hover:bg-surface-2 hover:text-ink"
           >
-            ✕
+            <XIcon className="h-3.5 w-3.5" />
           </button>
         </div>
       ) : null}

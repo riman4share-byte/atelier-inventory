@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useCustomers, useCreateCustomer, useCreateMovement } from './api';
 import { Button } from '@/components/ui/Button';
+import { Panel } from '@/components/ui/Panel';
+import { TextArea } from '@/components/ui/TextArea';
+import { TextField } from '@/components/ui/TextField';
+import { XIcon } from '@/components/icons';
 
 const REASONS = ['rental', 'sale_delivery', 'fitting', 'alteration', 'cleaning', 'photoshoot', 'other'] as const;
 
@@ -12,9 +16,27 @@ interface CheckOutSheetProps {
   dressCode: string;
 }
 
+/**
+ * Renders a translated title with the dress code set in the monospaced face:
+ * the code is the record identifier, the words around it are prose.
+ */
+function TitleWithCode({ title, code }: { title: string; code: string }) {
+  const index = title.indexOf(code);
+  if (index < 0) return <>{title}</>;
+  return (
+    <>
+      {title.slice(0, index)}
+      <span className="font-mono tracking-tight">{code}</span>
+      {title.slice(index + code.length)}
+    </>
+  );
+}
+
 /** Bottom sheet to check a dress out to a customer. */
 export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutSheetProps) {
   const { t } = useTranslation();
+  const reasonId = useId();
+  const listId = useId();
   const [customerSearch, setCustomerSearch] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
@@ -69,129 +91,164 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
     }
   };
 
+  const showSuggestions = Boolean(customerSearch.trim()) && !selectedCustomerId;
+
   return (
     <div className="fixed inset-0 z-40 flex flex-col justify-end" data-testid="checkout-sheet">
       <button type="button" aria-label={t('common.close')} onClick={onClose} className="flex-1 bg-black/30" />
-      <div className="max-h-[90dvh] overflow-y-auto rounded-sheet border border-line bg-surface p-4">
-        <h2 className="mb-3 text-title">{t('movements.checkOutTitle', { code: dressCode })}</h2>
+      <div className="flex max-h-[90dvh] flex-col overflow-y-auto rounded-t-sheet border-t border-line bg-surface pb-safe">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2">
+          <h2 className="text-title font-semibold tracking-tight text-ink">
+            <TitleWithCode title={t('movements.checkOutTitle', { code: dressCode })} code={dressCode} />
+          </h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            fullWidth={false}
+            aria-label={t('common.close')}
+            onClick={onClose}
+            className="w-8 !px-0"
+          >
+            <XIcon className="h-4 w-4" />
+          </Button>
+        </header>
 
-        <div className="flex flex-col gap-3">
-          {/* Customer */}
-          <div>
-            <label className="mb-1 block text-caption font-semibold text-muted">{t('movements.customer')}</label>
-            <input
-              value={customerSearch}
-              onChange={(event) => {
-                setCustomerSearch(event.target.value);
-                setSelectedCustomerId(null);
-              }}
-              placeholder={t('movements.searchCustomer')}
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink placeholder:text-muted"
-            />
-            {customerSearch.trim() && !selectedCustomerId ? (
-              <div className="mt-1 max-h-32 overflow-y-auto rounded-field bg-soft">
-                {(customers.data ?? []).map((customer) => (
-                  <button
-                    key={customer.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCustomerId(customer.id);
-                      setCustomerSearch(customer.full_name);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-start text-small text-ink hover:bg-surface"
-                  >
-                    <span className="font-semibold">{customer.full_name}</span>
-                    {customer.phone ? <span className="text-muted">{customer.phone}</span> : null}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setNewName(customerSearch.trim());
+        <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
+          {/* Custody: who is taking the dress. */}
+          <Panel>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <TextField
+                  label={t('movements.customer')}
+                  placeholder={t('movements.searchCustomer')}
+                  value={customerSearch}
+                  role="combobox"
+                  aria-expanded={showSuggestions}
+                  aria-controls={listId}
+                  aria-autocomplete="list"
+                  onChange={(event) => {
+                    setCustomerSearch(event.target.value);
                     setSelectedCustomerId(null);
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-start text-small font-semibold text-accent"
-                >
-                  {t('movements.addNewCustomer', { name: customerSearch.trim() })}
-                </button>
+                />
+                {showSuggestions ? (
+                  <div className="overflow-hidden rounded-field border border-line bg-surface">
+                    <ul id={listId} role="listbox" className="divide-y divide-line">
+                      {(customers.data ?? []).map((customer) => (
+                        <li key={customer.id} role="presentation">
+                          <button
+                            type="button"
+                            role="option"
+                            aria-selected={false}
+                            onClick={() => {
+                              setSelectedCustomerId(customer.id);
+                              setCustomerSearch(customer.full_name);
+                            }}
+                            className="flex w-full items-center gap-2 px-2.5 py-1.5 text-start text-small text-ink transition-colors hover:bg-surface-2"
+                          >
+                            <span className="font-semibold">{customer.full_name}</span>
+                            {customer.phone ? (
+                              <span className="font-mono text-note text-muted">{customer.phone}</span>
+                            ) : null}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNewName(customerSearch.trim());
+                        setSelectedCustomerId(null);
+                      }}
+                      className="w-full border-t border-line px-2.5 py-1.5 text-start text-caption font-semibold text-accent transition-colors hover:bg-surface-2"
+                    >
+                      {t('movements.addNewCustomer', { name: customerSearch.trim() })}
+                    </button>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
 
-          {newName && !selectedCustomerId ? (
-            <div className="rounded-field bg-soft p-3">
-              <p className="mb-2 text-caption font-semibold text-muted">{t('movements.newCustomer')}</p>
-              <input
-                value={newName}
-                onChange={(event) => setNewName(event.target.value)}
-                placeholder={t('movements.fullName')}
-                className="min-h-tap mb-2 w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink"
+              {newName && !selectedCustomerId ? (
+                <div className="flex flex-col gap-3 border-t border-line pt-3">
+                  <p className="eyebrow">{t('movements.newCustomer')}</p>
+                  <TextField
+                    label={t('movements.fullName')}
+                    value={newName}
+                    onChange={(event) => setNewName(event.target.value)}
+                  />
+                  <TextField
+                    label={t('movements.phone')}
+                    mono
+                    value={newPhone}
+                    onChange={(event) => setNewPhone(event.target.value)}
+                  />
+                </div>
+              ) : null}
+            </div>
+          </Panel>
+
+          {/* The movement itself: reason, return date, money taken. */}
+          <Panel>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1">
+                <label
+                  htmlFor={reasonId}
+                  className="eyebrow text-[10px] font-medium tracking-widest text-muted"
+                >
+                  {t('movements.reasonLabel')}
+                </label>
+                <select
+                  id={reasonId}
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value as 'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'return' | 'other')}
+                  className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
+                >
+                  {REASONS.map((value) => (
+                    <option key={value} value={value}>
+                      {t(`movements.reason.${value}`)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <TextField
+                label={t('movements.dueDate')}
+                type="date"
+                mono
+                value={dueDate}
+                onChange={(event) => setDueDate(event.target.value)}
               />
-              <input
-                value={newPhone}
-                onChange={(event) => setNewPhone(event.target.value)}
-                placeholder={t('movements.phone')}
-                className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink"
+
+              <TextField
+                label={t('movements.deposit')}
+                type="number"
+                mono
+                inputMode="decimal"
+                placeholder="0"
+                value={deposit}
+                onChange={(event) => setDeposit(event.target.value)}
               />
             </div>
-          ) : null}
+          </Panel>
 
-          {/* Reason */}
-          <div>
-            <label className="mb-1 block text-caption font-semibold text-muted">{t('movements.reason')}</label>
-            <select
-              value={reason}
-              onChange={(event) => setReason(event.target.value as 'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'return' | 'other')}
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink"
-            >
-              {REASONS.map((value) => (
-                <option key={value} value={value}>
-                  {t(`movements.reason.${value}`)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Due date */}
-          <div>
-            <label className="mb-1 block text-caption font-semibold text-muted">{t('movements.dueDate')}</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(event) => setDueDate(event.target.value)}
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink"
-            />
-          </div>
-
-          {/* Deposit */}
-          <div>
-            <label className="mb-1 block text-caption font-semibold text-muted">{t('movements.deposit')}</label>
-            <input
-              type="number"
-              value={deposit}
-              onChange={(event) => setDeposit(event.target.value)}
-              placeholder="0"
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink"
-            />
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="mb-1 block text-caption font-semibold text-muted">{t('movements.conditionNotes')}</label>
-            <textarea
+          <Panel>
+            <TextArea
+              label={t('movements.conditionNotes')}
+              rows={2}
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
-              rows={2}
-              className="min-h-tap w-full rounded-field border-[1.5px] border-line bg-surface px-3 py-2 text-input text-ink"
             />
-          </div>
+          </Panel>
 
-          {errorText ? <p className="text-small text-danger">{errorText}</p> : null}
+          {errorText ? (
+            <p className="text-small text-danger" role="alert">
+              {errorText}
+            </p>
+          ) : null}
 
           <Button
             onClick={() => void submit()}
             loading={createMovement.isPending || createCustomer.isPending}
-            className="w-full"
           >
             {t('movements.checkOut')}
           </Button>

@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as XLSX from 'xlsx';
 import {
@@ -22,9 +22,16 @@ import {
 } from './exportData';
 import { buildCatalogHtml, buildStockReportHtml, printHtml } from './printDocument';
 import QRCode from 'qrcode';
+import { Button } from '@/components/ui/Button';
+import { Panel } from '@/components/ui/Panel';
+import { SegmentedControl, type SegmentOption } from '@/components/ui/SegmentedControl';
+import { XIcon } from '@/components/icons';
+import { cx } from '@/lib/cx';
 
 type ExportFormat = 'excel' | 'csv' | 'catalog' | 'report' | 'share';
 type ExportScope = 'filters' | 'selected' | 'all';
+/** `none` marks "no segment of the pair is selected" while the wide scope is on. */
+type ScopeChoice = ExportScope | 'none';
 
 const FORMATS: ReadonlyArray<{ value: ExportFormat; labelKey: string }> = [
   { value: 'excel', labelKey: 'export.formatExcel' },
@@ -74,30 +81,27 @@ interface ExportSheetProps {
   initialScope?: ExportScope;
 }
 
-function Chip({
+/** A column toggle — a hairline cell that reads as on or off. */
+function ColumnToggle({
   selected,
-  disabled,
   onClick,
   children,
 }: {
   selected: boolean;
-  disabled?: boolean;
   onClick: () => void;
-  children: ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       aria-pressed={selected}
-      disabled={disabled}
       onClick={onClick}
-      className={
-        disabled
-          ? 'min-h-tap shrink-0 rounded-pill bg-soft px-3 text-caption font-semibold text-muted opacity-60'
-          : selected
-            ? 'min-h-tap shrink-0 rounded-pill bg-accent px-3 text-caption font-semibold text-accent-ink'
-            : 'min-h-tap shrink-0 rounded-pill bg-soft px-3 text-caption font-semibold text-ink'
-      }
+      className={cx(
+        'h-7 shrink-0 rounded-field border px-2 text-caption font-semibold tracking-tight transition-colors',
+        selected
+          ? 'border-accent-line bg-accent-bg text-accent'
+          : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
+      )}
     >
       {children}
     </button>
@@ -113,6 +117,7 @@ export function ExportSheet({
   initialScope = 'filters',
 }: ExportSheetProps) {
   const { t } = useTranslation();
+  const columnsLegendId = useId();
   const [format, setFormat] = useState<ExportFormat>('excel');
   const [scope, setScope] = useState<ExportScope>(initialScope);
   const [showPrices, setShowPrices] = useState(false);
@@ -218,163 +223,242 @@ export function ExportSheet({
     }
   };
 
+  const formatOptions: ReadonlyArray<SegmentOption<ExportFormat>> = FORMATS.map((item) => ({
+    value: item.value,
+    label: t(item.labelKey),
+  }));
+
+  const scopeOptions: ReadonlyArray<SegmentOption<ScopeChoice>> = [
+    { value: 'filters', label: t('export.scopeFilters') },
+    { value: 'selected', label: t('export.scopeSelected', { count: selectedIds.length }) },
+  ];
+
+  const perPageOptions: ReadonlyArray<SegmentOption<'1' | '2' | '4'>> = (['1', '2', '4'] as const).map(
+    (value) => ({ value, label: `${value} ${t('export.perPageUnit')}` }),
+  );
+
+  const expiryOptions: ReadonlyArray<SegmentOption<'never' | '24h' | '7d'>> = [
+    { value: 'never', label: t('share.expiryNever') },
+    { value: '24h', label: t('share.expiry24h') },
+    { value: '7d', label: t('share.expiry7d') },
+  ];
+
   return (
     <div className="fixed inset-0 z-40 flex flex-col justify-end" data-testid="export-sheet">
-      <button type="button" aria-label={t('common.close')} onClick={onClose} className="flex-1 bg-black/30" />
-      <div className="max-h-[85dvh] overflow-y-auto rounded-sheet border border-line bg-surface p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-title">{t('export.title')}</h2>
-          <button
-            type="button"
-            onClick={onClose}
+      <button
+        type="button"
+        aria-label={t('common.close')}
+        onClick={onClose}
+        className="flex-1 bg-black/30"
+      />
+      <div className="flex max-h-[85dvh] flex-col overflow-y-auto rounded-t-sheet border-t border-line bg-surface pb-safe">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2">
+          <h2 className="text-title font-semibold tracking-tight text-ink">{t('export.title')}</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            fullWidth={false}
             aria-label={t('common.close')}
-            className="min-h-tap rounded-pill bg-soft px-3 text-caption font-bold text-ink"
+            onClick={onClose}
+            className="w-8 !px-0"
           >
-            ✕
-          </button>
-        </div>
+            <XIcon className="h-4 w-4" />
+          </Button>
+        </header>
 
-        <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-3">
-          {FORMATS.map((item) => (
-            <Chip key={item.value} selected={format === item.value} onClick={() => setFormat(item.value)}>
-              {t(item.labelKey)}
-            </Chip>
-          ))}
-        </div>
+        <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
+          <Panel>
+            <div className="flex flex-col gap-3">
+              {/* Format */}
+              <div className="no-scrollbar -mx-3 overflow-x-auto px-3">
+                <div className="w-max">
+                  <SegmentedControl
+                    label={t('export.title')}
+                    options={formatOptions}
+                    value={format}
+                    onChange={(value) => setFormat(value)}
+                  />
+                </div>
+              </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex gap-2" role="group" aria-label={t('export.scopeLabel')}>
-            <Chip selected={effectiveScope === 'filters'} onClick={() => setScope('filters')}>
-              {t('export.scopeFilters')}
-            </Chip>
-            <Chip
-              selected={effectiveScope === 'selected'}
-              disabled={!hasSelection}
-              onClick={() => setScope('selected')}
-            >
-              {t('export.scopeSelected', { count: selectedIds.length })}
-            </Chip>
-            <Chip selected={effectiveScope === 'all'} onClick={() => setScope('all')}>
-              {t('export.scopeAll')}
-            </Chip>
-          </div>
-
-          {(format === 'excel' || format === 'csv') && (
-            <div className="flex flex-wrap gap-2" role="group" aria-label={t('export.columnsLabel')}>
-              {DEFAULT_EXPORT_COLUMNS.map((column) => (
-                <Chip
-                  key={column.id}
-                  selected={!disabledColumns.has(column.id)}
-                  onClick={() =>
-                    setDisabledColumns((current) => {
-                      const next = new Set(current);
-                      if (next.has(column.id)) next.delete(column.id);
-                      else next.add(column.id);
-                      return next;
-                    })
-                  }
+              {/* Scope — the filtered pair, then the wide scope on its own. */}
+              <div className="flex flex-col gap-2 border-t border-line pt-3">
+                <p className="eyebrow">{t('export.scopeLabel')}</p>
+                <SegmentedControl
+                  label={t('export.scopeLabel')}
+                  options={scopeOptions}
+                  value={effectiveScope === 'all' ? 'none' : effectiveScope}
+                  onChange={(value) => {
+                    if (value === 'none') return;
+                    // Without a selection there is nothing to export by id.
+                    setScope(value === 'selected' && !hasSelection ? 'filters' : value);
+                  }}
+                />
+                {/* "Everything" ignores the filters, so it has a wider blast
+                    radius than a filtered scope. It sits outside the segmented
+                    pair, in its own full-width cell, and never reads as a
+                    third tab. */}
+                <button
+                  type="button"
+                  aria-pressed={effectiveScope === 'all'}
+                  onClick={() => setScope('all')}
+                  className={cx(
+                    'flex w-full items-center justify-between gap-2 rounded-field border px-2.5 py-1.5 transition-colors',
+                    effectiveScope === 'all'
+                      ? 'border-accent-line bg-accent-bg text-accent'
+                      : 'border-line-strong bg-surface text-ink hover:bg-surface-2',
+                  )}
                 >
-                  {t(`export.column.${column.id}`)}
-                </Chip>
-              ))}
-            </div>
-          )}
+                  <span className="eyebrow">{t('export.scopeAll')}</span>
+                  <span
+                    aria-hidden="true"
+                    className={cx(
+                      'h-1.5 w-1.5 rounded-full',
+                      effectiveScope === 'all' ? 'bg-accent' : 'bg-faint',
+                    )}
+                  />
+                </button>
+              </div>
 
-          {format === 'catalog' && (
-            <div className="flex gap-2" role="group" aria-label={t('export.perPageLabel')}>
-              {(['1', '2', '4'] as const).map((value) => (
-                <Chip
-                  key={value}
-                  selected={String(perPage) === value}
-                  onClick={() => setPerPage(Number(value) as 1 | 2 | 4)}
+              {/* Columns */}
+              {(format === 'excel' || format === 'csv') && (
+                <div
+                  role="group"
+                  aria-label={t('export.columnsLabel')}
+                  aria-labelledby={columnsLegendId}
+                  className="flex flex-col gap-2 border-t border-line pt-3"
                 >
-                  {value} {t('export.perPageUnit')}
-                </Chip>
-              ))}
+                  <p id={columnsLegendId} className="eyebrow">
+                    {t('export.columnsLabel')}
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {DEFAULT_EXPORT_COLUMNS.map((column) => (
+                      <ColumnToggle
+                        key={column.id}
+                        selected={!disabledColumns.has(column.id)}
+                        onClick={() =>
+                          setDisabledColumns((current) => {
+                            const next = new Set(current);
+                            if (next.has(column.id)) next.delete(column.id);
+                            else next.add(column.id);
+                            return next;
+                          })
+                        }
+                      >
+                        {t(`export.column.${column.id}`)}
+                      </ColumnToggle>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Layout */}
+              {format === 'catalog' && (
+                <div className="flex flex-col gap-2 border-t border-line pt-3">
+                  <p className="eyebrow">{t('export.perPageLabel')}</p>
+                  <SegmentedControl
+                    label={t('export.perPageLabel')}
+                    options={perPageOptions}
+                    value={String(perPage) as '1' | '2' | '4'}
+                    onChange={(value) => setPerPage(Number(value) as 1 | 2 | 4)}
+                  />
+                </div>
+              )}
+
+              {/* Link lifetime */}
+              {format === 'share' && (
+                <div className="flex flex-col gap-2 border-t border-line pt-3">
+                  <p className="eyebrow">{t('share.expiryLabel')}</p>
+                  <SegmentedControl
+                    label={t('share.expiryLabel')}
+                    options={expiryOptions}
+                    value={expiry}
+                    onChange={(value) => setExpiry(value)}
+                  />
+                </div>
+              )}
+
+              {/* Prices */}
+              {(format === 'catalog' || format === 'share') && (
+                <label className="flex items-center justify-between gap-3 border-t border-line pt-3">
+                  <span className="text-small font-semibold text-ink">
+                    {format === 'catalog' ? t('export.showPrices') : t('share.showPrices')}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={showPrices}
+                    onChange={(event) => setShowPrices(event.target.checked)}
+                    className="h-4 w-4 accent-accent"
+                  />
+                </label>
+              )}
+
+              <p className="border-t border-line pt-3 text-note text-muted">
+                {t('export.englishOnlyNote')}
+              </p>
+              {errorText ? (
+                <p className="text-small text-danger" role="alert">
+                  {errorText}
+                </p>
+              ) : null}
             </div>
-          )}
+          </Panel>
 
-          {format === 'share' && (
-            <div className="flex gap-2" role="group" aria-label={t('share.expiryLabel')}>
-              <Chip selected={expiry === 'never'} onClick={() => setExpiry('never')}>
-                {t('share.expiryNever')}
-              </Chip>
-              <Chip selected={expiry === '24h'} onClick={() => setExpiry('24h')}>
-                {t('share.expiry24h')}
-              </Chip>
-              <Chip selected={expiry === '7d'} onClick={() => setExpiry('7d')}>
-                {t('share.expiry7d')}
-              </Chip>
-            </div>
-          )}
-
-          {(format === 'catalog' || format === 'share') && (
-            <label className="flex min-h-tap items-center justify-between text-small font-semibold text-ink">
-              <span>{format === 'catalog' ? t('export.showPrices') : t('share.showPrices')}</span>
-              <input
-                type="checkbox"
-                checked={showPrices}
-                onChange={(event) => setShowPrices(event.target.checked)}
-                className="h-5 w-5"
-              />
-            </label>
-          )}
-
-          <p className="text-note text-muted">{t('export.englishOnlyNote')}</p>
-          {errorText ? <p className="text-small text-danger">{errorText}</p> : null}
-
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void run()}
-            className="min-h-tap rounded-btn bg-brand py-[13px] text-body font-bold text-white shadow-btn disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button onClick={() => void run()} loading={busy}>
             {busy ? t('export.working') : t('export.generate')}
-          </button>
+          </Button>
 
           {createdLink ? (
-            <div className="rounded-field bg-soft p-3" data-testid="created-share-link">
-              <p className="text-note text-muted">{t('share.created')}</p>
-              <p className="mt-1 break-all text-small text-ink">{createdLink}</p>
-              <button
-                type="button"
+            <div
+              className="rounded-card border border-line bg-surface-2 p-3"
+              data-testid="created-share-link"
+            >
+              <p className="eyebrow">{t('share.created')}</p>
+              <p className="mt-1.5 break-all font-mono text-note text-ink">{createdLink}</p>
+              <Button
+                variant="secondary"
+                size="sm"
+                fullWidth={false}
+                className="mt-2 px-3"
                 onClick={() => {
                   void navigator.clipboard
                     .writeText(createdLink)
                     .then(() => setCopied(createdLink))
                     .catch(() => setCopied(null));
                 }}
-                className="mt-2 min-h-tap rounded-pill bg-accent px-3 text-caption font-semibold text-accent-ink"
               >
                 {copied === createdLink ? t('share.copied') : t('share.copy')}
-              </button>
+              </Button>
             </div>
           ) : null}
 
           {format === 'share' && (recentLinks.data?.length ?? 0) > 0 ? (
-            <div className="flex flex-col gap-2">
-              <p className="text-caption font-semibold text-muted">{t('share.recent')}</p>
-              {recentLinks.data?.slice(0, 5).map((link) => (
-                <div key={link.id} className="flex items-center gap-2 rounded-field bg-soft p-2.5">
-                  <p className="flex-1 break-all text-note text-muted">
-                    {shareLinkUrl(link.token, window.location.origin)}
-                  </p>
-                  {!link.revoked ? (
-                    <button
-                      type="button"
-                      onClick={() => revokeShare.mutate(link.id)}
-                      className="min-h-tap shrink-0 rounded-pill bg-danger-bg px-3 text-caption font-semibold text-danger"
-                    >
-                      {t('share.revoke')}
-                    </button>
-                  ) : (
-                    <span className="shrink-0 rounded-pill bg-off-bg px-3 py-1 text-note font-semibold text-off">
-                      {t('share.revoked')}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
+            <Panel title={t('share.recent')} flush>
+              <ul className="divide-y divide-line">
+                {recentLinks.data?.slice(0, 5).map((link) => (
+                  <li key={link.id} className="flex items-center gap-2 px-3 py-2">
+                    <p className="min-w-0 flex-1 break-all font-mono text-note text-muted">
+                      {shareLinkUrl(link.token, window.location.origin)}
+                    </p>
+                    {!link.revoked ? (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        fullWidth={false}
+                        className="shrink-0 px-2.5"
+                        onClick={() => revokeShare.mutate(link.id)}
+                      >
+                        {t('share.revoke')}
+                      </Button>
+                    ) : (
+                      <span className="shrink-0 rounded-pill bg-off-bg px-2 py-0.5 font-mono text-micro uppercase tracking-widest text-off">
+                        {t('share.revoked')}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Panel>
           ) : null}
         </div>
       </div>

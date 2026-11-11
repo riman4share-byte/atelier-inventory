@@ -2,9 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
+import { Panel } from '@/components/ui/Panel';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Screen } from '@/components/layout/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
+import { LinkIcon, PencilIcon, QrIcon, TrashIcon } from '@/components/icons';
 import {
   dressErrorMessage,
   useCreateDress,
@@ -25,7 +27,6 @@ import { DressAiReview } from '@/features/ai/DressAiReview';
 import { PhotoGallery } from '@/features/photos/PhotoGallery';
 import { useEnqueueErpSync } from '@/features/erp/api';
 import { BackgroundCleaner } from '@/features/cleanup/BackgroundCleaner';
-import { cx } from '@/lib/cx';
 import { buildHangTagHtml, printHtml } from '@/features/dresses/printDocument';
 import QRCode from 'qrcode';
 
@@ -140,36 +141,28 @@ function ExistingDress({ id }: { id: string }) {
 
   if (dressQuery.isError) {
     return (
-      <Screen title={t('screens.dresses.title')}>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-card bg-soft px-6 py-10 text-center">
+      <Screen eyebrow={t('nav.dresses')} title={t('screens.dresses.title')}>
+        <Panel className="flex flex-col items-center gap-3 px-6 py-10 text-center">
           <p className="text-body font-semibold text-ink">{t('dress.errors.loadFailedTitle')}</p>
           <p className="text-small text-muted">{t('dress.errors.loadFailedBody')}</p>
-          <Button
-            variant="secondary"
-            onClick={() => void dressQuery.refetch()}
-            className="min-h-tap w-auto px-4"
-          >
+          <Button variant="secondary" className="w-auto px-4" onClick={() => void dressQuery.refetch()}>
             {t('common.retry')}
           </Button>
-        </div>
+        </Panel>
       </Screen>
     );
   }
 
   if (!dressQuery.data?.found || !dressQuery.data.dress) {
     return (
-      <Screen title={t('screens.dresses.title')}>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 rounded-card bg-soft px-6 py-10 text-center">
+      <Screen eyebrow={t('nav.dresses')} title={t('screens.dresses.title')}>
+        <Panel className="flex flex-col items-center gap-3 px-6 py-10 text-center">
           <p className="text-body font-semibold text-ink">{t('dress.errors.notFoundTitle')}</p>
           <p className="text-small text-muted">{t('dress.errors.notFoundBody')}</p>
-          <Button
-            variant="secondary"
-            onClick={() => navigate('/dresses')}
-            className="min-h-tap w-auto px-4"
-          >
+          <Button variant="secondary" className="w-auto px-4" onClick={() => navigate('/dresses')}>
             {t('dress.errors.backToList')}
           </Button>
-        </div>
+        </Panel>
       </Screen>
     );
   }
@@ -215,98 +208,106 @@ function ExistingDress({ id }: { id: string }) {
 
   return (
     <Screen
+      eyebrow={dress.code}
       title={displayName(dress, i18n.language)}
-      subtitle={`${dress.code} · ${t(`status.${dress.status}`)}`}
+      subtitle={t(`status.${dress.status}`)}
     >
-      <div className="flex flex-1 flex-col gap-5 pb-2">
-        <PhotoGallery dress={dress} photos={photos} />
+      <div
+        className="flex flex-1 flex-col gap-3 pb-2 lg:grid lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:items-start lg:gap-5"
+      >
+        {/* Left column: the visual record — photos and the AI panel. */}
+        <div className="flex flex-col gap-3">
+          <PhotoGallery dress={dress} photos={photos} />
 
-        {isDraft ? (
-          <div className="rounded-card bg-accent/10 p-3 text-small text-ink">
-            {t('dress.draftBanner')}
-          </div>
-        ) : null}
+          {isDraft ? (
+            <div className="rounded-card border border-accent-line bg-accent-bg px-3 py-2.5 text-small text-ink">
+              <span className="eyebrow mb-1 block text-accent">Draft</span>
+              {t('dress.draftBanner')}
+            </div>
+          ) : null}
 
-        {photos.length > 0 && !isDraft ? <BackgroundCleaner dressId={dress.id} photos={photos} /> : null}
+          {photos.length > 0 && !isDraft ? <BackgroundCleaner dressId={dress.id} photos={photos} /> : null}
 
-        {aiOpen && aiDraft ? (
-          <DressAiReview
-            draft={aiDraft}
-            pending={describe.isPending}
-            onApply={(draft) => {
-              formUpdate.mutate(
-                {
-                  id: dress.id,
-                  values: {
-                    name_en: draft.name_en,
-                    name_ar: draft.name_ar,
-                    description_en: draft.description_en,
-                    description_ar: draft.description_ar,
-                    silhouette: draft.silhouette,
-                    neckline: draft.neckline,
-                    sleeves: draft.sleeves,
-                    color: draft.color,
-                    fabrics: draft.fabrics,
-                    ai_raw: aiRaw as never,
-                    ai_model: aiModel,
+          {aiOpen && aiDraft ? (
+            <DressAiReview
+              draft={aiDraft}
+              pending={describe.isPending}
+              onApply={(draft) => {
+                formUpdate.mutate(
+                  {
+                    id: dress.id,
+                    values: {
+                      name_en: draft.name_en,
+                      name_ar: draft.name_ar,
+                      description_en: draft.description_en,
+                      description_ar: draft.description_ar,
+                      silhouette: draft.silhouette,
+                      neckline: draft.neckline,
+                      sleeves: draft.sleeves,
+                      color: draft.color,
+                      fabrics: draft.fabrics,
+                      ai_raw: aiRaw as never,
+                      ai_model: aiModel,
+                    },
                   },
-                },
-                { onSuccess: () => { setAiOpen(false); navigate(`/dresses/${dress.id}`, { replace: true }); } },
-              );
-            }}
-            onRegenerate={() => {
-              setAiError(null);
-              describe.mutate({ dress }, { onError: (error) => setAiError(aiErrorMessage(error)) });
-            }}
-            onCancel={() => setAiOpen(false)}
-          />
-        ) : (
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setAiError(null);
-                describe.mutate({ dress }, {
-                  onSuccess: (result) => {
-          // A malformed answer must not crash the page.
-          if (!result?.draft) { setAiError('unknown'); return; }
-          setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
-        },
-                  onError: (error) => setAiError(aiErrorMessage(error)),
-                });
+                  { onSuccess: () => { setAiOpen(false); navigate(`/dresses/${dress.id}`, { replace: true }); } },
+                );
               }}
-              loading={describe.isPending}
-              disabled={photos.length === 0}
-            >
-              {t('ai.describe')}
-            </Button>
-            {photos.length === 0 ? (
-              <p className="text-note text-muted">{t('ai.needsPhotos')}</p>
-            ) : null}
-            {aiError ? (
-              <p className="text-small text-danger" role="alert">
-                {aiError === 'no_key'
-                  ? t('ai.noKey')
-                  : aiError === 'no_photos'
-                    ? t('ai.needsPhotos')
-                    : aiError === 'unauthorized'
-                      ? t('ai.notSignedIn')
-                      : aiError === 'bad_image'
-                        ? t('ai.badImage')
-                        : aiError === 'parse_error'
-                          ? t('ai.parseFailed')
-                          : aiError === 'provider_error' || aiError === 'network_error'
-                            ? t('ai.providerFailed')
-                            : t('ai.failed')}
-              </p>
-            ) : null}
-          </div>
-        )}
+              onRegenerate={() => {
+                setAiError(null);
+                describe.mutate({ dress }, { onError: (error) => setAiError(aiErrorMessage(error)) });
+              }}
+              onCancel={() => setAiOpen(false)}
+            />
+          ) : (
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setAiError(null);
+                  describe.mutate({ dress }, {
+                    onSuccess: (result) => {
+              // A malformed answer must not crash the page.
+              if (!result?.draft) { setAiError('unknown'); return; }
+              setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
+            },
+                    onError: (error) => setAiError(aiErrorMessage(error)),
+                  });
+                }}
+                loading={describe.isPending}
+                disabled={photos.length === 0}
+              >
+                {t('ai.describe')}
+              </Button>
+              {photos.length === 0 ? (
+                <p className="text-note text-muted">{t('ai.needsPhotos')}</p>
+              ) : null}
+              {aiError ? (
+                <p className="text-small text-danger" role="alert">
+                  {aiError === 'no_key'
+                    ? t('ai.noKey')
+                    : aiError === 'no_photos'
+                      ? t('ai.needsPhotos')
+                      : aiError === 'unauthorized'
+                        ? t('ai.notSignedIn')
+                        : aiError === 'bad_image'
+                          ? t('ai.badImage')
+                          : aiError === 'parse_error'
+                            ? t('ai.parseFailed')
+                            : aiError === 'provider_error' || aiError === 'network_error'
+                              ? t('ai.providerFailed')
+                              : t('ai.failed')}
+                </p>
+              ) : null}
+            </div>
+          )}
+        </div>
+
+        {/* Right column: the facts and the actions. */}
+        <div className="flex flex-col gap-3">
 
         <div>
-          <span className="mb-1.5 block text-caption font-semibold text-muted">
-            {t('dress.statusLabel')}
-          </span>
+          <span className="eyebrow mb-1.5 block">{t('dress.statusLabel')}</span>
           <SegmentedControl
             label={t('dress.statusLabel')}
             options={STATUS_OPTIONS.map((option) => ({
@@ -319,120 +320,139 @@ function ExistingDress({ id }: { id: string }) {
             }
           />
           {statusUpdate.isError ? (
-            <p className="mt-1.5 text-caption text-danger">{t('dress.errors.saveFailed')}</p>
+            <p className="mt-1.5 text-note text-danger" role="alert">
+              {t('dress.errors.saveFailed')}
+            </p>
           ) : null}
         </div>
 
         {!isDraft ? (
           <>
         {/* Where is it now + movement actions */}
-        <div className="rounded-card bg-soft p-4" data-testid="where-now">
-          <p className="text-caption font-semibold text-muted">{t('movements.whereNow')}</p>
-          <p className="mt-1 text-body font-semibold text-ink">
-            {t(`movements.location.${dress.location ?? 'in_atelier'}`)}
-          </p>
-          {dress.current_customer_id ? (
-            <p className="mt-1 text-small text-muted">
-              {t('movements.withCustomer', { id: dress.current_customer_id })}
+        <Panel title={t('movements.whereNow')} data-testid="where-now">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <p className="text-body font-semibold text-ink">
+              {t(`movements.location.${dress.location ?? 'in_atelier'}`)}
             </p>
-          ) : null}
-          <div className="mt-3 flex flex-wrap gap-2">
+            {dress.current_customer_id ? (
+              <p className="font-mono text-[11px] tracking-tight text-muted">
+                {t('movements.withCustomer', { id: dress.current_customer_id })}
+              </p>
+            ) : null}
+          </div>
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
             {dress.location === 'in_atelier' || dress.location === 'other' ? (
-              <Button variant="secondary" className="w-auto px-4" onClick={() => setCheckoutOpen(true)}>
+              <Button variant="secondary" size="sm" className="w-auto px-2.5" onClick={() => setCheckoutOpen(true)}>
                 {t('movements.checkOut')}
               </Button>
             ) : (
-              <Button variant="secondary" className="w-auto px-4" onClick={() => setCheckinOpen(true)}>
+              <Button variant="secondary" size="sm" className="w-auto px-2.5" onClick={() => setCheckinOpen(true)}>
                 {t('movements.checkIn')}
               </Button>
             )}
-            <Button variant="secondary" className="w-auto px-4" onClick={() => setReserveOpen(true)}>
+            <Button variant="secondary" size="sm" className="w-auto px-2.5" onClick={() => setReserveOpen(true)}>
               {t('movements.reserve')}
             </Button>
           </div>
-        </div>
+        </Panel>
 
         {/* Timeline */}
         {(movementsQuery.data?.length ?? 0) > 0 ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-caption font-semibold text-muted">{t('movements.timeline')}</p>
-            {(movementsQuery.data ?? []).map((movement) => (
-              <div key={movement.id} className="rounded-field bg-surface px-3 py-2">
-                <p className="text-small font-semibold text-ink">
-                  {t(`movements.direction.${movement.direction}`)} · {t(`movements.reason.${movement.reason}`)}
-                </p>
-                <p className="text-note text-muted">
-                  {new Date(movement.occurred_at).toLocaleString()} → {movement.to_location}
-                  {movement.due_at ? ` · ${t('movements.due')} ${new Date(movement.due_at).toLocaleDateString()}` : ''}
-                </p>
-                {movement.condition_notes ? (
-                  <p className="mt-1 text-note text-ink">{movement.condition_notes}</p>
-                ) : null}
-                {movement.direction === 'out' ? (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const { printHtml, buildReceiptHtml } = await import('@/features/dresses/printDocument');
-                      printHtml(buildReceiptHtml(movement, dress.code, t('app.name')));
-                    }}
-                    className="mt-1 text-caption font-semibold text-accent"
-                  >
-                    {t('movements.printReceipt')}
-                  </button>
-                ) : null}
-              </div>
-            ))}
-          </div>
+          <Panel title={t('movements.timeline')} flush>
+            <ul className="divide-y divide-line">
+              {(movementsQuery.data ?? []).map((movement) => (
+                <li key={movement.id} className="px-3 py-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-small font-semibold text-ink">
+                      {t(`movements.direction.${movement.direction}`)} ·{' '}
+                      <span className="font-normal text-muted">
+                        {t(`movements.reason.${movement.reason}`)}
+                      </span>
+                    </p>
+                    <span className="shrink-0 font-mono text-[11px] tracking-tight text-muted">
+                      {new Date(movement.occurred_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 font-mono text-[11px] tracking-tight text-faint">
+                    {movement.to_location}
+                    {movement.due_at
+                      ? ` · ${t('movements.due')} ${new Date(movement.due_at).toLocaleDateString()}`
+                      : ''}
+                  </p>
+                  {movement.condition_notes ? (
+                    <p className="mt-1 text-note text-ink">{movement.condition_notes}</p>
+                  ) : null}
+                  {movement.direction === 'out' ? (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const { printHtml, buildReceiptHtml } = await import('@/features/dresses/printDocument');
+                        printHtml(buildReceiptHtml(movement, dress.code, t('app.name')));
+                      }}
+                      className="mt-1 font-mono text-[11px] font-semibold uppercase tracking-widest text-accent"
+                    >
+                      {t('movements.printReceipt')}
+                    </button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </Panel>
         ) : null}
 
         </>
         ) : null}
 
-        <div className="rounded-card bg-soft p-4">
-          <p className="text-caption font-semibold text-muted">{t('dress.listingLabel')}</p>
+        <Panel title={t('dress.listingLabel')}>
           <p className="text-body font-semibold text-ink">{t(LISTING_LABELS[dress.listing_type])}</p>
-          <div className="mt-2 flex gap-6">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             {dress.sale_price !== null ? (
-              <p className="text-small text-ink">
-                <span className="text-muted">{t('dress.salePrice')}: </span>
-                <span className="font-bold">{dress.sale_price}</span>
-              </p>
+              <div className="rounded-field border border-line bg-surface-2 px-2.5 py-1.5">
+                <p className="eyebrow">{t('dress.salePrice')}</p>
+                <p className="mt-0.5 font-mono text-small font-semibold tracking-tight text-ink">
+                  {dress.sale_price}
+                </p>
+              </div>
             ) : null}
             {dress.rent_price !== null ? (
-              <p className="text-small text-ink">
-                <span className="text-muted">{t('dress.rentPrice')}: </span>
-                <span className="font-bold">{dress.rent_price}</span>
-              </p>
+              <div className="rounded-field border border-line bg-surface-2 px-2.5 py-1.5">
+                <p className="eyebrow">{t('dress.rentPrice')}</p>
+                <p className="mt-0.5 font-mono text-small font-semibold tracking-tight text-ink">
+                  {dress.rent_price}
+                </p>
+              </div>
             ) : null}
           </div>
-        </div>
+        </Panel>
 
         {attributes.length > 0 || dress.fabrics.length > 0 ? (
-          <div className="flex flex-wrap gap-2" data-testid="dress-attributes">
-            {attributes.map((attribute) => (
-              <span key={attribute.label} className="rounded-pill bg-soft px-3 py-1.5 text-caption font-medium text-ink">
-                <span className="text-muted">{attribute.label}: </span>
-                {attribute.value}
-              </span>
-            ))}
-            {dress.fabrics.map((fabric) => (
-              <span key={fabric} className="rounded-pill bg-soft px-3 py-1.5 text-caption font-medium text-ink">
-                <span className="text-muted">{t('dress.fabrics')}: </span>
-                {fabric}
-              </span>
-            ))}
-          </div>
+          <Panel title={t('dress.silhouette')} data-testid="dress-attributes" flush>
+            <dl className="divide-y divide-line">
+              {attributes.map((attribute) => (
+                <div key={attribute.label} className="flex items-baseline justify-between gap-3 px-3 py-1.5">
+                  <dt className="text-note text-muted">{attribute.label}</dt>
+                  <dd className="text-small text-ink">{attribute.value}</dd>
+                </div>
+              ))}
+              {dress.fabrics.length > 0 ? (
+                <div className="flex items-baseline justify-between gap-3 px-3 py-1.5">
+                  <dt className="shrink-0 text-note text-muted">{t('dress.fabrics')}</dt>
+                  <dd className="text-small text-ink">{dress.fabrics.join(', ')}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </Panel>
         ) : null}
 
         {dress.description_en || dress.description_ar ? (
           <div className="flex flex-col gap-2">
             {dress.description_en ? (
-              <p className="text-small text-ink" dir="ltr">
+              <p className="text-small leading-relaxed text-ink" dir="ltr">
                 {dress.description_en}
               </p>
             ) : null}
             {dress.description_ar ? (
-              <p className="text-small text-ink" dir="rtl">
+              <p className="text-small leading-relaxed text-ink" dir="rtl">
                 {dress.description_ar}
               </p>
             ) : null}
@@ -440,15 +460,18 @@ function ExistingDress({ id }: { id: string }) {
         ) : null}
 
         {dress.notes ? (
-          <p className="rounded-card bg-soft p-3 text-small text-muted">{dress.notes}</p>
+          <p className="rounded-card border border-line bg-surface-2 px-3 py-2 text-small text-muted">
+            {dress.notes}
+          </p>
         ) : null}
 
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-1">
           <Button variant="secondary" onClick={() => setEditing(true)} className="flex-1">
+            <PencilIcon className="h-3.5 w-3.5" />
             {t('dress.edit')}
           </Button>
           <Button
-            variant={confirmingDelete ? 'primary' : 'secondary'}
+            variant={confirmingDelete ? 'danger' : 'secondary'}
             onClick={() => {
               if (!confirmingDelete) {
                 setConfirmingDelete(true);
@@ -463,8 +486,9 @@ function ExistingDress({ id }: { id: string }) {
                 },
               });
             }}
-            className={cx('flex-1', confirmingDelete && 'bg-danger text-white')}
+            className="flex-1"
           >
+            <TrashIcon className="h-3.5 w-3.5" />
             {confirmingDelete ? t('dress.confirmDelete') : t('dress.delete')}
           </Button>
         </div>
@@ -472,25 +496,31 @@ function ExistingDress({ id }: { id: string }) {
         {confirmingDelete ? (
           <p className="text-note text-muted">{t('dress.deleteWarning')}</p>
         ) : null}
-        {deleteFailed ? <p className="text-small text-danger">{t('dress.errors.deleteFailed')}</p> : null}
+        {deleteFailed ? (
+          <p className="text-small text-danger" role="alert">
+            {t('dress.errors.deleteFailed')}
+          </p>
+        ) : null}
 
         {!isDraft ? (
-          <>
+          <div className="grid grid-cols-2 gap-2">
             <Button
               variant="secondary"
+              size="sm"
               onClick={async () => {
                 // The tag carries the unguessable public token, not the code.
                 const url = `${window.location.origin}/d/${dress.public_token}`;
                 const qr = await QRCode.toDataURL(url, { margin: 1, width: 240 });
                 printHtml(buildHangTagHtml(dress, t('app.name'), qr));
               }}
-              className="w-full"
             >
+              <QrIcon className="h-3.5 w-3.5" />
               {t('dress.printTag')}
             </Button>
 
             <Button
               variant="secondary"
+              size="sm"
               onClick={() =>
                 erpSync.mutate({
                   dressId: dress.id,
@@ -500,12 +530,14 @@ function ExistingDress({ id }: { id: string }) {
                 })
               }
               loading={erpSync.isPending}
-              className="w-full"
             >
+              <LinkIcon className="h-3.5 w-3.5" />
               {t('dress.syncErp')}
             </Button>
-          </>
+          </div>
         ) : null}
+
+        </div>
 
         <CheckOutSheet open={checkoutOpen} onClose={() => setCheckoutOpen(false)} dressId={dress.id} dressCode={dress.code} />
         <CheckInSheet open={checkinOpen} onClose={() => setCheckinOpen(false)} dressId={dress.id} dressCode={dress.code} currentCustomerId={dress.current_customer_id} />

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Navigate } from 'react-router-dom';
-import { SparkleIcon } from '@/components/icons';
+import { TerminalIcon } from '@/components/icons';
 import { LanguageToggle } from '@/components/layout/LanguageToggle';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
@@ -14,26 +14,36 @@ export function SetupPage() {
   if (isSupabaseConfigured) return <Navigate to="/login" replace />;
 
   return (
-    <div className="min-h-dvh bg-bg md:grid md:place-items-center md:p-6">
-      <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-surface md:min-h-0 md:rounded-sheet md:border md:border-line md:shadow-frame">
-        <div className="flex justify-end px-4 pt-4">
-          <LanguageToggle />
-        </div>
-        <div className="px-6 pb-10 pt-3">
-          <div className="grid place-items-center rounded-card bg-c2 py-8 text-accent2">
-            <SparkleIcon className="h-10 w-10" />
+    <div className="flex min-h-dvh flex-col bg-bg">
+      <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 pt-safe">
+        <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent">
+          Atelier
+        </span>
+        <LanguageToggle />
+      </header>
+
+      <main className="flex flex-1 items-start justify-center px-4 py-8 md:items-center">
+        <div className="w-full max-w-sm rounded-card border border-line bg-surface">
+          <div className="border-b border-line px-5 py-3.5">
+            <div className="flex items-center gap-2">
+              <TerminalIcon className="h-4 w-4 shrink-0 text-accent" />
+              <h1 className="text-title font-semibold tracking-tight text-ink">
+                {t('setup.title')}
+              </h1>
+            </div>
           </div>
-          <h1 className="mt-6 text-hero">{t('setup.title')}</h1>
-          <p className="mt-2 text-small leading-relaxed text-muted">{t('setup.body')}</p>
-          <pre className="mt-5 overflow-x-auto rounded-field bg-soft p-3 text-caption text-ink" dir="ltr">
-            <code>
-              {'VITE_SUPABASE_URL=https://<project-ref>.supabase.co\nVITE_SUPABASE_ANON_KEY=<anon-key>'}
-            </code>
-          </pre>
-          <p className="mt-3 text-caption text-muted">{t('setup.vars')}</p>
-          <p className="mt-1 text-caption text-muted">{t('setup.docs')}</p>
+          <div className="flex flex-col gap-3 px-5 py-5">
+            <p className="text-small leading-relaxed text-muted">{t('setup.body')}</p>
+            <pre className="overflow-x-auto rounded-field border border-line bg-surface-2 p-2.5 font-mono text-[11px] leading-relaxed text-ink" dir="ltr">
+              <code>
+                {'VITE_SUPABASE_URL=https://<project-ref>.supabase.co\nVITE_SUPABASE_ANON_KEY=<anon-key>'}
+              </code>
+            </pre>
+            <p className="text-note text-muted">{t('setup.vars')}</p>
+            <p className="text-note text-muted">{t('setup.docs')}</p>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

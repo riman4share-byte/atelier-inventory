@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { DressStatus, ListingType } from '@/lib/database.types';
 import type { DressRow } from './api';
 import { Button } from '@/components/ui/Button';
+import { Panel } from '@/components/ui/Panel';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { TextArea } from '@/components/ui/TextArea';
 import { TextField } from '@/components/ui/TextField';
@@ -192,138 +193,156 @@ export function DressForm({ initial, savingLabel, pending, submitError, onSubmit
 
   return (
     <form
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-3"
       onSubmit={(event) => {
         event.preventDefault();
         submit();
       }}
       noValidate
     >
-      <TextField
-        label={t('dress.code')}
-        value={values.code}
-        onChange={(event) => set('code', event.target.value)}
-        error={fieldErrors.code ? t('dress.errors.codeRequired') : undefined}
-        aria-describedby={undefined}
-        autoComplete="off"
-      />
+      <Panel title={t('dress.nameEn')}>
+        <div className="flex flex-col gap-2.5">
+          <TextField
+            label={t('dress.code')}
+            value={values.code}
+            onChange={(event) => set('code', event.target.value)}
+            error={fieldErrors.code ? t('dress.errors.codeRequired') : undefined}
+            aria-describedby={undefined}
+            autoComplete="off"
+            mono
+          />
+          <TextField
+            label={t('dress.nameEn')}
+            value={values.name_en}
+            onChange={(event) => set('name_en', event.target.value)}
+            dir="ltr"
+          />
+          <TextField
+            label={t('dress.nameAr')}
+            value={values.name_ar}
+            onChange={(event) => set('name_ar', event.target.value)}
+            dir="rtl"
+          />
+        </div>
+      </Panel>
 
-      <TextField
-        label={t('dress.nameEn')}
-        value={values.name_en}
-        onChange={(event) => set('name_en', event.target.value)}
-        dir="ltr"
-      />
-      <TextField
-        label={t('dress.nameAr')}
-        value={values.name_ar}
-        onChange={(event) => set('name_ar', event.target.value)}
-        dir="rtl"
-      />
+      <Panel title={t('dress.statusLabel')}>
+        <div className="flex flex-col gap-2.5">
+          <div>
+            <span className="eyebrow mb-1.5 block">{t('dress.statusLabel')}</span>
+            <SegmentedControl
+              label={t('dress.statusLabel')}
+              options={STATUS_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
+              value={values.status}
+              onChange={(value) => set('status', value)}
+            />
+          </div>
 
-      <div>
-        <span className="mb-1.5 block text-caption font-semibold text-muted">
-          {t('dress.statusLabel')}
-        </span>
-        <SegmentedControl
-          label={t('dress.statusLabel')}
-          options={STATUS_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
-          value={values.status}
-          onChange={(value) => set('status', value)}
-        />
-      </div>
+          <div>
+            <span className="eyebrow mb-1.5 block">{t('dress.listingLabel')}</span>
+            <SegmentedControl
+              label={t('dress.listingLabel')}
+              options={LISTING_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
+              value={values.listing_type}
+              onChange={(value) => set('listing_type', value)}
+            />
+          </div>
 
-      <div>
-        <span className="mb-1.5 block text-caption font-semibold text-muted">
-          {t('dress.listingLabel')}
-        </span>
-        <SegmentedControl
-          label={t('dress.listingLabel')}
-          options={LISTING_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
-          value={values.listing_type}
-          onChange={(value) => set('listing_type', value)}
-        />
-      </div>
+          <div className="grid grid-cols-2 gap-2.5">
+            {(values.listing_type === 'sale' || values.listing_type === 'both') && (
+              <TextField
+                label={t('dress.salePrice')}
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={values.sale_price}
+                onChange={(event) => set('sale_price', event.target.value)}
+                error={priceError('sale_price')}
+                mono
+              />
+            )}
+            {(values.listing_type === 'rent' || values.listing_type === 'both') && (
+              <TextField
+                label={t('dress.rentPrice')}
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="0.01"
+                value={values.rent_price}
+                onChange={(event) => set('rent_price', event.target.value)}
+                error={priceError('rent_price')}
+                mono
+              />
+            )}
+          </div>
+        </div>
+      </Panel>
 
-      {(values.listing_type === 'sale' || values.listing_type === 'both') && (
-        <TextField
-          label={t('dress.salePrice')}
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          value={values.sale_price}
-          onChange={(event) => set('sale_price', event.target.value)}
-          error={priceError('sale_price')}
-        />
-      )}
-      {(values.listing_type === 'rent' || values.listing_type === 'both') && (
-        <TextField
-          label={t('dress.rentPrice')}
-          type="number"
-          inputMode="decimal"
-          min="0"
-          step="0.01"
-          value={values.rent_price}
-          onChange={(event) => set('rent_price', event.target.value)}
-          error={priceError('rent_price')}
-        />
-      )}
+      <Panel title={t('dress.silhouette')}>
+        <div className="grid grid-cols-2 gap-2.5">
+          <TextField
+            label={t('dress.silhouette')}
+            value={values.silhouette}
+            onChange={(event) => set('silhouette', event.target.value)}
+          />
+          <TextField
+            label={t('dress.neckline')}
+            value={values.neckline}
+            onChange={(event) => set('neckline', event.target.value)}
+          />
+          <TextField
+            label={t('dress.sleeves')}
+            value={values.sleeves}
+            onChange={(event) => set('sleeves', event.target.value)}
+          />
+          <TextField
+            label={t('dress.color')}
+            value={values.color}
+            onChange={(event) => set('color', event.target.value)}
+          />
+          <TextField
+            label={t('dress.size')}
+            value={values.size_label}
+            onChange={(event) => set('size_label', event.target.value)}
+            mono
+          />
+          <TextField
+            label={t('dress.fabrics')}
+            hint={t('dress.fabricsHint')}
+            value={values.fabricsText}
+            onChange={(event) => set('fabricsText', event.target.value)}
+          />
+        </div>
+      </Panel>
 
-      <div className="grid grid-cols-2 gap-3">
-        <TextField
-          label={t('dress.silhouette')}
-          value={values.silhouette}
-          onChange={(event) => set('silhouette', event.target.value)}
-        />
-        <TextField
-          label={t('dress.neckline')}
-          value={values.neckline}
-          onChange={(event) => set('neckline', event.target.value)}
-        />
-        <TextField
-          label={t('dress.sleeves')}
-          value={values.sleeves}
-          onChange={(event) => set('sleeves', event.target.value)}
-        />
-        <TextField
-          label={t('dress.color')}
-          value={values.color}
-          onChange={(event) => set('color', event.target.value)}
-        />
-      </div>
+      <Panel title={t('dress.descriptionEn')}>
+        <div className="flex flex-col gap-2.5">
+          <TextArea
+            label={t('dress.descriptionEn')}
+            value={values.description_en}
+            onChange={(event) => set('description_en', event.target.value)}
+            dir="ltr"
+          />
+          <TextArea
+            label={t('dress.descriptionAr')}
+            value={values.description_ar}
+            onChange={(event) => set('description_ar', event.target.value)}
+            dir="rtl"
+          />
+          <TextArea
+            label={t('dress.notes')}
+            value={values.notes}
+            onChange={(event) => set('notes', event.target.value)}
+          />
+        </div>
+      </Panel>
 
-      <TextField
-        label={t('dress.fabrics')}
-        hint={t('dress.fabricsHint')}
-        value={values.fabricsText}
-        onChange={(event) => set('fabricsText', event.target.value)}
-      />
-      <TextField
-        label={t('dress.size')}
-        value={values.size_label}
-        onChange={(event) => set('size_label', event.target.value)}
-      />
-
-      <TextArea
-        label={t('dress.descriptionEn')}
-        value={values.description_en}
-        onChange={(event) => set('description_en', event.target.value)}
-        dir="ltr"
-      />
-      <TextArea
-        label={t('dress.descriptionAr')}
-        value={values.description_ar}
-        onChange={(event) => set('description_ar', event.target.value)}
-        dir="rtl"
-      />
-      <TextArea
-        label={t('dress.notes')}
-        value={values.notes}
-        onChange={(event) => set('notes', event.target.value)}
-      />
-
-      {submitError ? <p className="text-small text-danger">{submitError}</p> : null}
+      {submitError ? (
+        <p className="rounded-field border border-danger-line bg-danger-bg px-2.5 py-1.5 text-small text-danger" role="alert">
+          {submitError}
+        </p>
+      ) : null}
 
       <div className="flex gap-2 pt-1">
         <Button type="button" variant="secondary" onClick={onCancel} className="flex-1">

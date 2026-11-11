@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/Button';
+import { Metric } from '@/components/ui/Metric';
+import { Panel } from '@/components/ui/Panel';
 import { Screen } from '@/components/layout/Screen';
 import { ExportSheet } from '@/features/dresses/ExportSheet';
 import {
@@ -14,14 +16,8 @@ import {
 import { useMovementSummary } from '@/features/movements/api';
 import { useAllMovements } from '@/features/movements/api';
 import { exportMovementsToExcel } from '@/features/movements/export';
-import { cx } from '@/lib/cx';
-
-const STATUS_TILE_CLASSES: Record<string, string> = {
-  available: 'bg-ok-bg text-ok',
-  reserved: 'bg-warn-bg text-warn',
-  rented: 'bg-info-bg text-info',
-  sold: 'bg-off-bg text-off',
-};
+import { formatMoney, formatNumber } from '@/lib/format';
+import { DownloadIcon, QrIcon } from '@/components/icons';
 
 export function DashboardPage() {
   const { t, i18n } = useTranslation();
@@ -35,170 +31,188 @@ export function DashboardPage() {
   const counts = countByStatus(rows);
   const total = rows.length;
   const attention = needsAttention(rows, i18n.language);
-  const recent = rows.slice(0, 5);
+  const recent = rows.slice(0, 6);
 
   // A failed query must never look like an empty atelier.
   if (dashboard.isError) {
     return (
-      <Screen title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
-        <div className="flex flex-1 flex-col items-center gap-3 rounded-card bg-soft px-6 py-10 text-center">
+      <Screen eyebrow={t('nav.home')} title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
+        <Panel className="flex flex-col items-center gap-3 px-6 py-10 text-center">
           <p className="text-body font-semibold text-ink">{t('gallery.loadFailedTitle')}</p>
           <p className="text-small text-muted">{t('gallery.loadFailedBody')}</p>
           <Button variant="secondary" className="w-auto px-4" onClick={dashboard.refetch}>
             {t('common.retry')}
           </Button>
-        </div>
+        </Panel>
       </Screen>
     );
   }
 
+  const s = movementSummary.data;
+
   return (
-    <Screen title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
-      <div className="flex flex-1 flex-col gap-4" data-testid="dashboard">
-        <div className="rounded-card bg-brand px-4 py-4 text-white shadow-frame">
-          <p className="text-caption opacity-90">{t('dashboard.greeting')}</p>
-          <p className="mt-1 text-hero font-serif font-semibold">{t('dashboard.headline')}</p>
-          <div className="mt-3 flex gap-2">
-            <span className="rounded-[12px] bg-white/20 px-2.5 py-1.5 text-note font-semibold">
-              <strong className="block text-body">{total}</strong>
-              {t('gallery.heroLabel')}
-            </span>
-            <span className="rounded-[12px] bg-white/20 px-2.5 py-1.5 text-note font-semibold">
-              <strong className="block text-body">{counts.reserved}</strong>
-              {t('dashboard.outReserved')}
-            </span>
-            <span className="rounded-[12px] bg-white/20 px-2.5 py-1.5 text-note font-semibold">
-              <strong className="block text-body">{attention.length}</strong>
-              {t('dashboard.needInfo')}
-            </span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5" role="group" aria-label={t('dashboard.countsLabel')}>
-          {(['available', 'reserved', 'rented', 'sold'] as const).map((value) => (
-            <div key={value} className={cx('rounded-tile p-3', STATUS_TILE_CLASSES[value])}>
-              <strong className="block text-hero font-serif font-semibold">{counts[value]}</strong>
-              <small className="text-caption font-semibold">{t(`status.${value}`)}</small>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="rounded-tile bg-soft p-3" data-testid="sale-value">
-            <p className="text-note text-muted">{t('dashboard.saleValue')}</p>
-            <p className="mt-1 text-body font-serif font-bold text-ink">
-              {t('format.currency', { value: listedSaleValue(rows) })}
-            </p>
-          </div>
-          <div className="rounded-tile bg-soft p-3" data-testid="rent-value">
-            <p className="text-note text-muted">{t('dashboard.rentValue')}</p>
-            <p className="mt-1 text-body font-serif font-bold text-ink">
-              {t('format.currency', { value: listedRentValue(rows) })}
-            </p>
-            <p className="text-note text-muted">{t('dashboard.perDayNote')}</p>
-          </div>
-        </div>
-
-        {(() => {
-          const s = movementSummary.data;
-          if (!s) return null;
-          return (
-            <div className="grid grid-cols-2 gap-2.5" data-testid="movement-summary">
-              <div className="rounded-tile bg-soft p-3">
-                <strong className="block text-hero font-serif font-semibold text-ink">{s.outNow}</strong>
-                <small className="text-caption font-semibold text-muted">{t('dashboard.outNow')}</small>
+    <Screen eyebrow={t('nav.home')} title={t('dashboard.title')} subtitle={t('dashboard.subtitle')}>
+      <div className="flex flex-1 flex-col gap-3" data-testid="dashboard">
+        {/* Status strip — the headline readings, in one hairline frame. */}
+        <Panel flush>
+          <div className="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-4 sm:divide-y-0">
+            {(['available', 'reserved', 'rented', 'sold'] as const).map((value) => (
+              <div key={value} className="px-3 py-2.5">
+                <p className="eyebrow">{t(`status.${value}`)}</p>
+                <p className="mt-1 font-mono text-metric font-semibold tracking-tight text-ink">
+                  {counts[value]}
+                </p>
               </div>
-              <div className="rounded-tile bg-soft p-3">
-                <strong className="block text-hero font-serif font-semibold text-ink">{s.overdue}</strong>
-                <small className="text-caption font-semibold text-muted">{t('dashboard.overdue')}</small>
-              </div>
-              <div className="rounded-tile bg-soft p-3">
-                <strong className="block text-hero font-serif font-semibold text-ink">{s.dueThisWeek}</strong>
-                <small className="text-caption font-semibold text-muted">{t('dashboard.dueThisWeek')}</small>
-              </div>
-              <div className="rounded-tile bg-soft p-3">
-                <strong className="block text-hero font-serif font-semibold text-ink">{s.reservedThisMonth}</strong>
-                <small className="text-caption font-semibold text-muted">{t('dashboard.reservedThisMonth')}</small>
-              </div>
-            </div>
-          );
-        })()}
-
-        <div className="flex flex-col gap-2">
-          <p className="text-caption font-semibold text-muted">{t('dashboard.attention')}</p>
-          {total === 0 ? (
-            <p className="rounded-card bg-soft p-3 text-small text-muted">
-              {t('dashboard.attentionEmpty')}
-            </p>
-          ) : attention.length === 0 ? (
-            <p className="rounded-card bg-soft p-3 text-small text-muted">
-              {t('dashboard.attentionNone')}
-            </p>
-          ) : (
-            attention.map((item) => (
-              <button
-                key={`${item.kind}-${item.code}`}
-                type="button"
-                onClick={() => {
-                  setExportOpen(false);
-                  navigate(`/dresses?view=table&initialSearch=${encodeURIComponent(item.code)}`);
-                }}
-                className="flex min-h-tap items-center gap-3 rounded-field bg-surface px-3 py-2 text-start"
-              >
-                <span className="flex-1 text-small font-semibold text-ink">
-                  {t(`dashboard.attention${item.kind.charAt(0).toUpperCase()}${item.kind.slice(1)}`, {
-                    code: item.code,
-                    name: item.name,
-                  })}
-                </span>
-                <span className="rounded-pill bg-warn-bg px-2.5 py-[3px] text-note font-bold text-warn">
-                  {t('dashboard.fix')}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
-
-        {recent.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            <p className="text-caption font-semibold text-muted">{t('dashboard.recent')}</p>
-            {recent.map((row) => (
-              <button
-                key={row.id}
-                type="button"
-                onClick={() => navigate(`/dresses/${row.id}`)}
-                className="flex min-h-tap items-center gap-3 rounded-field bg-surface px-3 py-2 text-start"
-              >
-                <span className="flex-1">
-                  <span className="block text-small font-semibold text-ink">
-                    {(i18n.language.startsWith('ar') ? row.name_ar : row.name_en) || row.code}
-                  </span>
-                  <span className="text-note text-muted">
-                    {row.code} · {row.created_at.slice(0, 10)}
-                  </span>
-                </span>
-                <span className="text-note text-muted">{t(`status.${row.status}`)}</span>
-              </button>
             ))}
           </div>
+        </Panel>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Metric
+            label={t('dashboard.saleValue')}
+            value={t('format.currency', { value: formatMoney(listedSaleValue(rows), i18n.language) })}
+            hint={`${formatNumber(total, i18n.language)} ${t('gallery.heroLabel')}`}
+          />
+          <Metric
+            label={t('dashboard.rentValue')}
+            value={t('format.currency', { value: formatMoney(listedRentValue(rows), i18n.language) })}
+            hint={t('dashboard.perDayNote')}
+          />
+        </div>
+
+        {s ? (
+          <Panel title={t('dashboard.movementSummary')} flush>
+            <div className="grid grid-cols-2 divide-x divide-y divide-line sm:grid-cols-4 sm:divide-y-0">
+              {[
+                { label: t('dashboard.outNow'), value: s.outNow, tone: 'accent' as const },
+                { label: t('dashboard.overdue'), value: s.overdue, tone: 'warn' as const },
+                { label: t('dashboard.dueThisWeek'), value: s.dueThisWeek, tone: 'info' as const },
+                {
+                  label: t('dashboard.reservedThisMonth'),
+                  value: s.reservedThisMonth,
+                  tone: 'off' as const,
+                },
+              ].map((item) => (
+                <div key={item.label} className="relative px-3 py-2.5">
+                  <span
+                    aria-hidden="true"
+                    className={`absolute inset-x-0 top-0 h-0.5 ${
+                      item.tone === 'accent'
+                        ? 'bg-accent'
+                        : item.tone === 'warn'
+                          ? 'bg-warn'
+                          : item.tone === 'info'
+                            ? 'bg-info'
+                            : 'bg-off'
+                    }`}
+                  />
+                  <p className="eyebrow truncate">{item.label}</p>
+                  <p className="mt-1 font-mono text-metric font-semibold tracking-tight text-ink">
+                    {item.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Panel>
         ) : null}
 
-        <Button
-          variant="secondary"
-          onClick={() => setExportOpen(true)}
-          className="mt-1"
-          data-testid="export-inventory"
+        {/* Exceptions first — this is the list the owner actually acts on. */}
+        <Panel
+          title={t('dashboard.attention')}
+          action={
+            attention.length > 0 ? (
+              <span className="rounded-pill bg-warn-bg px-1.5 py-0.5 font-mono text-[10px] font-semibold text-warn">
+                {attention.length}
+              </span>
+            ) : null
+          }
+          flush
         >
-          {t('dashboard.export')}
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => exportMovementsToExcel(allMovements.data ?? [], `movements-${new Date().toISOString().slice(0, 10)}.xlsx`)}
-          className="mt-1"
-          data-testid="export-movements"
-        >
-          {t('dashboard.exportMovements')}
-        </Button>
+          {total === 0 ? (
+            <p className="px-3 py-3 text-small text-muted">{t('dashboard.attentionEmpty')}</p>
+          ) : attention.length === 0 ? (
+            <p className="px-3 py-3 text-small text-muted">{t('dashboard.attentionNone')}</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {attention.map((item) => (
+                <li key={`${item.kind}-${item.code}`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExportOpen(false);
+                      navigate(`/dresses?view=table&initialSearch=${encodeURIComponent(item.code)}`);
+                    }}
+                    className="flex w-full items-center gap-3 px-3 py-2 text-start transition-colors hover:bg-surface-2"
+                  >
+                    <span className="flex-1 truncate text-small text-ink">
+                      {t(
+                        `dashboard.attention${item.kind.charAt(0).toUpperCase()}${item.kind.slice(1)}`,
+                        { code: item.code, name: item.name },
+                      )}
+                    </span>
+                    <span className="shrink-0 font-mono text-[10px] uppercase tracking-widest text-warn">
+                      {t('dashboard.fix')}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+
+        {recent.length > 0 ? (
+          <Panel title={t('dashboard.recent')} flush>
+            <ul className="divide-y divide-line">
+              {recent.map((row) => (
+                <li key={row.id}>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/dresses/${row.id}`)}
+                    className="flex w-full items-center gap-3 px-3 py-2 text-start transition-colors hover:bg-surface-2"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-small text-ink">
+                        {(i18n.language.startsWith('ar') ? row.name_ar : row.name_en) || row.code}
+                      </span>
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] tracking-tight text-muted">
+                      {row.code}
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] tracking-tight text-faint">
+                      {row.created_at.slice(0, 10)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        ) : null}
+
+        <div className="mt-1 grid grid-cols-2 gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setExportOpen(true)}
+            data-testid="export-inventory"
+          >
+            <DownloadIcon className="h-3.5 w-3.5" />
+            {t('dashboard.export')}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              exportMovementsToExcel(
+                allMovements.data ?? [],
+                `movements-${new Date().toISOString().slice(0, 10)}.xlsx`,
+              )
+            }
+            data-testid="export-movements"
+          >
+            <QrIcon className="h-3.5 w-3.5" />
+            {t('dashboard.exportMovements')}
+          </Button>
+        </div>
       </div>
 
       <ExportSheet
