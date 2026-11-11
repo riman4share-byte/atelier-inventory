@@ -43,6 +43,11 @@ const LISTING_LABELS: Record<DressRow['listing_type'], string> = {
   both: 'dress.listingBoth',
 };
 
+/**
+ * The name to show for a dress. A dress that has not been named yet falls
+ * back to its code, which is also the page eyebrow — showing both would
+ * print the same thing twice.
+ */
 function displayName(dress: DressRow, language: string): string {
   const isArabic = language.startsWith('ar');
   const primary = isArabic ? dress.name_ar : dress.name_en;
@@ -206,10 +211,15 @@ function ExistingDress({ id }: { id: string }) {
     { label: t('dress.size'), value: dress.size_label },
   ].filter((attribute) => Boolean(attribute.value));
 
+  const name = displayName(dress, i18n.language);
+  // A dress that has no name yet shows the code as its eyebrow; repeating it
+  // as the title would print the same value twice.
+  const title = name === dress.code ? t('capture.draftName') : name;
+
   return (
     <Screen
       eyebrow={dress.code}
-      title={displayName(dress, i18n.language)}
+      title={title}
       subtitle={t(`status.${dress.status}`)}
     >
       <div
