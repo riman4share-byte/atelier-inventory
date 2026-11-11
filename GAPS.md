@@ -174,9 +174,21 @@ All 22 pass against the cloud project.
 
 ### G-27 · PWA install, offline shell and update prompt are not built
 
-**Status:** open · **Phase:** 1
-`vite-plugin-pwa` is not installed yet; Phase 12 covers manifest, icons and
-offline shell.
+**Status:** resolved 2026-11-12 · **Phase:** 12
+`vite-plugin-pwa` is installed with a manifest, icons, workbox runtime
+caching and auto-update. On the real MediaPad M5 the Chrome install prompt
+("Install the atelier app on this device") fires over the live site, the
+service worker registers, and the app runs as an installed PWA.
+
+The install payload was measured rather than guessed: the service worker
+precaches 952 KB raw (388 KB gzipped) and the entry chunk is 732 KB raw
+(205 KB gzipped), down from 2,149 KB and 1,033 KB. The service worker
+caches only the public share reader, never an authenticated API response,
+and signing out purges every non-precache cache.
+
+Still open: the update prompt has not been seen in the wild (it needs two
+deploys in a row on a device that keeps the app open), and the app has not
+been tested installed with the network cut on the tablet.
 
 ### G-28 · Capture and Materials screens are intentional empty shells
 
@@ -193,9 +205,45 @@ downloaded/printed asset, never inline. Revisit in Phase 12.
 
 ### G-30 · Phone camera, biometrics and real-device behaviour are untested
 
-**Status:** open · **Phase:** 1
-No phone was used. Camera permission, iOS safe areas and Android browser chrome
-need testing in Phase 4.
+**Status:** resolved 2026-11-12 · **Phase:** 12
+Tested on a real Huawei MediaPad M5 (Android 10, 1200x1920 @ density 280,
+686x977 CSS px, Chrome 153) over ADB with Chrome's DevTools protocol.
+
+**What the device proved:**
+- The camera opens and stays open. The rear camera reports
+  "camera 0, facing back" at 480x640; the front camera reports
+  "camera 1, facing front".
+- The app's preview shows the live picture, and the front camera preview is
+  mirrored to match what the photographer expects.
+- A photo taken on the device reaches the server. The saved file was pulled
+  back from the `dress-originals` bucket and is a real photograph, not a
+  placeholder.
+- The AI naming works end to end on a real photo: the Gemini function
+  returned a full bilingual draft (name "Midnight Ethereal Glow" /
+  "توهج أثيري ليلي", silhouette, neckline, sleeves, colour) and the review
+  panel opened on the tablet with no errors.
+
+**Three real bugs were found and fixed here** (commits `d2e31e9`,
+`6d9373e`, `5071fa6`):
+1. The app asked for the rear camera once and never checked what came back.
+   If another app took the camera, the page showed an empty grey box with no
+   way to recover. It now says what happened and offers a retry.
+2. The capture silently fell back to a 1280x720 canvas when the video had no
+   dimensions, so a dead camera produced a black rectangle that was saved
+   into the catalogue as a photo. The camera is now measured before it is
+   trusted, and a black frame is refused rather than saved.
+3. `URL.createObjectURL` was called inside the capture screen's render body,
+   so every re-render leaked an object URL for every thumbnail. On this
+   tablet Chrome was killed for memory (`iAwareF[LowMem]`, ~1.2 GB free of
+   6 GB) in the middle of the camera tests. The thumbnail now owns its URL
+   and revokes it.
+
+**Still untested:** biometrics, iOS safe areas, and how the camera behaves
+on a phone-sized screen rather than a 10-inch tablet. The device also
+refuses a second camera client: YouTube in picture-in-picture and Snapchat
+hold the camera, and the app then fails with "Too many cameras already
+open". That is a device constraint, not an app bug, but it is worth
+knowing before the camera is used in a busy shop.
 
 ### G-31 · Phase 8 and Phase 11 tables are not created yet
 
@@ -485,11 +533,13 @@ and ids correctly.
 
 ### G-56 · A failed query still looks like an empty inventory on two screens
 
-**Status:** open · **Phase:** 12
-The dashboard now renders an error state instead of "No dresses yet", but
-`MaterialsPage` and `CustomersPage` still show "No materials yet" / "No
-customers yet" when the request fails. During an outage the owner may
-re-create records that still exist.
+**Status:** resolved 2026-11-12 · **Phase:** 12
+`MaterialsPage` and `CustomersPage` used to show "No materials yet" / "No
+customers yet" when the request failed, exactly as they do when the
+inventory really is empty. During an outage the owner may re-create records
+that still exist. Both screens now render the same error state and retry
+button that the dashboard and the dress gallery already use. `DressesPage`
+already handled it.
 
 ### G-57 · Reservation overlap is only checked in the browser
 
@@ -520,13 +570,21 @@ is a neutral "Studio gradient". The manifest orientation is `any` so a
 
 ### G-59 · Capture re-encodes every photo twice and leaks its object URLs
 
-**Status:** open · **Phase:** 12
-`preparePhoto` runs at capture time and again at save time, so every photo
-is decoded and re-encoded twice on the main thread. `URL.createObjectURL` is
-called inside the render body, so every re-render allocates fresh object
-URLs for every thumbnail and none are ever revoked — on a phone this grows
-until the tab is killed mid-capture, losing photos that only exist in
-memory.
+**Status:** resolved 2026-11-12 · **Phase:** 12
+The leak is fixed: the capture screen called `URL.createObjectURL` inside the
+render body, so every re-render allocated a fresh URL for every thumbnail
+and none were ever revoked. On the real tablet Chrome was killed for memory
+(`iAwareF[LowMem]`, ~1.2 GB free of 6 GB) in the middle of the camera
+tests, and the photos at that point only exist in memory. The thumbnail is
+now its own component that owns its URL and revokes it
+(`src/lib/useObjectUrl.ts`).
+
+The double re-encode is still open: `preparePhoto` runs at capture time and
+again at save time, so every photo is decoded and re-encoded twice on the
+main thread. On a tablet-sized photo this is the most expensive part of a
+capture. The fix is to prepare once and carry the prepared blob through to
+storage, but the offline queue has to keep working with whatever it is
+handed, so it wants its own decision rather than a quiet change.
 
 ### G-60 · The code allocator was not self-healing
 
@@ -584,6 +642,28 @@ correct, so `main` builds work; only preview builds are affected. Note that
 the Pages API accepts `PATCH .../deployment_configs/{env}` with HTTP 200 and
 then ignores the `env_vars` change, so these have to be edited in the
 dashboard.
+
+### G-64 · The camera could photograph a black frame and save it as a photo
+
+**Status:** resolved 2026-11-12 · **Phase:** 12
+Found on the real tablet. After the camera is opened, and especially after
+the front and back lenses are switched, the sensor hands out black frames
+for a moment before it catches up. Photographing during that window
+produced a black rectangle that was saved into the catalogue as a real
+photo — one turned up in the gallery next to a genuine picture.
+
+The camera is now measured before it is trusted:
+- The capture screen watches the live preview and waits until a frame
+  actually carries an image. While it waits, the viewfinder says so and the
+  shutter stays out of the way.
+- The frame that is about to be saved is checked one last time. A frame that
+  is entirely black, or a flat single tone, is refused rather than saved.
+  A real photograph is never refused, however dark the room is.
+- If the camera never produces a usable frame the shutter is released again,
+  so nobody is ever locked out of the screen.
+
+The rule lives in `src/features/capture/frameQuality.ts` with its own unit
+tests, because it is a rule that must not drift.
 
 ---
 
