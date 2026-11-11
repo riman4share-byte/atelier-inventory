@@ -29,6 +29,16 @@ function CustomerList() {
           <div className="flex justify-center py-8">
             <Spinner className="h-5 w-5 text-accent" />
           </div>
+        ) : customers.isError ? (
+          // A failed query must never look like an empty customer list: the
+          // owner would re-create customers that already exist.
+          <Panel className="flex flex-col items-center gap-3 px-6 py-10 text-center">
+            <p className="text-body font-semibold text-ink">{t('gallery.loadFailedTitle')}</p>
+            <p className="text-small text-muted">{t('gallery.loadFailedBody')}</p>
+            <Button variant="secondary" className="w-auto px-4" onClick={() => void customers.refetch()}>
+              {t('common.retry')}
+            </Button>
+          </Panel>
         ) : (customers.data ?? []).length === 0 ? (
           <Panel className="px-3 py-6 text-center">
             <p className="text-small text-muted">{t('customers.empty')}</p>

@@ -10,6 +10,7 @@ import { PHOTO_ANGLE_VALUES, type PhotoAngle } from '@/features/photos/api';
 import { preparePhoto } from '@/features/photos/photoPipeline';
 import { saveCaptureBatch } from '@/features/offline/saveCapture';
 import { isEmptyFrame, readFrameStats } from '@/features/capture/frameQuality';
+import { useObjectUrl } from '@/lib/useObjectUrl';
 import { cx } from '@/lib/cx';
 
 type Captured = { id: string; blob: Blob; angle: PhotoAngle; width: number; height: number };
@@ -52,6 +53,59 @@ async function openCamera(facing: Facing): Promise<MediaStream | null> {
     return stream;
   }
   return null;
+}
+
+/**
+ * One captured photo.
+ *
+ * Kept as its own component so the object URL for the thumbnail is created
+ * once and revoked when the photo goes - not on every re-render of the
+ * capture screen.
+ */
+function CapturedTile({
+  captured,
+  onRemove,
+  onRetag,
+}: {
+  captured: Captured;
+  onRemove: (id: string) => void;
+  onRetag: (id: string, angle: PhotoAngle) => void;
+}) {
+  const { t } = useTranslation();
+  const url = useObjectUrl(captured.blob);
+
+  return (
+    <div className="flex flex-col overflow-hidden rounded-tile border border-line bg-surface">
+      <div className="relative">
+        {url ? (
+          <img src={url} alt="" className="h-20 w-full object-cover" />
+        ) : (
+          <div className="h-20 w-full bg-surface-3" />
+        )}
+        <span className="absolute bottom-1 left-1 rounded-pill border border-line bg-surface px-1.5 py-0.5 font-mono text-micro font-medium uppercase tracking-widest text-ink">
+          {t(`photos.angle.${captured.angle}`)}
+        </span>
+        <button
+          type="button"
+          onClick={() => onRemove(captured.id)}
+          className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-tile border border-line bg-surface text-muted transition-colors hover:border-danger-line hover:text-danger"
+          aria-label={t('common.close')}
+        >
+          <XIcon className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      <select
+        value={captured.angle}
+        onChange={(event) => onRetag(captured.id, event.target.value as PhotoAngle)}
+        aria-label={t('photos.addAs')}
+        className="h-8 w-full border-t border-line bg-surface px-1 font-mono text-note text-ink"
+      >
+        {ANGLES.map((a) => (
+          <option key={a} value={a}>{t(`photos.angle.${a}`)}</option>
+        ))}
+      </select>
+    </div>
+  );
 }
 
 export function CapturePage() {
@@ -431,35 +485,7 @@ export function CapturePage() {
             <p className="eyebrow">{t('capture.captured', { count: captured.length })}</p>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
               {captured.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex flex-col overflow-hidden rounded-tile border border-line bg-surface"
-                >
-                  <div className="relative">
-                    <img src={URL.createObjectURL(c.blob)} alt="" className="h-20 w-full object-cover" />
-                    <span className="absolute bottom-1 left-1 rounded-pill border border-line bg-surface px-1.5 py-0.5 font-mono text-micro font-medium uppercase tracking-widest text-ink">
-                      {t(`photos.angle.${c.angle}`)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => remove(c.id)}
-                      className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-tile border border-line bg-surface text-muted transition-colors hover:border-danger-line hover:text-danger"
-                      aria-label={t('common.close')}
-                    >
-                      <XIcon className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  <select
-                    value={c.angle}
-                    onChange={(event) => retag(c.id, event.target.value as PhotoAngle)}
-                    aria-label={t('photos.addAs')}
-                    className="h-8 w-full border-t border-line bg-surface px-1 font-mono text-note text-ink"
-                  >
-                    {ANGLES.map((a) => (
-                      <option key={a} value={a}>{t(`photos.angle.${a}`)}</option>
-                    ))}
-                  </select>
-                </div>
+                <CapturedTile key={c.id} captured={c} onRemove={remove} onRetag={retag} />
               ))}
             </div>
           </div>
