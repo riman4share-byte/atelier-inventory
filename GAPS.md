@@ -135,10 +135,14 @@ working after the push.
 
 ### G-23 · Dark mode follows the operating system only
 
-**Status:** open · **Phase:** 1
-There is no in-app light/dark override. The design system describes a
-`prefers-color-scheme` override, which is implemented; a manual toggle is not
-requested yet.
+**Status:** resolved 2026-11-11 · **Phase:** 12
+There is now an explicit choice — light, dark, or follow the system — in the
+header of every screen and on the Account and Settings screens. The choice is
+stored per device under `atelier.theme` and applied as a `data-theme`
+attribute on the document element, so an explicit pick always wins over the
+operating system. A small inline script in `index.html` applies it before the
+first paint, so the app never flashes the wrong colour on load, and the
+browser chrome colour follows the theme on Android.
 
 ### G-24 · No visual review of the shell in a browser
 

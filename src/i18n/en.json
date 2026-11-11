@@ -61,6 +61,13 @@
       "body": "The materials library and stock movements arrive in a later phase."
     }
   },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Match system",
+    "hint": "Light is the crisp white console. Dark is the matte charcoal one."
+  },
   "account": {
     "title": "Account",
     "adminTools": "Owner settings"

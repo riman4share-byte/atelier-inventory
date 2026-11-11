@@ -71,8 +71,20 @@
   color-scheme: light;
 }
 
+/*
+ * Theme application.
+ *
+ *   :root                              -> the light palette
+ *   prefers-color-scheme: dark         -> the dark palette, unless the user
+ *                                         picked light explicitly
+ *   [data-theme='dark']                -> the dark palette, always
+ *
+ * The explicit attribute rule comes last so it wins over the media query
+ * whichever way the operating system is set.
+ */
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #0a0a0c;
     --surface: #111114;
     --surface-2: #16161a;
@@ -116,6 +128,52 @@
     color-scheme: dark;
   }
 }
+
+/* An explicit choice always wins. */
+:root[data-theme='dark'] {
+  --bg: #0a0a0c;
+  --surface: #111114;
+  --surface-2: #16161a;
+  --surface-3: #1c1c21;
+
+  --ink: #e7e9ec;
+  --muted: #8a919e;
+  --faint: #646b77;
+  --line: #222226;
+  --line-strong: #32323a;
+
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-ink: #ffffff;
+  --accent-bg: #10182b;
+  --accent-line: #1e2f52;
+
+  --ok: #10b981;
+  --ok-bg: #0d1f1a;
+  --ok-line: #16463a;
+  --warn: #f59e0b;
+  --warn-bg: #241a0c;
+  --warn-line: #4d3812;
+  --danger: #f87171;
+  --danger-bg: #2a1214;
+  --danger-line: #5c2226;
+  --info: #60a5fa;
+  --info-bg: #10182b;
+  --info-line: #1e2f52;
+  --off: #8a919e;
+  --off-bg: #1c1c21;
+  --off-line: #32323a;
+
+  --c1: #1c1c21;
+  --c2: #24242a;
+  --c3: #2d2d34;
+  --c4: #37373f;
+
+  --focus: #60a5fa;
+
+  color-scheme: dark;
+}
+
 
 @layer base {
   html {

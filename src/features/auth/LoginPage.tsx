@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { LanguageToggle } from '@/components/layout/LanguageToggle';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
@@ -59,7 +60,10 @@ export function LoginPage() {
           </span>
           <span className="text-note text-muted">{t('app.tagline')}</span>
         </div>
-        <LanguageToggle />
+        <div className="flex items-center gap-1.5">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="flex flex-1 items-start justify-center px-4 py-8 md:items-center">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Screen } from '@/components/layout/Screen';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
@@ -66,6 +67,11 @@ export function SettingsPage() {
             ]}
           />
           <p className="mt-2 text-note text-muted">{t('settings.languageHint')}</p>
+        </Panel>
+
+        <Panel title={t('theme.label')}>
+          <ThemeToggle showLabel />
+          <p className="mt-2 text-note text-muted">{t('theme.hint')}</p>
         </Panel>
 
         <Panel>

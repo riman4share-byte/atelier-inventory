@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { LanguageToggle } from './LanguageToggle';
+import { ThemeToggle } from './ThemeToggle';
 
 interface ScreenProps {
   title: string;
@@ -12,8 +13,8 @@ interface ScreenProps {
 
 /**
  * Screen chrome: a sticky hairline header carrying the section context, and a
- * body on a strict vertical rhythm. The language switch stays on every screen
- * so staff can flip languages without finding the owner settings.
+ * body on a strict vertical rhythm. The language and theme switches sit on
+ * every screen so staff can flip either without opening the owner settings.
  */
 export function Screen({ title, subtitle, eyebrow, action, children }: ScreenProps) {
   return (
@@ -24,7 +25,10 @@ export function Screen({ title, subtitle, eyebrow, action, children }: ScreenPro
           <h1 className="truncate text-title font-semibold tracking-tight text-ink">{title}</h1>
           {subtitle ? <p className="mt-0.5 truncate text-note text-muted">{subtitle}</p> : null}
         </div>
-        <div className="shrink-0 pt-0.5">{action ?? <LanguageToggle />}</div>
+        <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
+          {action ?? <LanguageToggle />}
+          <ThemeToggle />
+        </div>
       </header>
       <div className="flex flex-1 flex-col gap-3 px-4 py-4">{children}</div>
     </div>

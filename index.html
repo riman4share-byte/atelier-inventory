@@ -4,10 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="theme-color" content="#f1f5f9" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f1f5f9" id="theme-color" />
     <meta name="description" content="Inventory for a wedding dress atelier." />
     <title>Atelier Inventory</title>
+    <script>
+      // Apply the saved theme before the first paint so the app never flashes
+      // the wrong colour on load. Kept inline and tiny on purpose.
+      (function () {
+        try {
+          var stored = localStorage.getItem('atelier.theme');
+          var theme = stored === 'light' || stored === 'dark' ? stored : null;
+          var dark =
+            theme === 'dark' ||
+            (theme === null &&
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          var root = document.documentElement;
+          if (theme) root.setAttribute('data-theme', theme);
+          root.style.colorScheme = dark ? 'dark' : 'light';
+          var meta = document.getElementById('theme-color');
+          if (meta) meta.setAttribute('content', dark ? '#0a0a0c' : '#f1f5f9');
+        } catch (error) {
+          // A blocked localStorage must not stop the app from booting.
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
