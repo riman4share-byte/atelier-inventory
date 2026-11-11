@@ -9,6 +9,7 @@ import { useSuggestedCode } from '@/features/dresses/api';
 import { PHOTO_ANGLE_VALUES, type PhotoAngle } from '@/features/photos/api';
 import { preparePhoto } from '@/features/photos/photoPipeline';
 import { saveCaptureBatch } from '@/features/offline/saveCapture';
+import { isEmptyFrame, readFrameStats } from '@/features/capture/frameQuality';
 import { cx } from '@/lib/cx';
 
 type Captured = { id: string; blob: Blob; angle: PhotoAngle; width: number; height: number };
@@ -66,6 +67,10 @@ export function CapturePage() {
   const [facing, setFacing] = useState<Facing>('environment');
   const [cameraError, setCameraError] = useState<'unavailable' | 'ended' | null>(null);
   const [starting, setStarting] = useState(true);
+  // True until the camera has handed over a frame that actually carries an
+  // image. A freshly opened or freshly switched camera sends black frames
+  // for a moment, and those must never reach the catalogue.
+  const [warming, setWarming] = useState(true);
   const [captured, setCaptured] = useState<Captured[]>([]);
   const [angle, setAngle] = useState<PhotoAngle>('front');
   const [saving, setSaving] = useState(false);
@@ -74,10 +79,49 @@ export function CapturePage() {
 
   const streamRef = useRef<MediaStream | null>(null);
 
+  /**
+   * Draws the live video into a small canvas and reports what it sees.
+   * `null` means the camera is not live yet.
+   */
+  const inspectFrame = useCallback((): { mean: number; max: number; distinct: number } | null => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) return null;
+    const probe = document.createElement('canvas');
+    probe.width = 32;
+    probe.height = 32;
+    const ctx = probe.getContext('2d');
+    if (!ctx) return null;
+    try {
+      ctx.drawImage(video, 0, 0, probe.width, probe.height);
+      return readFrameStats(ctx, probe.width, probe.height);
+    } catch {
+      // A tainted or not-yet-ready canvas tells us nothing.
+      return null;
+    }
+  }, []);
+
+  /**
+   * Waits until the camera hands over a frame that carries an image.
+   *
+   * After opening or switching a camera the sensor sends a few black frames
+   * before it catches up. Photographing during that window produces a black
+   * rectangle. So the screen waits for a real picture first.
+   */
+  const waitForRealFrame = useCallback(async (timeoutMs = 6000): Promise<boolean> => {
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      const stats = inspectFrame();
+      if (stats && !isEmptyFrame(stats)) return true;
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+    return false;
+  }, [inspectFrame]);
+
   /** Opens the camera, replacing whatever was running. */
   const startCamera = useCallback(async (next: Facing) => {
     setStarting(true);
     setCameraError(null);
+    setWarming(true);
 
     // Release the previous camera before asking for another one: a phone
     // usually refuses to open a second one.
@@ -122,6 +166,23 @@ export function CapturePage() {
     }
   }, [stream]);
 
+  // Wait for the camera to hand over a real picture before the shutter is
+  // usable. Until then the preview says so instead of showing a black box.
+  useEffect(() => {
+    if (!stream) return;
+    let cancelled = false;
+    void (async () => {
+      await waitForRealFrame();
+      // Whether or not the camera produced a picture, the shutter is enabled
+      // again. The capture itself checks the frame one last time, so a black
+      // rectangle can never be saved - but the user is never locked out.
+      if (!cancelled) setWarming(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [stream, waitForRealFrame]);
+
   const flipCamera = useCallback(() => {
     void startCamera(facing === 'environment' ? 'user' : 'environment');
   }, [facing, startCamera]);
@@ -136,6 +197,18 @@ export function CapturePage() {
       setCameraError('unavailable');
       return;
     }
+
+    // The camera may still be warming up after being opened or switched.
+    // Wait for a real frame rather than photographing a black rectangle.
+    const stats = inspectFrame();
+    if (!stats || isEmptyFrame(stats)) {
+      const ready = await waitForRealFrame(4000);
+      if (!ready) {
+        setCameraError('unavailable');
+        return;
+      }
+    }
+
     const w = video.videoWidth;
     const h = video.videoHeight;
     canvas.width = w;
@@ -149,6 +222,15 @@ export function CapturePage() {
       ctx.scale(-1, 1);
     }
     ctx.drawImage(video, 0, 0, w, h);
+
+    // One last look at the frame that is about to be saved. If it is still
+    // black, do not save it: the user would only find out later.
+    const finalStats = readFrameStats(ctx, w, h);
+    if (isEmptyFrame(finalStats)) {
+      setCameraError('unavailable');
+      return;
+    }
+
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
     if (!blob) return;
     const prepared = await preparePhoto(blob);
@@ -156,7 +238,7 @@ export function CapturePage() {
       ...current,
       { id: crypto.randomUUID(), blob: prepared.blob, angle, width: prepared.width, height: prepared.height },
     ]);
-  }, [angle, facing]);
+  }, [angle, facing, inspectFrame, waitForRealFrame]);
 
   const onFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -251,14 +333,25 @@ export function CapturePage() {
                 </div>
               </div>
             ) : (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="h-full w-full object-cover"
-                style={facing === 'user' ? { transform: 'scaleX(-1)' } : undefined}
-              />
+              <>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  className="h-full w-full object-cover"
+                  style={facing === 'user' ? { transform: 'scaleX(-1)' } : undefined}
+                />
+                {warming ? (
+                  <div
+                    className="pointer-events-none absolute inset-0 grid place-items-center bg-surface/70"
+                    role="status"
+                    data-testid="camera-warming"
+                  >
+                    <span className="eyebrow text-muted">{t('capture.cameraWarming')}</span>
+                  </div>
+                ) : null}
+              </>
             )}
             <canvas ref={canvasRef} hidden />
             {/* framing guides */}
@@ -309,7 +402,11 @@ export function CapturePage() {
         {/* Capture / upload controls */}
         <div className="grid grid-cols-2 gap-2">
           {!cameraError ? (
-            <Button variant="secondary" onClick={() => void captureFrame()}>
+            <Button
+              variant="secondary"
+              disabled={warming}
+              onClick={() => void captureFrame()}
+            >
               <CameraIcon className="h-4 w-4" />
               {t('capture.shutter')}
             </Button>

@@ -393,6 +393,7 @@
     "cameraTaken": "The camera was closed by another app.",
     "cameraRetry": "Try again",
     "cameraSwitch": "Switch camera",
+    "cameraWarming": "Starting the camera...",
     "cameraDenied": "Camera not available. Use “Upload photos” instead.",
     "shutter": "Take photo",
     "upload": "Upload photos",
