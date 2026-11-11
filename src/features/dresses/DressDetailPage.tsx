@@ -6,7 +6,7 @@ import { Panel } from '@/components/ui/Panel';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Screen } from '@/components/layout/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
-import { LinkIcon, PencilIcon, QrIcon, TrashIcon } from '@/components/icons';
+import { ImageIcon, LinkIcon, PencilIcon, QrIcon, TrashIcon } from '@/components/icons';
 import {
   dressErrorMessage,
   useCreateDress,
@@ -119,6 +119,9 @@ function ExistingDress({ id }: { id: string }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
+  // The background remover is a tool, not part of the page: it opens only
+  // when the owner asks for it.
+  const [cleanerOpen, setCleanerOpen] = useState(false);
 
   // Auto-trigger AI on draft dresses with photos and no name yet
   useEffect(() => {
@@ -235,7 +238,16 @@ function ExistingDress({ id }: { id: string }) {
             </div>
           ) : null}
 
-          {photos.length > 0 && !isDraft ? <BackgroundCleaner dressId={dress.id} photos={photos} /> : null}
+          {photos.length > 0 && !isDraft ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setCleanerOpen(true)}
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+              {t('cleanup.open')}
+            </Button>
+          ) : null}
 
           {aiOpen && aiDraft ? (
             <DressAiReview
@@ -552,6 +564,13 @@ function ExistingDress({ id }: { id: string }) {
         <CheckOutSheet open={checkoutOpen} onClose={() => setCheckoutOpen(false)} dressId={dress.id} dressCode={dress.code} />
         <CheckInSheet open={checkinOpen} onClose={() => setCheckinOpen(false)} dressId={dress.id} dressCode={dress.code} currentCustomerId={dress.current_customer_id} />
         <ReserveSheet open={reserveOpen} onClose={() => setReserveOpen(false)} dressId={dress.id} dressCode={dress.code} />
+        {cleanerOpen ? (
+          <BackgroundCleaner
+            dressId={dress.id}
+            photos={photos}
+            onClose={() => setCleanerOpen(false)}
+          />
+        ) : null}
       </div>
     </Screen>
   );

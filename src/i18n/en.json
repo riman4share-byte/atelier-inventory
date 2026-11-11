@@ -286,6 +286,7 @@
     "modelNote": "Drafted by the active vision model."
   },
   "cleanup": {
+    "open": "Clean background",
     "title": "Clean background",
     "photo": "Photo",
     "cleaned": "Cleaned",
