@@ -202,7 +202,7 @@ export function DashboardPage() {
             variant="secondary"
             size="sm"
             onClick={() =>
-              exportMovementsToExcel(
+              void exportMovementsToExcel(
                 allMovements.data ?? [],
                 `movements-${new Date().toISOString().slice(0, 10)}.xlsx`,
               )

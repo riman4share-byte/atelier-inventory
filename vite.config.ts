@@ -26,11 +26,22 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // The in-browser background remover is ~860 KB of onnxruntime that only
+        // the owner ever uses, and the spreadsheet writer is ~420 KB that only
+        // runs when someone exports. Both are fetched on demand like their
+        // 23 MB wasm companion, so neither may be precached on every staff
+        // install.
+        globIgnores: ['**/ort*.{js,mjs}', '**/dist-*.js', '**/xlsx-*.js'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
+            // Only the public share reader is cached. Authenticated API
+            // responses must never be: the cache key is the URL, and
+            // PostgREST answers the same URL for every signed-in user, so on
+            // a shared tablet one staff member could be served another
+            // member's dresses and customer rows.
+            urlPattern: /\/rest\/v1\/rpc\/get_shared_dresses/i,
             handler: 'NetworkFirst',
-            options: { cacheName: 'supabase-api', expiration: { maxEntries: 50, maxAgeSeconds: 300 } },
+            options: { cacheName: 'public-share', expiration: { maxEntries: 20, maxAgeSeconds: 300 } },
           },
         ],
       },

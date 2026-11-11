@@ -1,6 +1,3 @@
-import '@fontsource-variable/plus-jakarta-sans';
-import '@fontsource-variable/jetbrains-mono';
-import '@fontsource-variable/cairo';
 import './styles/index.css';
 import './i18n';
 

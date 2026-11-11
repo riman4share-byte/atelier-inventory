@@ -1,9 +1,17 @@
-import * as XLSX from 'xlsx';
 import type { DressMovementRow } from './api';
 import { neutraliseFormula } from '@/features/dresses/exportData';
 
-/** Movement history as Excel (English-only, per owner decision). */
-export function exportMovementsToExcel(movements: DressMovementRow[], filename: string): void {
+/**
+ * Movement history as Excel (English-only, per owner decision).
+ *
+ * The spreadsheet writer is ~800 KB. It is imported here rather than at the
+ * top of the module so it only downloads when someone actually exports.
+ */
+export async function exportMovementsToExcel(
+  movements: DressMovementRow[],
+  filename: string,
+): Promise<void> {
+  const XLSX = await import('xlsx');
   const rows: Array<Array<string>> = [
     ['Occurred', 'Dress', 'Direction', 'Reason', 'Customer', 'From', 'To', 'Due', 'Deposit', 'Notes'],
     ...movements.map((m) => [

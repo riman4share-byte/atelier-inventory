@@ -1,6 +1,5 @@
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as XLSX from 'xlsx';
 import {
   EXPORT_ROW_LIMIT,
   fetchDressesForExport,
@@ -21,7 +20,6 @@ import {
   neutraliseFormula,
 } from './exportData';
 import { buildCatalogHtml, buildStockReportHtml, printHtml } from './printDocument';
-import QRCode from 'qrcode';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { SegmentedControl, type SegmentOption } from '@/components/ui/SegmentedControl';
@@ -63,6 +61,9 @@ function countByStatus(dresses: DressRow[]): Record<DressRow['status'], number> 
  */
 async function catalogQrCodes(dresses: DressRow[]): Promise<Record<string, string>> {
   const origin = window.location.origin;
+  // The QR library is only needed when a catalog is actually printed, so it
+  // is fetched here rather than shipped in the first download.
+  const QRCode = (await import('qrcode')).default;
   const entries = await Promise.all(
     dresses.map(async (dress) => [
       dress.code,
@@ -165,6 +166,9 @@ export function ExportSheet({
         const rows = exportRows(dresses, [...activeColumns, QR_URL_COLUMN, EXPORT_DATE_COLUMN], origin);
         // Neutralise spreadsheet formulas before the values reach Excel.
         const safeRows = rows.map((row) => row.map((cell) => neutraliseFormula(cell)));
+        // The spreadsheet writer is ~800 KB. Loading it only when an Excel
+        // export is actually requested keeps it out of the first download.
+        const XLSX = await import('xlsx');
         const sheet = XLSX.utils.aoa_to_sheet(safeRows);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, sheet, 'Dresses');

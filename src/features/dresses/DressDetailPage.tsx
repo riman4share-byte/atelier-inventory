@@ -28,7 +28,6 @@ import { PhotoGallery } from '@/features/photos/PhotoGallery';
 import { useEnqueueErpSync } from '@/features/erp/api';
 import { BackgroundCleaner } from '@/features/cleanup/BackgroundCleaner';
 import { buildHangTagHtml, printHtml } from '@/features/dresses/printDocument';
-import QRCode from 'qrcode';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: DressRow['status']; labelKey: string }> = [
   { value: 'available', labelKey: 'status.available' },
@@ -520,6 +519,7 @@ function ExistingDress({ id }: { id: string }) {
               onClick={async () => {
                 // The tag carries the unguessable public token, not the code.
                 const url = `${window.location.origin}/d/${dress.public_token}`;
+                const QRCode = (await import('qrcode')).default;
                 const qr = await QRCode.toDataURL(url, { margin: 1, width: 240 });
                 printHtml(buildHangTagHtml(dress, t('app.name'), qr));
               }}
