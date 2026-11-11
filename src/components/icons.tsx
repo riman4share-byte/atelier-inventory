@@ -278,3 +278,11 @@ export const ContrastIcon = glyph(
     <path d="M12 3.5a8.5 8.5 0 0 1 0 17Z" fill="currentColor" stroke="none" />
   </>,
 );
+
+export const SwitchCameraIcon = glyph(
+  <>
+    <path d="M3 8.5h3.5L8 6h8l1.5 2.5H21v10H3v-10Z" />
+    <path d="M12 10.5a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z" />
+    <path d="M17.5 3.5v4M15.5 5.5h4" />
+  </>,
+);

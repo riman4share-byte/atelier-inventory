@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { CameraIcon, GownIcon, UploadIcon, XIcon } from '@/components/icons';
+import { CameraIcon, RefreshIcon, SwitchCameraIcon, UploadIcon, XIcon } from '@/components/icons';
 import { Button } from '@/components/ui/Button';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Screen } from '@/components/layout/Screen';
@@ -15,21 +15,42 @@ type Captured = { id: string; blob: Blob; angle: PhotoAngle; width: number; heig
 
 const ANGLES = PHOTO_ANGLE_VALUES as readonly PhotoAngle[];
 
-/** Open the rear camera if possible, else null. */
-async function openRearCamera(): Promise<MediaStream | null> {
+type Facing = 'environment' | 'user';
+
+/**
+ * Opens the camera the user asked for.
+ *
+ * A phone can refuse a camera that another app is holding, and some devices
+ * hand back the wrong one. So each request is checked: if the camera that
+ * comes back is not the one asked for, it is closed and the next option is
+ * tried. `null` means no camera could be opened at all.
+ */
+async function openCamera(facing: Facing): Promise<MediaStream | null> {
   if (!navigator.mediaDevices?.getUserMedia) return null;
-  try {
-    return await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: 'environment' } },
-      audio: false,
-    });
-  } catch {
+
+  const wanted: MediaStreamConstraints[] = [
+    { video: { facingMode: { exact: facing } }, audio: false },
+    { video: { facingMode: { ideal: facing } }, audio: false },
+    { video: true, audio: false },
+  ];
+
+  for (const constraints of wanted) {
+    let stream: MediaStream | null = null;
     try {
-      return await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
     } catch {
-      return null;
+      continue;
     }
+    const track = stream.getVideoTracks()[0];
+    const got = track?.getSettings?.().facingMode;
+    // The device gave us the other camera. Close it and try again.
+    if (got && got !== facing) {
+      stream.getTracks().forEach((t) => t.stop());
+      continue;
+    }
+    return stream;
   }
+  return null;
 }
 
 export function CapturePage() {
@@ -42,45 +63,91 @@ export function CapturePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [cameraError, setCameraError] = useState(false);
+  const [facing, setFacing] = useState<Facing>('environment');
+  const [cameraError, setCameraError] = useState<'unavailable' | 'ended' | null>(null);
+  const [starting, setStarting] = useState(true);
   const [captured, setCaptured] = useState<Captured[]>([]);
   const [angle, setAngle] = useState<PhotoAngle>('front');
   const [saving, setSaving] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [queued, setQueued] = useState(false);
 
-  // Open camera on mount
-  useEffect(() => {
-    let active = true;
-    openRearCamera().then((s) => {
-      if (!active) { s?.getTracks().forEach((t) => t.stop()); return; }
-      if (!s) { setCameraError(true); return; }
-      setStream(s);
-      if (videoRef.current) videoRef.current.srcObject = s;
-    });
-    return () => { active = false; };
+  const streamRef = useRef<MediaStream | null>(null);
+
+  /** Opens the camera, replacing whatever was running. */
+  const startCamera = useCallback(async (next: Facing) => {
+    setStarting(true);
+    setCameraError(null);
+
+    // Release the previous camera before asking for another one: a phone
+    // usually refuses to open a second one.
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setStream(null);
+
+    const opened = await openCamera(next);
+    if (!opened) {
+      setCameraError('unavailable');
+      setStarting(false);
+      return;
+    }
+    streamRef.current = opened;
+    setStream(opened);
+    setFacing(next);
+
+    // Another app can take the camera away mid-session. When that happens
+    // the preview would silently go blank, so say so instead.
+    opened.getVideoTracks()[0]?.addEventListener(
+      'ended',
+      () => setCameraError('ended'),
+      { once: true },
+    );
+    setStarting(false);
   }, []);
 
-  // Attach stream to video element once both exist
+  // Open the rear camera on mount.
   useEffect(() => {
-    if (stream && videoRef.current) videoRef.current.srcObject = stream;
+    void startCamera('environment');
+    return () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    };
+  }, [startCamera]);
+
+  // Attach the stream to the video element once both exist.
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      void videoRef.current.play().catch(() => undefined);
+    }
   }, [stream]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => { stream?.getTracks().forEach((track) => track.stop()); };
-  }, [stream]);
+  const flipCamera = useCallback(() => {
+    void startCamera(facing === 'environment' ? 'user' : 'environment');
+  }, [facing, startCamera]);
 
   const captureFrame = useCallback(async () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     if (!video || !canvas) return;
-    const w = video.videoWidth || 1280;
-    const h = video.videoHeight || 720;
+    // A camera that is not live produces a black frame. Saving one silently
+    // would put a black rectangle in the catalogue, so refuse instead.
+    if (!video.videoWidth || !video.videoHeight) {
+      setCameraError('unavailable');
+      return;
+    }
+    const w = video.videoWidth;
+    const h = video.videoHeight;
     canvas.width = w;
     canvas.height = h;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    // The front camera is shown mirrored, so the saved photo matches what the
+    // photographer saw.
+    if (facing === 'user') {
+      ctx.translate(w, 0);
+      ctx.scale(-1, 1);
+    }
     ctx.drawImage(video, 0, 0, w, h);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
     if (!blob) return;
@@ -89,7 +156,7 @@ export function CapturePage() {
       ...current,
       { id: crypto.randomUUID(), blob: prepared.blob, angle, width: prepared.width, height: prepared.height },
     ]);
-  }, [angle]);
+  }, [angle, facing]);
 
   const onFiles = async (files: FileList | null) => {
     if (!files) return;
@@ -165,16 +232,50 @@ export function CapturePage() {
             {cameraError ? (
               <div className="grid h-full place-items-center p-6 text-center">
                 <div>
-                  <GownIcon className="mx-auto h-10 w-auto text-faint" />
-                  <p className="mt-3 text-small text-muted">{t('capture.cameraDenied')}</p>
+                  <CameraIcon className="mx-auto h-6 w-6 text-faint" />
+                  <p className="mt-2 text-small text-muted">
+                    {cameraError === 'ended'
+                      ? t('capture.cameraTaken')
+                      : t('capture.cameraUnavailable')}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="mt-3 w-auto px-3"
+                    loading={starting}
+                    onClick={() => void startCamera(facing)}
+                  >
+                    <RefreshIcon className="h-3.5 w-3.5" />
+                    {t('capture.cameraRetry')}
+                  </Button>
                 </div>
               </div>
             ) : (
-              <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="h-full w-full object-cover"
+                style={facing === 'user' ? { transform: 'scaleX(-1)' } : undefined}
+              />
             )}
             <canvas ref={canvasRef} hidden />
             {/* framing guides */}
             <div aria-hidden="true" className="pointer-events-none absolute inset-4 border border-line-strong" />
+
+            {/* Flip between the rear and front camera. */}
+            {cameraError ? null : (
+              <button
+                type="button"
+                onClick={flipCamera}
+                aria-label={t('capture.cameraSwitch')}
+                title={t('capture.cameraSwitch')}
+                className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-field border border-line bg-surface/85 text-ink backdrop-blur-sm transition-colors hover:bg-surface"
+              >
+                <SwitchCameraIcon className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 

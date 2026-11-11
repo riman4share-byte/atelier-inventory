@@ -389,6 +389,10 @@
   "capture": {
     "title": "Capture",
     "subtitle": "Photograph or upload a dress.",
+    "cameraUnavailable": "The camera could not be started. Another app may be using it.",
+    "cameraTaken": "The camera was closed by another app.",
+    "cameraRetry": "Try again",
+    "cameraSwitch": "Switch camera",
     "cameraDenied": "Camera not available. Use “Upload photos” instead.",
     "shutter": "Take photo",
     "upload": "Upload photos",
