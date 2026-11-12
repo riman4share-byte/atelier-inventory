@@ -21,6 +21,7 @@ import { useDressMovements } from '@/features/movements/api';
 import { CheckOutSheet } from '@/features/movements/CheckOutSheet';
 import { CheckInSheet } from '@/features/movements/CheckInSheet';
 import { ReserveSheet } from '@/features/movements/ReserveSheet';
+import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
 import { categoryLabel, toCategory } from './categories';
 import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
@@ -539,10 +540,8 @@ function ExistingDress({ id }: { id: string }) {
           </div>
         ) : null}
 
-        {dress.notes ? (
-          <p className="rounded-card border border-line bg-surface-2 px-3 py-2 text-small text-muted">
-            {dress.notes}
-          </p>
+        {movementsQuery.data && movementsQuery.data.length > 0 ? (
+          <AvailabilityCalendar movements={movementsQuery.data} />
         ) : null}
 
         <div className="flex gap-2 pt-1">
