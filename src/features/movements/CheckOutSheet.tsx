@@ -1,6 +1,7 @@
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCustomers, useCreateCustomer, useCreateMovement } from './api';
+import { useCustomers, useCreateCustomer, useCreateMovement, useDressMovements } from './api';
+import { bookingsFromMovements, conflictsWithBooking } from './availability';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { TextArea } from '@/components/ui/TextArea';
@@ -50,6 +51,22 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
   const customers = useCustomers(customerSearch);
   const createCustomer = useCreateCustomer();
   const createMovement = useCreateMovement();
+  const movementsQuery = useDressMovements(dressId);
+
+  // Bookings already on this dress. If the chosen due date overlaps one of
+  // them, warn before saving — a double-booked dress is the one mistake a
+  // rental shop cannot afford.
+  const bookings = useMemo(
+    () => bookingsFromMovements(movementsQuery.data ?? []),
+    [movementsQuery.data],
+  );
+  const conflict = useMemo(() => {
+    if (!dueDate) return null;
+    const from = new Date();
+    const to = new Date(dueDate);
+    if (Number.isNaN(to.getTime())) return null;
+    return conflictsWithBooking(bookings, from, to);
+  }, [bookings, dueDate]);
 
   if (!open) return null;
 
@@ -218,6 +235,11 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
                 value={dueDate}
                 onChange={(event) => setDueDate(event.target.value)}
               />
+              {conflict ? (
+                <p className="rounded-card border border-danger-line bg-danger-bg px-3 py-2 text-small text-danger" role="alert">
+                  {t('movements.conflict')}
+                </p>
+              ) : null}
 
               <TextField
                 label={t('movements.deposit')}
