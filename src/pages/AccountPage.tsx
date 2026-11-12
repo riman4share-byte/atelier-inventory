@@ -77,17 +77,16 @@ export function AccountPage() {
           <p className="mt-2 text-note text-muted">{t('theme.hint')}</p>
         </Panel>
 
-        {profile?.role === 'admin' ? (
-          <Panel title={t('account.adminTools')}>
-            <Link
-              to="/settings"
-              className="flex h-9 items-center justify-between gap-2 rounded-field border border-line bg-surface-2 px-2.5 text-small font-semibold text-ink transition-colors hover:border-line-strong hover:bg-surface-3"
-            >
-              {t('account.adminTools')}
-              <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted" />
-            </Link>
-          </Panel>
-        ) : null}
+        <Panel title={t('help.title')}>
+          <Link
+            to="/help"
+            className="flex h-9 items-center justify-between gap-2 rounded-field border border-line bg-surface-2 px-2.5 text-small font-semibold text-ink transition-colors hover:border-line-strong hover:bg-surface-3"
+          >
+            {t('help.subtitle')}
+            <ChevronRightIcon className="h-4 w-4 shrink-0 text-muted" />
+          </Link>
+        </Panel>
+
 
         <Panel>
           <Button
