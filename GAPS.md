@@ -706,6 +706,38 @@ The camera is now measured before it is trusted:
 The rule lives in `src/features/capture/frameQuality.ts` with its own unit
 tests, because it is a rule that must not drift.
 
+### G-67 · The Excel export was a bare grid of cells
+
+**Status:** resolved 2026-11-12 · **Phase:** 12
+The export wrote an array of rows into a spreadsheet and nothing else: no
+title, no date, no company name, no logo, no formatting, and no table. It
+opened looking like a list someone typed into a text file. The movement
+history was worse: it wrote the dress and the customer as raw UUIDs, so
+the sheet was a list of identifiers rather than a record of anything.
+
+Both exports now share one design module and carry the atelier's mark,
+its name, what it makes and how to reach it; the report's title and the
+date; a real Excel table with filter buttons, banded rows and a name;
+prices as numbers in AED and dates as dates; columns sized to their
+content; the header frozen; a quiet footer; and a print setup that
+repeats the header on every page. The movement history carries the
+dress's code and name and the customer's name, with the identifiers kept
+alongside.
+
+Two bugs were only findable by opening the finished file in Excel:
+a cell inside a table cannot carry its own format (the writer puts the
+whole object into the cell as text, so every price read
+`{"value":3500,"numFmt":"..."}`), and a base64 image contains the letters
+"svg" by chance about one time in eight, so a guard that searched the
+string for "svg" threw away a good PNG and the logo never reached the
+sheet. Both have tests.
+
+The old spreadsheet library could not write a single style or an image -
+that is a paid feature - so the file could never have been made to look
+like anything. It is replaced by one that can, and the 429 KB of dead
+weight it carried is gone. The new library is loaded on demand and is
+not precached, so the install payload is unchanged.
+
 ---
 
 ## Resolved
