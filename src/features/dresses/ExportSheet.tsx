@@ -239,9 +239,9 @@ export function ExportSheet({
       }
       if (format === 'catalog') {
         const dresses = await resolveSelection();
-        const [qrByCode, photoUrlByCode] = await Promise.all([
+        const [qrByCode, photoUrlsByCode] = await Promise.all([
           catalogQrCodes(dresses),
-          import('@/features/photos/api').then((photos) => photos.firstPhotoUrls(dresses)),
+          import('@/features/photos/api').then((photos) => photos.cataloguePhotoUrls(dresses)),
         ]);
         printHtml(
           buildCatalogHtml(dresses, {
@@ -252,7 +252,7 @@ export function ExportSheet({
             tagline: branding.tagline,
             contact: branding.contact,
             qrByCode,
-            photoUrlByCode,
+            photoUrlsByCode,
           }),
         );
         onClose();

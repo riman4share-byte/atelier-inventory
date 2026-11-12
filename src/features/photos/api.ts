@@ -35,40 +35,6 @@ const PHOTO_ANGLE_VALUES = ['front', 'back', 'side', 'neckline', 'detail', 'othe
 export type PhotoAngle = DressPhotoRow['angle']; // front | back | side | neckline | detail | other
 export { PHOTO_ANGLE_VALUES };
 
-/**
- * Signed display URLs for the first photo of each given dress (used by the
- * PDF catalog at export time). The first photo by sort order wins; never
- * throws for a dress with no photos — it just misses the map.
- */
-export async function firstPhotoUrls(dresses: Array<{ id: string; code: string }>): Promise<Record<string, string>> {
-  const out: Record<string, string> = {};
-  if (dresses.length === 0) return out;
-  const client = supabase as NonNullable<typeof supabase>;
-  const { data, error } = await client
-    .from('dress_photos')
-    .select('dress_id, original_path, sort_order')
-    .in(
-      'dress_id',
-      dresses.map((dress) => dress.id),
-    )
-    .order('sort_order');
-  if (error) throw error;
-  const firstPath = new Map<string, string>();
-  for (const row of data) {
-    if (!firstPath.has(row.dress_id)) firstPath.set(row.dress_id, row.original_path);
-  }
-  for (const dress of dresses) {
-    const path = firstPath.get(dress.id);
-    if (!path) continue;
-    const { data: signed, error: signError } = await client.storage
-      .from('dress-originals')
-      .createSignedUrl(path, 3600);
-    if (signError) continue; // one bad file must not kill the export
-    out[dress.code] = signed.signedUrl;
-  }
-  return out;
-}
-
 /** Upload many files in one tap; each becomes one dress_photos row. */
 export function useAddPhotos(dressId: string) {
   const client = useQueryClient();
@@ -128,6 +94,74 @@ export function useDeletePhoto(dressId: string) {
 }
 
 /** Move one photo up/down in the ordered list by swapping sort_order. */
+/**
+ * The three photographs a printed catalogue shows for each dress: the front,
+ * the back and a detail.
+ *
+ * The catalogue has three slots, so it must be given three photographs. It
+ * used to be given only the first one, which left the back and the detail
+ * as empty grey boxes on every page.
+ */
+export interface CataloguePhotos {
+  front?: string;
+  back?: string;
+  detail?: string;
+}
+
+export async function cataloguePhotoUrls(
+  dresses: Array<{ id: string; code: string }>,
+): Promise<Record<string, CataloguePhotos>> {
+  const out: Record<string, CataloguePhotos> = {};
+  if (dresses.length === 0) return out;
+  const client = supabase as NonNullable<typeof supabase>;
+  const { data, error } = await client
+    .from('dress_photos')
+    .select('dress_id, original_path, angle, sort_order')
+    .in(
+      'dress_id',
+      dresses.map((dress) => dress.id),
+    )
+    .order('sort_order');
+  if (error) throw error;
+
+  // The first photograph of each dress is the front, whatever it was tagged.
+  const paths = new Map<string, CataloguePhotos>();
+  for (const row of data) {
+    const current = paths.get(row.dress_id);
+    if (!current) {
+      paths.set(row.dress_id, { front: row.original_path });
+      continue;
+    }
+    // The back and the detail are the ones that were tagged as such. A
+    // neckline photograph stands in for a detail, and a side view stands in
+    // for a back.
+    if (!current.back && (row.angle === 'back' || row.angle === 'side')) {
+      current.back = row.original_path;
+    }
+    if (!current.detail && (row.angle === 'detail' || row.angle === 'neckline')) {
+      current.detail = row.original_path;
+    }
+  }
+
+  for (const dress of dresses) {
+    const found = paths.get(dress.id);
+    if (!found) continue;
+    const urls: CataloguePhotos = {};
+    for (const slot of ['front', 'back', 'detail'] as const) {
+      const path = found[slot];
+      if (!path) continue;
+      const { data: signed, error: signError } = await client.storage
+        .from('dress-originals')
+        .createSignedUrl(path, 3600);
+      // One bad file must not kill the export.
+      if (signError || !signed) continue;
+      urls[slot] = signed.signedUrl;
+    }
+    if (urls.front || urls.back || urls.detail) out[dress.code] = urls;
+  }
+  return out;
+}
+
 export function useMovePhoto(dressId: string, total: number) {
   const client = useQueryClient();
   return useMutation({
