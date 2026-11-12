@@ -152,6 +152,22 @@ export function formatFor<TRow>(column: ExcelColumn<TRow>): string | undefined {
 }
 
 /**
+ * The kind of image a data URL holds.
+ *
+ * The type is read from the front of the data URL, where the MIME type
+ * lives. It must not be found by searching the string: a 30 KB base64 image
+ * contains the letters "svg" by chance about one time in eight, and a
+ * search would throw away a perfectly good PNG.
+ */
+export function imageKind(dataUrl: string): { mime: string; extension: 'png' | 'jpeg' | 'svg' } {
+  const match = /^data:image\/([a-zA-Z0-9+.-]+)\s*;/.exec(dataUrl.trim());
+  const mime = (match?.[1] ?? 'png').toLowerCase();
+  if (mime === 'svg' || mime === 'svg+xml') return { mime, extension: 'svg' };
+  if (mime === 'jpeg' || mime === 'jpg') return { mime, extension: 'jpeg' };
+  return { mime, extension: 'png' };
+}
+
+/**
  * Writes the header block: the logo, the atelier's name, what it makes, how
  * to reach it, the title of the report and when it was made.
  *
@@ -170,16 +186,13 @@ export function writeBrandHeader(
   const lastColumn = columnCount;
 
   if (branding.logoDataUrl) {
-    const isSvg = branding.logoDataUrl.includes('svg');
+    const { extension } = imageKind(branding.logoDataUrl);
     // Excel will not take an SVG, so a vector logo is left out rather than
     // breaking the file.
-    if (!isSvg) {
+    if (extension !== 'svg') {
       const imageId = workbook.addImage({
         base64: branding.logoDataUrl.split(',')[1] ?? branding.logoDataUrl,
-        extension:
-          branding.logoDataUrl.includes('jpeg') || branding.logoDataUrl.includes('jpg')
-            ? 'jpeg'
-            : 'png',
+        extension,
       });
       sheet.getRow(row).height = 64;
       sheet.addImage(imageId, {
