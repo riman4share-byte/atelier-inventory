@@ -10,6 +10,7 @@ import { useAuth } from '@/features/auth/useAuth';
 import type { LanguageCode } from '@/lib/database.types';
 
 import { ToolsPanel } from './ToolsPanel';
+import { BrandingPanel } from './BrandingPanel';
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -86,6 +87,7 @@ export function SettingsPage() {
           </Button>
         </Panel>
 
+        {profile.role === 'admin' ? <BrandingPanel /> : null}
         {profile.role === 'admin' ? <ToolsPanel /> : null}
       </div>
     </Screen>

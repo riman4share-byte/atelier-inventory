@@ -21,6 +21,10 @@ const PAGE_STYLE = `
     .page:last-child { page-break-after: auto; }
     .mono { font-family: 'Consolas', 'SF Mono', ui-monospace, monospace; }
 
+    /* ---- the atelier's mark on a printed page ---- */
+    .report-mark { height: 11mm; width: auto; max-width: 30mm; object-fit: contain;
+      display: block; margin-bottom: 4mm; }
+
     /* ---- cover ---- */
     .cover { display: flex; flex-direction: column; min-height: 255mm;
       padding: 20mm 16mm; background: #f8f9fa; }
@@ -28,6 +32,8 @@ const PAGE_STYLE = `
     .cover h1 { font-size: 34pt; line-height: 1.15; color: #0b0d0f; letter-spacing: -0.02em; }
     .cover .collection { margin-top: 6mm; font-size: 10pt; letter-spacing: 3px;
       text-transform: uppercase; color: #5b6470; font-family: Consolas, ui-monospace, monospace; }
+    .cover .cover-mark { height: 16mm; width: auto; max-width: 44mm; object-fit: contain;
+      margin-top: 14mm; }
     .cover .meta { margin-top: 8mm; font-size: 8.5pt; color: #8b939f;
       display: flex; justify-content: space-between;
       font-family: Consolas, ui-monospace, monospace; letter-spacing: 0.4px; }
@@ -39,7 +45,9 @@ const PAGE_STYLE = `
     .strip { display: flex; justify-content: space-between; align-items: baseline;
       border-bottom: 1px solid #e2e4e9; padding-bottom: 3mm; margin-bottom: 6mm; }
     .strip .brand { font-size: 8.5pt; letter-spacing: 3px; text-transform: uppercase;
-      color: #0b0d0f; font-weight: 700; font-family: Consolas, ui-monospace, monospace; }
+      color: #0b0d0f; font-weight: 700; font-family: Consolas, ui-monospace, monospace;
+      display: flex; align-items: center; gap: 2mm; }
+    .strip .brand .mark { height: 6mm; width: auto; max-width: 16mm; object-fit: contain; }
     .strip .date { font-size: 8pt; color: #8b939f;
       font-family: Consolas, ui-monospace, monospace; }
 
@@ -117,6 +125,8 @@ export interface CatalogOptions {
   perPage: 1 | 2 | 4;
   showPrices: boolean;
   atelierName: string;
+  /** The atelier's logo, as a URL the printed document may load. */
+  logoUrl?: string | null;
   /** Pre-rendered QR data URLs keyed by dress code. */
   qrByCode?: Record<string, string>;
   /** Signed display URLs (first photo per dress), keyed by dress code. */
@@ -177,7 +187,7 @@ function photoZone(dress: DressRow, photoUrlByCode: CatalogOptions['photoUrlByCo
 function dressPage(dress: DressRow, options: CatalogOptions): string {
   return `<div class="page dress-page">
       <div class="strip">
-        <span class="brand">${escapeHtml(options.atelierName)}</span>
+        <span class="brand">${options.logoUrl ? `<img class="mark" src="${escapeHtml(options.logoUrl)}" alt="">` : ''}${escapeHtml(options.atelierName)}</span>
         <span class="date">${new Date().toLocaleDateString('en-GB')}</span>
       </div>
       ${photoZone(dress, options.photoUrlByCode)}
@@ -212,6 +222,7 @@ export function buildCatalogHtml(
 ): string {
   const cover = `<div class="page cover">
       <div class="collection">The collection</div>
+      ${options.logoUrl ? `<img class="cover-mark" src="${escapeHtml(options.logoUrl)}" alt="">` : ''}
       <h1>${escapeHtml(options.atelierName)}</h1>
       <div class="rule"></div>
       <div class="meta"><span>${dresses.length} dresses</span><span>${new Date().toLocaleDateString('en-GB')}</span></div>
@@ -232,6 +243,8 @@ export function buildCatalogHtml(
 
 export interface StockReportInputs {
   atelierName: string;
+  /** The atelier's logo, as a URL the printed document may load. */
+  logoUrl?: string | null;
   counts: Record<DressRow['status'], number>;
 }
 
@@ -250,6 +263,7 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>${escapeHtml(inputs.atelierName)} stock report</title>${PAGE_STYLE}</head>
     <body class="per1">
+      ${inputs.logoUrl ? `<img class="report-mark" src="${escapeHtml(inputs.logoUrl)}" alt="">` : ''}
       <h1>${escapeHtml(inputs.atelierName)} — stock report</h1>
       <p class="sub">${new Date().toLocaleDateString('en-GB')}</p>
       <div class="tiles">
@@ -265,7 +279,12 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
     </body></html>`;
 }
 
-export function buildHangTagHtml(dress: DressRow, atelierName: string, qrDataUrl: string | undefined): string {
+export function buildHangTagHtml(
+  dress: DressRow,
+  atelierName: string,
+  qrDataUrl: string | undefined,
+  logoUrl?: string | null,
+): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>Tag ${escapeHtml(dress.code)}</title>
     <style>
@@ -273,11 +292,12 @@ export function buildHangTagHtml(dress: DressRow, atelierName: string, qrDataUrl
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body { width: 50mm; height: 30mm; font-family: 'Segoe UI', system-ui, sans-serif;
         color: #0b0d0f; display: flex; align-items: center; padding: 2mm; }
-      .qr { width: 22mm; height: 22mm; }
+      .qr { width: 22mm; height: 22mm; flex-shrink: 0; }
       .qr img { width: 100%; height: 100%; }
-      .info { flex: 1; padding-left: 2mm; }
-      .brand { font-size: 7pt; letter-spacing: 2px; text-transform: uppercase; color: #8b939f;
-        font-family: Consolas, ui-monospace, monospace; }
+      .info { flex: 1; padding-left: 2mm; min-width: 0; }
+      .brand { display: flex; align-items: center; gap: 1.2mm; font-size: 7pt; letter-spacing: 2px;
+        text-transform: uppercase; color: #8b939f; font-family: Consolas, ui-monospace, monospace; }
+      .brand img { height: 4.5mm; width: auto; max-width: 12mm; object-fit: contain; }
       .code { font-size: 11pt; font-weight: 700; color: #0b0d0f; margin-top: 1mm;
         font-family: Consolas, ui-monospace, monospace; }
       .name { font-size: 8pt; color: #0b0d0f; margin-top: 1mm; line-height: 1.2; }
@@ -285,20 +305,25 @@ export function buildHangTagHtml(dress: DressRow, atelierName: string, qrDataUrl
     <body>
       <div class="qr">${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR">` : ''}</div>
       <div class="info">
-        <div class="brand">${escapeHtml(atelierName)}</div>
+        <div class="brand">${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="">` : ''}<span>${escapeHtml(atelierName)}</span></div>
         <div class="code">${escapeHtml(dress.code)}</div>
         <div class="name">${escapeHtml(dress.name_en || dress.code)}</div>
       </div>
     </body></html>`;
 }
 
-export function buildTagSheetHtml(dresses: DressRow[], atelierName: string, qrByCode: Record<string, string> | undefined): string {
+export function buildTagSheetHtml(
+  dresses: DressRow[],
+  atelierName: string,
+  qrByCode: Record<string, string> | undefined,
+  logoUrl?: string | null,
+): string {
   const tags = dresses.map((dress) => {
     const qr = qrByCode?.[dress.code];
     return `<div class="tag">
       <div class="qr">${qr ? `<img src="${qr}" alt="QR">` : ''}</div>
       <div class="info">
-        <div class="brand">${escapeHtml(atelierName)}</div>
+        <div class="brand">${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="">` : ''}<span>${escapeHtml(atelierName)}</span></div>
         <div class="code">${escapeHtml(dress.code)}</div>
         <div class="name">${escapeHtml(dress.name_en || dress.code)}</div>
       </div>
@@ -315,9 +340,10 @@ export function buildTagSheetHtml(dresses: DressRow[], atelierName: string, qrBy
         display: flex; align-items: center; height: 30mm; break-inside: avoid; }
       .qr { width: 20mm; height: 20mm; flex-shrink: 0; }
       .qr img { width: 100%; height: 100%; }
-      .info { flex: 1; padding-left: 2mm; }
-      .brand { font-size: 6pt; letter-spacing: 2px; text-transform: uppercase; color: #8b939f;
-        font-family: Consolas, ui-monospace, monospace; }
+      .info { flex: 1; padding-left: 2mm; min-width: 0; }
+      .brand { display: flex; align-items: center; gap: 1mm; font-size: 6pt; letter-spacing: 2px;
+        text-transform: uppercase; color: #8b939f; font-family: Consolas, ui-monospace, monospace; }
+      .brand img { height: 4mm; width: auto; max-width: 10mm; object-fit: contain; }
       .code { font-size: 9pt; font-weight: 700; color: #0b0d0f; margin-top: 1mm;
         font-family: Consolas, ui-monospace, monospace; }
       .name { font-size: 7pt; color: #0b0d0f; margin-top: 1mm; line-height: 1.2; }

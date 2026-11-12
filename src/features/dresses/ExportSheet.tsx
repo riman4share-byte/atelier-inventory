@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { SegmentedControl, type SegmentOption } from '@/components/ui/SegmentedControl';
 import { XIcon } from '@/components/icons';
+import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { cx } from '@/lib/cx';
 
 type ExportFormat = 'excel' | 'csv' | 'catalog' | 'report' | 'share';
@@ -129,6 +130,8 @@ export function ExportSheet({
   const [createdLink, setCreatedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [disabledColumns, setDisabledColumns] = useState<ReadonlySet<string>>(new Set());
+  // The atelier's name and logo, for the printed documents.
+  const branding = useAtelierBranding();
   const recentLinks = useShareLinks();
   const createShare = useCreateShareLink();
   const revokeShare = useRevokeShareLink();
@@ -190,7 +193,14 @@ export function ExportSheet({
           import('@/features/photos/api').then((photos) => photos.firstPhotoUrls(dresses)),
         ]);
         printHtml(
-          buildCatalogHtml(dresses, { perPage, showPrices, atelierName: t('app.name'), qrByCode, photoUrlByCode }),
+          buildCatalogHtml(dresses, {
+            perPage,
+            showPrices,
+            atelierName: branding.atelierName,
+            logoUrl: branding.logoUrl,
+            qrByCode,
+            photoUrlByCode,
+          }),
         );
         onClose();
         return;
@@ -198,7 +208,11 @@ export function ExportSheet({
       if (format === 'report') {
         const dresses = await resolveSelection();
         printHtml(
-          buildStockReportHtml(dresses, { atelierName: t('app.name'), counts: countByStatus(dresses) }),
+          buildStockReportHtml(dresses, {
+            atelierName: branding.atelierName,
+            logoUrl: branding.logoUrl,
+            counts: countByStatus(dresses),
+          }),
         );
         onClose();
         return;

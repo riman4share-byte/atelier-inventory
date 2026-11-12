@@ -395,6 +395,25 @@
     "saveFailed": "Saving failed.",
     "securityNote": "Keys are write-only: only the last 4 characters are ever shown."
   },
+  "branding": {
+    "title": "Atelier branding",
+    "hint": "The name and logo printed on the hang tags and the catalogue, and shown on the public page a customer reaches by scanning the QR code.",
+    "atelierName": "Atelier name",
+    "saveName": "Save the name",
+    "nameSaved": "The name is saved. New tags and catalogues will use it.",
+    "saveFailed": "Could not save. Try again.",
+    "loadFailed": "Could not read the current branding.",
+    "logo": "Logo",
+    "logoHint": "A PNG, JPG or WebP, up to 2 MB. It is shown next to the QR code on the hang tag and on the public page. A transparent background works best.",
+    "logoAlt": "The atelier's logo",
+    "noLogo": "No logo",
+    "uploadLogo": "Upload the logo",
+    "replaceLogo": "Replace the logo",
+    "removeLogo": "Remove",
+    "logoSaved": "The logo is saved.",
+    "logoFailed": "Could not upload the logo. A PNG, JPG or WebP under 2 MB.",
+    "logoRemoved": "The logo is removed."
+  },
   "capture": {
     "title": "Capture",
     "subtitle": "Photograph or upload a dress.",

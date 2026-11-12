@@ -23,6 +23,7 @@ import { CheckInSheet } from '@/features/movements/CheckInSheet';
 import { ReserveSheet } from '@/features/movements/ReserveSheet';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
 import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
+import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { DressAiReview } from '@/features/ai/DressAiReview';
 import { PhotoGallery } from '@/features/photos/PhotoGallery';
 import { useEnqueueErpSync } from '@/features/erp/api';
@@ -107,6 +108,8 @@ function ExistingDress({ id }: { id: string }) {
   const softDelete = useSoftDeleteDress();
   const describe = useDescribeDress();
   const erpSync = useEnqueueErpSync();
+  // The atelier's name and logo, for the printed tag.
+  const branding = useAtelierBranding();
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -583,7 +586,7 @@ function ExistingDress({ id }: { id: string }) {
                 const url = `${window.location.origin}/d/${dress.public_token}`;
                 const QRCode = (await import('qrcode')).default;
                 const qr = await QRCode.toDataURL(url, { margin: 1, width: 240 });
-                printHtml(buildHangTagHtml(dress, t('app.name'), qr));
+                printHtml(buildHangTagHtml(dress, branding.atelierName, qr, branding.logoUrl));
               }}
             >
               <QrIcon className="h-3.5 w-3.5" />
