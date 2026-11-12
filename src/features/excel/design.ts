@@ -267,18 +267,32 @@ export function styleTable<TRow>(
 
   for (let index = 0; index < rowCount; index++) {
     const dataRow = sheet.getRow(headerRowIndex + 1 + index);
-    dataRow.height = 18;
     const banded = index % 2 === 1;
+    // A row whose text wraps is left to grow on its own: fixing the height
+    // would cut the description off after one line.
+    const wraps = columns.some(
+      (column) =>
+        column.id === 'description_en' ||
+        column.id === 'fabrics' ||
+        column.id === 'notes' ||
+        column.id === 'condition_notes',
+    );
+    if (!wraps) dataRow.height = 18;
     dataRow.eachCell((cell: Cell, columnNumber: number) => {
       const column = columns[columnNumber - 1];
       cell.font = { name: 'Calibri', size: 10, color: { argb: INK } };
       cell.alignment = {
-        vertical: 'middle',
+        vertical: 'top',
         horizontal: column?.type === 'price' ? 'right' : 'left',
         wrapText: column?.id === 'description_en' || column?.id === 'fabrics' || column?.id === 'notes',
       };
       const format = column ? formatFor(column) : undefined;
       if (format) cell.numFmt = format;
+      // A date cell needs a real date format, or Excel shows the raw
+      // serial number.
+      if (column?.type === 'date' || column?.type === 'datetime') {
+        if (cell.value instanceof Date) cell.numFmt = format ?? DATE_FORMAT;
+      }
       if (banded) {
         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: BAND } };
       }
@@ -320,6 +334,6 @@ export function setupPrint(sheet: Worksheet, branding: ExcelBranding, meta: Exce
   };
   sheet.headerFooter = {
     oddHeader: `&L&"Calibri,Bold"${branding.atelierName}&R&"Calibri"${meta.title}`,
-    oddFooter: '&L&"Calibri"Prepared by Atelier Inventory&R&"Calibri"Page &P of &N',
+    oddFooter: `&L&"Calibri"Prepared by ${branding.atelierName}&R&"Calibri"Page &P of &N`,
   };
 }

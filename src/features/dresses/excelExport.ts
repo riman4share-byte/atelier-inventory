@@ -2,7 +2,6 @@ import type { DressRow } from './api';
 import { neutraliseFormula, type ExportColumn } from './exportData';
 import {
   cellValue,
-  formatFor,
   safeSheetName,
   safeTableName,
   setupPrint,
@@ -106,11 +105,11 @@ export async function buildExcelWorkbook(
       designColumns.map((designColumn) => {
         const dress = dresses[index];
         if (!dress) return '';
-        const value = cellValue(designColumn, dress, neutraliseFormula);
-        if (value instanceof Date || typeof value === 'number') {
-          return { value, numFmt: formatFor(designColumn) };
-        }
-        return value;
+        // The value goes in plain. A cell inside a table cannot carry its
+        // own format: ExcelJS writes the whole object into the cell as
+        // text, and the sheet ends up showing {"value":3500,...}. The
+        // formats are applied to the cells afterwards instead.
+        return cellValue(designColumn, dress, neutraliseFormula);
       }),
     ),
   });

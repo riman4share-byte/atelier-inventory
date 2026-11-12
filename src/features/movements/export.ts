@@ -2,7 +2,6 @@ import type { DressMovementRow } from './api';
 import { neutraliseFormula } from '@/features/dresses/exportData';
 import {
   cellValue,
-  formatFor,
   safeSheetName,
   safeTableName,
   setupPrint,
@@ -192,15 +191,11 @@ export async function exportMovementsToExcel(
     columns: columns.map((column) => ({ name: column.header, filterButton: true })),
     rows: movements.map((m) =>
       columns.map((column) => {
-        const value = cellValue(
-          { ...column, get: () => column.get(m) },
-          m as never,
-          neutraliseFormula,
-        );
-        if (value instanceof Date || typeof value === 'number') {
-          return { value, numFmt: formatFor(column) };
-        }
-        return value;
+        // The value goes in plain. A cell inside a table cannot carry its
+        // own format: ExcelJS writes the whole object into the cell as
+        // text, and the sheet ends up showing {"value":3500,...}. The
+        // formats are applied to the cells afterwards instead.
+        return cellValue(column, m, neutraliseFormula);
       }),
     ),
   });
