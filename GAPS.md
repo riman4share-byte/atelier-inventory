@@ -738,6 +738,26 @@ like anything. It is replaced by one that can, and the 429 KB of dead
 weight it carried is gone. The new library is loaded on demand and is
 not precached, so the install payload is unchanged.
 
+### G-68 · The app carried no sign of who owns it
+
+**Status:** resolved 2026-11-12 · **Phase:** 12
+The app was built for the atelier and the atelier owns it, but nothing
+said so. The sign-in screen said "Atelier" in plain letters, the app had
+no logo anywhere, and the printed documents carried no credit.
+
+The atelier's own mark is now in the app: on the sign-in screen, on the
+public page a customer reaches by scanning the QR, on the printed hang
+tag, on the catalogue cover, on the stock report and in the exported
+spreadsheet. The credit - "Powered by Kais" - is in the footers of the
+app and of the printed documents.
+
+Both are settings, not hard-coded strings, so the owner can change the
+wording, replace the logo or clear the credit from one screen
+(Settings -> Atelier branding) without anyone touching the code.
+
+The settings table gained a `powered_by` column, and the public branding
+function carries it.
+
 ---
 
 ## Resolved
