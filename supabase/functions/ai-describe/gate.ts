@@ -27,15 +27,17 @@ export interface GateResult {
 
 export const GATE_PROMPT = `You are a photo classifier for a wedding dress atelier.
 
-Look at the photo and decide ONE thing: is the main subject of this photo an item of clothing that a bridal or occasion-wear atelier would catalogue?
+Look at the photo and decide ONE thing: is any wearable garment of clothing visible in it?
 
-Answer "garment" if the photo clearly shows a dress, gown, jumpsuit, suit, cape, bolero, veil, abaya, kaftan or similar wearable garment - whether on a person, a mannequin, a hanger, or laid flat.
+Answer "garment" if you can see a dress, gown, jumpsuit, suit, cape, bolero, veil, abaya, kaftan or similar wearable garment - whether it is being WORN by a person, on a mannequin, on a hanger, or laid flat.
 
-Answer "not_garment" if the photo shows anything else: a face or portrait, a room, a wall, a computer screen, a document, food, a landscape, a car, a bag, shoes alone, jewellery alone, or a pile of fabric with no finished garment.
+A BRIDE WEARING HER WEDDING GOWN IS A GARMENT PHOTO. This is the most common catalogue photograph there is. A face in the frame does NOT make the answer "not_garment". If the person is wearing something and you can see the fabric, the neckline, the sleeve, the bodice or the skirt, the answer is "garment".
 
-Answer "unclear" if you genuinely cannot tell - the photo is too dark, too blurred, or the garment is barely in frame.
+Answer "not_garment" only when NO wearable garment is visible at all: a bare face, or a head-and-shoulders portrait with no clothing in frame, a room, a wall, a computer screen, a document, food, a landscape, a car, a bag, shoes alone, jewellery alone, or a pile of fabric with no finished garment.
 
-Be strict. A photo that happens to contain a hint of cloth but does not show a garment is "not_garment". A human face is never a garment.
+Answer "unclear" if you genuinely cannot tell - the photo is so dark or so blurred that you cannot see whether anyone is wearing anything.
+
+Be strict about refusing a photograph with no garment in it, but do NOT refuse a photograph of a person who is wearing a garment. Low light and blur are not reasons to refuse: if you can tell it is a bridal gown, answer "garment" even if the picture is dim.
 
 Reply with JSON only, no other text:
 {"verdict":"garment"|"not_garment"|"unclear","subject":"what you actually see, 4 words max","reason":"one short sentence"}`;
