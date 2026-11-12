@@ -31,7 +31,10 @@ export default defineConfig({
         // runs when someone exports. Both are fetched on demand like their
         // 23 MB wasm companion, so neither may be precached on every staff
         // install.
-        globIgnores: ['**/ort*.{js,mjs}', '**/dist-*.js', '**/xlsx-*.js'],
+        // The spreadsheet writer and the background-removal engine are large
+        // and belong to features only the owner uses. They are loaded on
+        // demand and are not worth precaching for every member of staff.
+        globIgnores: ['**/ort*.{js,mjs}', '**/dist-*.js', '**/xlsx-*.js', '**/exceljs*.js'],
         runtimeCaching: [
           {
             // Only the public share reader is cached. Authenticated API

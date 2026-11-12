@@ -4,6 +4,10 @@ import { supabase } from '@/lib/supabase';
 export interface AtelierBranding {
   /** The shop's name: "Riman Fashion". */
   atelierName: string;
+  /** One line under the name: what it makes and where it is. */
+  tagline: string | null;
+  /** How to reach the atelier: phone, email, address. */
+  contact: string | null;
   /** The path of the logo in the `atelier-logo` bucket, or null. */
   logoPath: string | null;
   /** The public URL of the logo, ready for an <img> or a printed document. */
@@ -23,13 +27,25 @@ export function useAtelierBranding(): AtelierBranding {
 
   const { data } = useQuery({
     queryKey: ['atelier-branding'],
-    queryFn: async (): Promise<{ atelier_name: string; logo_path: string | null } | null> => {
+    queryFn: async (): Promise<{
+      atelier_name: string;
+      tagline: string | null;
+      contact: string | null;
+      logo_path: string | null;
+    } | null> => {
       const { data: rows, error } = await client.rpc('get_atelier_branding');
       if (error) return null;
-      const row = (rows as unknown as { atelier_name?: string; logo_path?: string | null }[] | null)?.[0];
+      const row = (rows as unknown as {
+        atelier_name?: string;
+        tagline?: string | null;
+        contact?: string | null;
+        logo_path?: string | null;
+      }[] | null)?.[0];
       if (!row) return null;
       return {
         atelier_name: row.atelier_name || 'Atelier',
+        tagline: row.tagline ?? null,
+        contact: row.contact ?? null,
         logo_path: row.logo_path ?? null,
       };
     },
@@ -43,6 +59,8 @@ export function useAtelierBranding(): AtelierBranding {
 
   return {
     atelierName: data?.atelier_name || 'Atelier',
+    tagline: data?.tagline ?? null,
+    contact: data?.contact ?? null,
     logoPath,
     logoUrl,
   };

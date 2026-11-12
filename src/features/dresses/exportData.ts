@@ -7,10 +7,23 @@ import type { DressRow } from './api';
  * letter-shaping proof recorded as G-12 in GAPS.md.
  */
 
+/**
+ * How a column's value should be treated in the spreadsheet.
+ *
+ * The CSV is text, so everything is a string there. The spreadsheet is not:
+ * a price has to be a number so it can be summed, and a date has to be a
+ * date so it can be sorted and filtered. The type says which.
+ */
+export type ExportValueType = 'text' | 'price' | 'date';
+
 export interface ExportColumn {
   id: string;
   header: string;
   get: (dress: DressRow, origin: string) => string;
+  /** How the value is written into the spreadsheet. Defaults to text. */
+  type?: ExportValueType;
+  /** The width of the column in Excel's units, when it needs one. */
+  width?: number;
 }
 
 export const STATUS_LABELS: Record<DressRow['status'], string> = {
@@ -30,16 +43,16 @@ const priceText = (price: DressRow['sale_price']): string =>
   price === null ? '' : String(price);
 
 export const DEFAULT_EXPORT_COLUMNS: ReadonlyArray<ExportColumn> = [
-  { id: 'code', header: 'Code', get: (d) => d.code },
-  { id: 'name_en', header: 'Name', get: (d) => d.name_en },
-  { id: 'status', header: 'Status', get: (d) => STATUS_LABELS[d.status] },
-  { id: 'listing_type', header: 'Listing', get: (d) => LISTING_LABELS[d.listing_type] },
-  { id: 'size_label', header: 'Size', get: (d) => d.size_label ?? '' },
-  { id: 'color', header: 'Colour', get: (d) => d.color ?? '' },
-  { id: 'fabrics', header: 'Fabrics', get: (d) => d.fabrics.join(', ') },
-  { id: 'sale_price', header: 'Sale price', get: (d) => priceText(d.sale_price) },
-  { id: 'rent_price', header: 'Rent price', get: (d) => priceText(d.rent_price) },
-  { id: 'description_en', header: 'Description', get: (d) => d.description_en ?? '' },
+  { id: 'code', header: 'Code', get: (d) => d.code, width: 12 },
+  { id: 'name_en', header: 'Name', get: (d) => d.name_en, width: 26 },
+  { id: 'status', header: 'Status', get: (d) => STATUS_LABELS[d.status], width: 14 },
+  { id: 'listing_type', header: 'Listing', get: (d) => LISTING_LABELS[d.listing_type], width: 16 },
+  { id: 'size_label', header: 'Size', get: (d) => d.size_label ?? '', width: 10 },
+  { id: 'color', header: 'Colour', get: (d) => d.color ?? '', width: 14 },
+  { id: 'fabrics', header: 'Fabrics', get: (d) => d.fabrics.join(', '), width: 22 },
+  { id: 'sale_price', header: 'Sale price', get: (d) => priceText(d.sale_price), type: 'price', width: 14 },
+  { id: 'rent_price', header: 'Rent price', get: (d) => priceText(d.rent_price), type: 'price', width: 14 },
+  { id: 'description_en', header: 'Description', get: (d) => d.description_en ?? '', width: 60 },
 ];
 
 /**
@@ -51,12 +64,15 @@ export const QR_URL_COLUMN: ExportColumn = {
   id: 'qr_url',
   header: 'QR URL',
   get: (d, origin) => `${origin}/d/${d.public_token}`,
+  width: 46,
 };
 
 export const EXPORT_DATE_COLUMN: ExportColumn = {
   id: 'created_at',
   header: 'Added on',
   get: (d) => d.created_at.slice(0, 10),
+  type: 'date',
+  width: 14,
 };
 
 /** Excel/CSV columns per row, header first. */

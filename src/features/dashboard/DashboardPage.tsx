@@ -14,8 +14,9 @@ import {
   useDashboardState,
 } from './api';
 import { useMovementSummary } from '@/features/movements/api';
-import { useAllMovements } from '@/features/movements/api';
+import { useAllMovements, useMovementNames } from '@/features/movements/api';
 import { exportMovementsToExcel } from '@/features/movements/export';
+import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { formatMoney, formatNumber } from '@/lib/format';
 import { DownloadIcon, QrIcon } from '@/components/icons';
 
@@ -26,6 +27,9 @@ export function DashboardPage() {
   const rows = dashboard.rows;
   const movementSummary = useMovementSummary();
   const allMovements = useAllMovements({});
+const movementNames = useMovementNames(allMovements.data ?? []);
+// The atelier's name and logo, for the exported sheet.
+const branding = useAtelierBranding();
   const [exportOpen, setExportOpen] = useState(false);
 
   const counts = countByStatus(rows);
@@ -205,6 +209,29 @@ export function DashboardPage() {
               void exportMovementsToExcel(
                 allMovements.data ?? [],
                 `movements-${new Date().toISOString().slice(0, 10)}.xlsx`,
+                {
+                  dresses: movementNames.data?.dresses ?? {},
+                  customers: movementNames.data?.customers ?? {},
+                },
+                {
+                  atelierName: branding.atelierName,
+                  logoDataUrl: null,
+                  tagline: branding.tagline,
+                  contact: branding.contact,
+                },
+                {
+                  title: t('export.movementsTitle'),
+                  generatedAt: new Date().toLocaleString('en-GB', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }),
+                  summary: t('export.movementsSummary', { count: allMovements.data?.length ?? 0 }),
+                  sheetName: t('export.movementsSheetName'),
+                  tableName: 'Movements',
+                },
               )
             }
             data-testid="export-movements"

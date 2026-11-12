@@ -74,6 +74,51 @@ export function useAllMovements(filters: { from?: string; to?: string; dressId?:
   });
 }
 
+export function useMovementNames(movements: DressMovementRow[]) {
+  return useQuery({
+    queryKey: ['movements', 'names', movements.length],
+    queryFn: async (): Promise<{
+      dresses: Record<string, string>;
+      customers: Record<string, string>;
+    }> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      const dressIds = [...new Set(movements.map((m) => m.dress_id))];
+      const customerIds = [...new Set(movements.map((m) => m.customer_id).filter(Boolean))] as string[];
+
+      const dresses: Record<string, string> = {};
+      const customers: Record<string, string> = {};
+
+      // The names are looked up so the sheet can say "RF-0001 Seraphine"
+      // instead of a UUID. A history nobody can read is not a record.
+      if (dressIds.length > 0) {
+        const { data } = await client
+          .from('dresses')
+          .select('id, code, name_en')
+          .in('id', dressIds);
+        for (const dress of data ?? []) {
+          dresses[dress.id] = dress.name_en
+            ? `${dress.code} ${dress.name_en}`
+            : dress.code;
+        }
+      }
+
+      if (customerIds.length > 0) {
+        const { data } = await client
+          .from('customers')
+          .select('id, full_name')
+          .in('id', customerIds);
+        for (const customer of data ?? []) {
+          customers[customer.id] = customer.full_name;
+        }
+      }
+
+      return { dresses, customers };
+    },
+    // The names only change when a dress or a customer does.
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useCreateMovement() {
   const client = useQueryClient();
   return useMutation({

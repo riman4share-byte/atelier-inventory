@@ -17,8 +17,8 @@ import {
   QR_URL_COLUMN,
   excelCompatibleCsv,
   exportRows,
-  neutraliseFormula,
 } from './exportData';
+import { buildExcelWorkbook } from './excelExport';
 import { buildCatalogHtml, buildStockReportHtml, printHtml } from './printDocument';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
@@ -40,14 +40,17 @@ const FORMATS: ReadonlyArray<{ value: ExportFormat; labelKey: string }> = [
   { value: 'share', labelKey: 'export.formatShare' },
 ];
 
-function downloadCsv(bytes: Uint8Array, filename: string): void {
-  const blob = new Blob([bytes.buffer], { type: 'text/csv;charset=utf-8' });
+function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function downloadCsv(bytes: Uint8Array, filename: string): void {
+  downloadBlob(new Blob([bytes.buffer], { type: 'text/csv;charset=utf-8' }), filename);
 }
 
 function countByStatus(dresses: DressRow[]): Record<DressRow['status'], number> {
@@ -166,16 +169,64 @@ export function ExportSheet({
       const filenameDate = new Date().toISOString().slice(0, 10);
       if (format === 'excel') {
         const dresses = await resolveSelection();
-        const rows = exportRows(dresses, [...activeColumns, QR_URL_COLUMN, EXPORT_DATE_COLUMN], origin);
-        // Neutralise spreadsheet formulas before the values reach Excel.
-        const safeRows = rows.map((row) => row.map((cell) => neutraliseFormula(cell)));
-        // The spreadsheet writer is ~800 KB. Loading it only when an Excel
+        const columns = [...activeColumns, QR_URL_COLUMN, EXPORT_DATE_COLUMN];
+        // The spreadsheet library is large. Loading it only when an Excel
         // export is actually requested keeps it out of the first download.
-        const XLSX = await import('xlsx');
-        const sheet = XLSX.utils.aoa_to_sheet(safeRows);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, sheet, 'Dresses');
-        XLSX.writeFile(workbook, `dresses-${filenameDate}.xlsx`);
+        const ExcelJS = await import('exceljs');
+
+        // The logo is put into the sheet, so the file carries the atelier's
+        // mark rather than only the app's.
+        let logoDataUrl: string | null = null;
+        if (branding.logoUrl) {
+          try {
+            const response = await fetch(branding.logoUrl);
+            if (response.ok) {
+              const blob = await response.blob();
+              logoDataUrl = await new Promise<string | null>((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : null);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(blob);
+              });
+            }
+          } catch {
+            logoDataUrl = null;
+          }
+        }
+
+        const now = new Date();
+        const workbook = await buildExcelWorkbook(
+          ExcelJS,
+          dresses,
+          columns,
+          origin,
+          {
+            atelierName: branding.atelierName,
+            logoDataUrl,
+            tagline: branding.tagline,
+            contact: branding.contact,
+          },
+          {
+            title: t('export.excelTitle'),
+            generatedAt: now.toLocaleString('en-GB', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+            summary: t('export.excelSummary', { count: dresses.length }),
+            sheetName: t('export.excelSheetName'),
+            tableName: 'Dresses',
+          },        );
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        downloadBlob(
+          new Blob([buffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          }),
+          `dresses-${filenameDate}.xlsx`,
+        );
         onClose();
         return;
       }
