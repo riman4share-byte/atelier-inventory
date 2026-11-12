@@ -250,6 +250,8 @@ export function ExportSheet({
             showPrices,
             atelierName: branding.atelierName,
             logoUrl: branding.logoUrl,
+            tagline: branding.tagline,
+            contact: branding.contact,
             poweredBy: branding.poweredBy,
             qrByCode,
             photoUrlByCode,

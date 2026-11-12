@@ -26,19 +26,23 @@ const PAGE_STYLE = `
       display: block; margin-bottom: 4mm; }
 
     /* ---- cover ---- */
-    .cover { display: flex; flex-direction: column; min-height: 255mm;
-      padding: 20mm 16mm; background: #f8f9fa; }
+    /* ---- cover: a title page, the mark in the middle and the facts at the
+       foot, so the page is composed rather than half empty. ---- */
+    .cover { display: flex; flex-direction: column; justify-content: space-between;
+      min-height: 255mm; padding: 20mm 16mm; background: #f8f9fa; }
+    .cover-top { margin-top: 26mm; }
     .cover .rule { width: 42mm; border-top: 1.5px solid #0b0d0f; margin: 8mm 0; }
     .cover h1 { font-size: 34pt; line-height: 1.15; color: #0b0d0f; letter-spacing: -0.02em; }
     .cover .collection { margin-top: 6mm; font-size: 10pt; letter-spacing: 3px;
       text-transform: uppercase; color: #5b6470; font-family: Consolas, ui-monospace, monospace; }
-    .cover .cover-mark { height: 16mm; width: auto; max-width: 44mm; object-fit: contain;
+    /* The mark is nearly square, so it is sized by its height. */
+    .cover .cover-mark { height: 46mm; width: auto; max-width: 46mm; object-fit: contain;
       margin-top: 14mm; }
-    .cover .meta { margin-top: 8mm; font-size: 8.5pt; color: #8b939f;
+    .cover .tagline { margin-top: 7mm; font-size: 12pt; color: #0b0d0f; letter-spacing: 0.2px; }
+    .cover .contact { margin-top: 1.5mm; font-size: 9.5pt; color: #5b6470; }
+    .cover .meta { font-size: 8.5pt; color: #8b939f;
       display: flex; justify-content: space-between;
       font-family: Consolas, ui-monospace, monospace; letter-spacing: 0.4px; }
-    .cover .frame-fill { flex: 1; border: 1px solid #e2e4e9; border-radius: 0;
-      margin-top: 10mm; background: #ffffff; }
     .cover .credit { margin-top: 4mm; font-size: 7pt; letter-spacing: 1.5px;
       text-transform: uppercase; color: #a4abb5;
       font-family: Consolas, ui-monospace, monospace; }
@@ -52,7 +56,7 @@ const PAGE_STYLE = `
     .strip .brand { font-size: 8.5pt; letter-spacing: 3px; text-transform: uppercase;
       color: #0b0d0f; font-weight: 700; font-family: Consolas, ui-monospace, monospace;
       display: flex; align-items: center; gap: 2mm; }
-    .strip .brand .mark { height: 6mm; width: auto; max-width: 16mm; object-fit: contain; }
+    .strip .brand .mark { height: 12mm; width: auto; max-width: 18mm; object-fit: contain; }
     .strip .date { font-size: 8pt; color: #8b939f;
       font-family: Consolas, ui-monospace, monospace; }
 
@@ -72,6 +76,11 @@ const PAGE_STYLE = `
     .photos .tag { margin: 3mm; font-size: 7pt; letter-spacing: 2px;
       text-transform: uppercase; color: #8b939f;
       font-family: Consolas, ui-monospace, monospace; }
+    /* On a photograph the tag has to carry its own ground, or it disappears
+       into whatever the dress happens to be. */
+    .photos .hero .tag { color: #ffffff; background: rgba(11, 13, 15, 0.55);
+      padding: 1.2mm 2mm; margin: 0; }
+    .photos .hero { align-items: flex-end; justify-content: flex-start; }
 
     /* ---- caption ---- */
     .name { font-size: 17pt; color: #0b0d0f; letter-spacing: -0.02em; }
@@ -132,6 +141,10 @@ export interface CatalogOptions {
   atelierName: string;
   /** The atelier's logo, as a URL the printed document may load. */
   logoUrl?: string | null;
+  /** One line under the name: what it makes and where it is. */
+  tagline?: string | null;
+  /** How to reach the atelier: phone, email, address. */
+  contact?: string | null;
   /** The software credit: "Powered by Kais". */
   poweredBy?: string | null;
   /** Pre-rendered QR data URLs keyed by dress code. */
@@ -229,13 +242,18 @@ export function buildCatalogHtml(
   options: CatalogOptions,
 ): string {
   const cover = `<div class="page cover">
-      <div class="collection">The collection</div>
-      ${options.logoUrl ? `<img class="cover-mark" src="${escapeHtml(options.logoUrl)}" alt="">` : ''}
-      <h1>${escapeHtml(options.atelierName)}</h1>
-      <div class="rule"></div>
-      <div class="meta"><span>${dresses.length} dresses</span><span>${new Date().toLocaleDateString('en-GB')}</span></div>
-      ${options.poweredBy ? `<div class="credit">${escapeHtml(options.poweredBy)}</div>` : ''}
-      <div class="frame-fill"></div>
+      <div class="cover-top">
+        <div class="collection">The collection</div>
+        ${options.logoUrl ? `<img class="cover-mark" src="${escapeHtml(options.logoUrl)}" alt="">` : ''}
+        <h1>${escapeHtml(options.atelierName)}</h1>
+        <div class="rule"></div>
+        ${options.tagline ? `<p class="tagline">${escapeHtml(options.tagline)}</p>` : ''}
+        ${options.contact ? `<p class="contact">${escapeHtml(options.contact)}</p>` : ''}
+      </div>
+      <div class="cover-foot">
+        <div class="meta"><span>${dresses.length} dresses</span><span>${new Date().toLocaleDateString('en-GB')}</span></div>
+        ${options.poweredBy ? `<div class="credit">${escapeHtml(options.poweredBy)}</div>` : ''}
+      </div>
     </div>`;
 
   if (options.perPage === 1) {
