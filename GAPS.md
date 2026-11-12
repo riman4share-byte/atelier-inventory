@@ -311,10 +311,11 @@ catalogue. `get_public_dress(code)` was retired in favour of
 
 ### G-40 · Catalog/report header uses the i18n app name, not the atelier setting
 
-**Status:** open · **Phase:** 3
-Printed documents title themselves with `t('app.name')` because staff cannot
-read `app_settings` (same root as G-20). The owner's chosen atelier name will
-replace it once a staff-readable settings source exists.
+**Status:** resolved 2026-11-12 · **Phase:** 12
+A public, read-only function now exposes the atelier's name and logo path,
+so the printed hang tag, the printed catalogue and the stock report carry
+the atelier's own name instead of the name of the app. The setting is
+"Riman Fashion". See G-65.
 
 ### G-41 · Saved table views and column choices live per device
 
@@ -642,6 +643,46 @@ correct, so `main` builds work; only preview builds are affected. Note that
 the Pages API accepts `PATCH .../deployment_configs/{env}` with HTTP 200 and
 then ignores the `env_vars` change, so these have to be edited in the
 dashboard.
+
+### G-65 · The printed documents and the public page said the wrong name
+
+**Status:** resolved 2026-11-12 · **Phase:** 12
+The printed hang tag, the printed catalogue and the stock report titled
+themselves with `t('app.name')` — "Atelier Inventory", the name of the
+software — because staff cannot read `app_settings` (G-20). The atelier
+was called "Atelier Inventory" on its own garments.
+
+A public function now exposes only the two fields the branding needs (the
+atelier's name and the logo path), the same shape as `get_public_dress`, and
+the printed documents use the real name. The atelier's name is now
+"Riman Fashion".
+
+The logo had nowhere to live: `app_settings.logo_path` existed, the
+`branding` bucket existed, and no screen accepted an image. There is now
+an admin panel in Settings that takes a PNG, JPG or WebP and stores it in
+its own bucket, readable by anyone (the public page has to show it to a
+customer who has never signed in) and writable only by an admin. The logo
+sits next to the QR code on the hang tag, on the cover and the header of
+the printed catalogue, and on the stock report.
+
+### G-66 · The public dress card showed a placeholder instead of the dress
+
+**Status:** resolved 2026-11-12 · **Phase:** 12
+A bride who scanned the tag on her own dress saw a grey placeholder icon:
+the photographs live in a private bucket, and a visitor who has never
+signed in cannot sign an object it has no rights to. The browser asked
+for a signed URL and was refused, correctly.
+
+A small `public-photo` function signs the link instead, because the
+function's rights are the owner's. It answers only for a dress whose
+public token the caller already holds — the same unguessable token
+already printed on the tag — so a guess still gets nothing: a made-up
+token answers 404, and a dress with no photograph answers with no link and
+the page falls back to its placeholder.
+
+Signing in SQL was tried first and could not work: this database has no
+function that can sign an object. The failed attempt is removed rather
+than left behind.
 
 ### G-64 · The camera could photograph a black frame and save it as a photo
 
