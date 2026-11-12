@@ -61,7 +61,10 @@ export default defineConfig({
     globals: true,
     css: false,
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    // The Edge Functions carry their own pure helpers (the photo gate, the
+    // prompt builder). They are plain TypeScript with no Deno API, so they
+    // are tested here with the rest of the app.
+    include: ['src/**/*.test.{ts,tsx}', 'supabase/functions/**/*.test.ts'],
     // Tests must not pick up a developer's .env.local; the boot test asserts
     // the unconfigured setup screen.
     env: {

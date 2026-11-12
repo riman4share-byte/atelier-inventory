@@ -14,6 +14,18 @@ const CONFIDENCE_TOKEN: Record<string, { token: string; tone: string }> = {
   low: { token: 'LOW', tone: 'border-off-line bg-off-bg text-off' },
 };
 
+/**
+ * The model writes "not visible" when the photographs do not show something.
+ * That is an honest answer, not an empty field, so it is marked rather than
+ * hidden - a blank field and a gap in the evidence look the same otherwise.
+ */
+const NOT_VISIBLE = 'not visible';
+
+function isGap(value: string): boolean {
+  const trimmed = value.trim().toLowerCase();
+  return trimmed === NOT_VISIBLE || trimmed === 'unknown' || trimmed === 'n/a' || trimmed === '';
+}
+
 interface DressAiReviewProps {
   draft: DressDraft;
   pending: boolean;
@@ -38,6 +50,18 @@ export function DressAiReview({ draft, pending, onApply, onRegenerate, onCancel 
     tone: 'border-line bg-surface-2 text-muted',
   };
 
+  // How many of the specific fields the model could not see.
+  const gapCount = [
+    values.garment_type,
+    values.silhouette,
+    values.neckline,
+    values.sleeves,
+    values.color,
+    values.embellishment,
+    values.hem_train,
+    values.back_closure,
+  ].filter(isGap).length;
+
   return (
     <div
       className="flex flex-col gap-3 rounded-card border border-line bg-surface p-3"
@@ -50,6 +74,15 @@ export function DressAiReview({ draft, pending, onApply, onRegenerate, onCancel 
         </span>
       </div>
       <p className="text-note text-muted">{t('ai.hint')}</p>
+
+      {/* A field the model could not see is a gap in the evidence, not a
+          value. Say so, so the staff member knows what still needs a
+          photograph. */}
+      {gapCount > 0 ? (
+        <p className="text-note text-warn" data-testid="ai-gaps">
+          {t('ai.gapWarning', { count: gapCount })}
+        </p>
+      ) : null}
 
       <Panel>
         <div className="flex flex-col gap-3">
@@ -66,6 +99,11 @@ export function DressAiReview({ draft, pending, onApply, onRegenerate, onCancel 
           />
 
           <div className="grid grid-cols-2 gap-3">
+            <TextField
+              label={t('ai.garmentType')}
+              value={values.garment_type}
+              onChange={(event) => update('garment_type', event.target.value)}
+            />
             <TextField
               label={t('dress.silhouette')}
               value={values.silhouette}
@@ -85,6 +123,21 @@ export function DressAiReview({ draft, pending, onApply, onRegenerate, onCancel 
               label={t('dress.color')}
               value={values.color}
               onChange={(event) => update('color', event.target.value)}
+            />
+            <TextField
+              label={t('ai.embellishment')}
+              value={values.embellishment}
+              onChange={(event) => update('embellishment', event.target.value)}
+            />
+            <TextField
+              label={t('ai.hemTrain')}
+              value={values.hem_train}
+              onChange={(event) => update('hem_train', event.target.value)}
+            />
+            <TextField
+              label={t('ai.backClosure')}
+              value={values.back_closure}
+              onChange={(event) => update('back_closure', event.target.value)}
             />
           </div>
 

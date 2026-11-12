@@ -116,6 +116,9 @@ function ExistingDress({ id }: { id: string }) {
   const [aiRaw, setAiRaw] = useState<unknown>(null);
   const [aiModel, setAiModel] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  // The photograph was refused: it is not a garment. The AI panel does not
+  // open; the reason is shown instead.
+  const [aiRejected, setAiRejected] = useState<{ subject: string; reason: string } | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
@@ -133,11 +136,21 @@ function ExistingDress({ id }: { id: string }) {
     if ((photosQuery.data ?? []).length === 0) return;
     if (describe.isPending || describe.data) return;
     setAiError(null);
+    setAiRejected(null);
     describe.mutate({ dress }, {
       onSuccess: (result) => {
+          // The photo was refused: it is not a garment. Nothing to review.
+          if (result && 'rejected' in result && result.rejected) {
+            setAiRejected({ subject: result.subject, reason: result.reason });
+            setAiOpen(false);
+            return;
+          }
           // A malformed answer must not crash the page.
-          if (!result?.draft) { setAiError('unknown'); return; }
-          setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
+          if (!result || !('draft' in result) || !result.draft) { setAiError('unknown'); return; }
+          setAiDraft(result.draft);
+          setAiRaw(result.raw);
+          setAiModel(result.model);
+          setAiOpen(true);
         },
       onError: (error) => setAiError(aiErrorMessage(error)),
     });
@@ -276,7 +289,19 @@ function ExistingDress({ id }: { id: string }) {
               }}
               onRegenerate={() => {
                 setAiError(null);
-                describe.mutate({ dress }, { onError: (error) => setAiError(aiErrorMessage(error)) });
+                setAiRejected(null);
+                describe.mutate({ dress }, {
+                  onSuccess: (result) => {
+                    if (result && 'rejected' in result && result.rejected) {
+                      setAiRejected({ subject: result.subject, reason: result.reason });
+                      setAiOpen(false);
+                      return;
+                    }
+                    if (!result || !('draft' in result) || !result.draft) { setAiError('unknown'); return; }
+                    setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
+                  },
+                  onError: (error) => setAiError(aiErrorMessage(error)),
+                });
               }}
               onCancel={() => setAiOpen(false)}
             />
@@ -286,12 +311,18 @@ function ExistingDress({ id }: { id: string }) {
                 variant="secondary"
                 onClick={() => {
                   setAiError(null);
+                  setAiRejected(null);
                   describe.mutate({ dress }, {
                     onSuccess: (result) => {
-              // A malformed answer must not crash the page.
-              if (!result?.draft) { setAiError('unknown'); return; }
-              setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
-            },
+                      if (result && 'rejected' in result && result.rejected) {
+                        setAiRejected({ subject: result.subject, reason: result.reason });
+                        setAiOpen(false);
+                        return;
+                      }
+                      // A malformed answer must not crash the page.
+                      if (!result || !('draft' in result) || !result.draft) { setAiError('unknown'); return; }
+                      setAiDraft(result.draft); setAiRaw(result.raw); setAiModel(result.model); setAiOpen(true);
+                    },
                     onError: (error) => setAiError(aiErrorMessage(error)),
                   });
                 }}
@@ -302,6 +333,23 @@ function ExistingDress({ id }: { id: string }) {
               </Button>
               {photos.length === 0 ? (
                 <p className="text-note text-muted">{t('ai.needsPhotos')}</p>
+              ) : null}
+              {aiRejected ? (
+                <Panel
+                  className="border-warn-line bg-warn-bg px-3 py-3"
+                  role="status"
+                  data-testid="ai-rejected"
+                >
+                  <span className="eyebrow mb-1 block text-warn">{t('ai.notAGarment')}</span>
+                  <p className="text-small text-ink">
+                    {aiRejected.subject
+                      ? t('ai.notAGarmentBody', { subject: aiRejected.subject })
+                      : t('ai.notAGarmentBodyNoSubject')}
+                  </p>
+                  {aiRejected.reason ? (
+                    <p className="mt-1 text-note text-muted">{aiRejected.reason}</p>
+                  ) : null}
+                </Panel>
               ) : null}
               {aiError ? (
                 <p className="text-small text-danger" role="alert">

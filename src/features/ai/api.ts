@@ -5,11 +5,15 @@ import type { DressRow } from '@/features/dresses/api';
 export interface DressDraft {
   name_en: string;
   name_ar: string;
+  garment_type: string;
   silhouette: string;
   neckline: string;
   sleeves: string;
   fabrics: string[];
   color: string;
+  embellishment: string;
+  hem_train: string;
+  back_closure: string;
   description_en: string;
   description_ar: string;
   suggested_materials: string[];
@@ -22,10 +26,23 @@ export interface AiDescribeResult {
   raw: unknown;
 }
 
+/**
+ * The photograph was refused: it is not a garment.
+ *
+ * The Edge Function asks a small model this question first, so a photo of a
+ * room or a face never costs a full description.
+ */
+export interface AiRejection {
+  rejected: true;
+  subject: string;
+  reason: string;
+  model: string;
+}
+
 /** Call the ai-describe Edge Function for one dress. */
 export function useDescribeDress() {
   return useMutation({
-    mutationFn: async ({ dress }: { dress: DressRow }): Promise<AiDescribeResult> => {
+    mutationFn: async ({ dress }: { dress: DressRow }): Promise<AiDescribeResult | AiRejection> => {
       const client = supabase as NonNullable<typeof supabase>;
 
       // Fetch this dress's photos and build signed display URLs for the function.
@@ -58,6 +75,15 @@ export function useDescribeDress() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+      // A refusal is a valid answer, not a failure.
+      if (data?.rejected) {
+        return {
+          rejected: true,
+          subject: typeof data.subject === 'string' ? data.subject : '',
+          reason: typeof data.reason === 'string' ? data.reason : '',
+          model: typeof data.model === 'string' ? data.model : '',
+        };
+      }
       // A 200 with no usable body is a failure, not a draft: without this
       // guard the caller would read `.draft` off undefined and crash the page.
       if (!data || typeof data !== 'object' || !('draft' in data)) {
