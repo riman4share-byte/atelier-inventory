@@ -22,6 +22,7 @@ import { CheckOutSheet } from '@/features/movements/CheckOutSheet';
 import { CheckInSheet } from '@/features/movements/CheckInSheet';
 import { ReserveSheet } from '@/features/movements/ReserveSheet';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
+import { categoryLabel, toCategory } from './categories';
 import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
 import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { DressAiReview } from '@/features/ai/DressAiReview';
@@ -222,6 +223,10 @@ function ExistingDress({ id }: { id: string }) {
   }
 
   const attributes = [
+    {
+      label: t('dress.category'),
+      value: categoryLabel(dress.category, i18n.language.startsWith('ar')),
+    },
     { label: t('dress.silhouette'), value: dress.silhouette },
     { label: t('dress.neckline'), value: dress.neckline },
     { label: t('dress.sleeves'), value: dress.sleeves },
@@ -278,6 +283,7 @@ function ExistingDress({ id }: { id: string }) {
                       name_ar: draft.name_ar,
                       description_en: draft.description_en,
                       description_ar: draft.description_ar,
+                      category: toCategory(draft.category),
                       silhouette: draft.silhouette,
                       neckline: draft.neckline,
                       sleeves: draft.sleeves,

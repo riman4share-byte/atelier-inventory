@@ -1,4 +1,5 @@
-import type { DressStatus } from '@/lib/database.types';
+import type { DressCategory, DressStatus } from '@/lib/database.types';
+import { DRESS_CATEGORIES } from './categories';
 
 /** The gallery status filter. 'all' means no status filter at all. */
 export type StatusFilter = 'all' | DressStatus;
@@ -11,9 +12,17 @@ export const STATUS_FILTERS: readonly StatusFilter[] = [
   'sold',
 ] as const;
 
+/** The gallery category filter. 'all' means no category filter at all. */
+export type CategoryFilter = 'all' | DressCategory;
+
+export const CATEGORY_FILTERS: readonly CategoryFilter[] = ['all', ...DRESS_CATEGORIES] as const;
+
 export interface DressFilters {
   search: string;
   status: StatusFilter;
+  /** The kind of garment. Optional, so the callers that do not filter by it
+   *  keep working unchanged. */
+  category?: CategoryFilter;
 }
 
 /**
@@ -56,13 +65,15 @@ export function searchExpression(search: string): string | null {
 export interface BuiltDressFilters {
   orExpression: string | null;
   status: DressStatus | null;
+  category: DressCategory | null;
   excludesDeleted: true;
 }
 
-export function buildDressFilters({ search, status }: DressFilters): BuiltDressFilters {
+export function buildDressFilters({ search, status, category }: DressFilters): BuiltDressFilters {
   return {
     orExpression: searchExpression(search),
     status: status === 'all' ? null : status,
+    category: !category || category === 'all' ? null : category,
     excludesDeleted: true,
   };
 }

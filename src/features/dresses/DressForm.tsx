@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
-import type { DressStatus, ListingType } from '@/lib/database.types';
+import type { DressCategory, DressStatus, ListingType } from '@/lib/database.types';
 import type { DressRow } from './api';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { TextArea } from '@/components/ui/TextArea';
+import { DRESS_CATEGORIES, categoryLabel } from './categories';
 import { TextField } from '@/components/ui/TextField';
 
 const STATUS_OPTIONS: ReadonlyArray<{ value: DressStatus; labelKey: string }> = [
@@ -29,6 +30,7 @@ const formSchema = z
     name_ar: z.string(),
     description_en: z.string(),
     description_ar: z.string(),
+    category: z.enum(['wedding', 'party', 'engagement', 'veil', 'jumpsuit']),
     silhouette: z.string(),
     neckline: z.string(),
     sleeves: z.string(),
@@ -63,6 +65,7 @@ export function emptyDressForm(suggestedCode: string): DressFormValues {
     name_ar: '',
     description_en: '',
     description_ar: '',
+    category: 'wedding',
     silhouette: '',
     neckline: '',
     sleeves: '',
@@ -84,6 +87,7 @@ export function dressRowToForm(dress: DressRow): DressFormValues {
     name_ar: dress.name_ar,
     description_en: dress.description_en ?? '',
     description_ar: dress.description_ar ?? '',
+    category: dress.category ?? 'wedding',
     silhouette: dress.silhouette ?? '',
     neckline: dress.neckline ?? '',
     sleeves: dress.sleeves ?? '',
@@ -105,6 +109,7 @@ export interface DressFormPayload {
   name_ar: string;
   description_en: string | null;
   description_ar: string | null;
+  category: DressCategory;
   silhouette: string | null;
   neckline: string | null;
   sleeves: string | null;
@@ -133,6 +138,7 @@ export function formToPayload(values: DressFormValues): DressFormPayload {
     name_ar: values.name_ar.trim(),
     description_en: toOptionalText(values.description_en),
     description_ar: toOptionalText(values.description_ar),
+    category: values.category,
     silhouette: toOptionalText(values.silhouette),
     neckline: toOptionalText(values.neckline),
     sleeves: toOptionalText(values.sleeves),
@@ -161,7 +167,7 @@ interface DressFormProps {
 }
 
 export function DressForm({ initial, savingLabel, pending, submitError, onSubmit, onCancel }: DressFormProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [values, setValues] = useState<DressFormValues>(initial);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof DressFormValues, string>>>({});
 
@@ -228,6 +234,19 @@ export function DressForm({ initial, savingLabel, pending, submitError, onSubmit
 
       <Panel title={t('dress.statusLabel')}>
         <div className="flex flex-col gap-2.5">
+          <div>
+            <span className="eyebrow mb-1.5 block">{t('dress.category')}</span>
+            <SegmentedControl
+              label={t('dress.category')}
+              options={DRESS_CATEGORIES.map((category) => ({
+                value: category,
+                label: categoryLabel(category, i18n.language.startsWith('ar')),
+              }))}
+              value={values.category}
+              onChange={(value) => set('category', value as DressCategory)}
+            />
+          </div>
+
           <div>
             <span className="eyebrow mb-1.5 block">{t('dress.statusLabel')}</span>
             <SegmentedControl

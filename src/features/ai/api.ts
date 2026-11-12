@@ -5,7 +5,8 @@ import type { DressRow } from '@/features/dresses/api';
 export interface DressDraft {
   name_en: string;
   name_ar: string;
-  garment_type: string;
+  /** The atelier's own kind of garment: wedding, party, engagement, veil, jumpsuit. */
+  category?: string;
   silhouette: string;
   neckline: string;
   sleeves: string;

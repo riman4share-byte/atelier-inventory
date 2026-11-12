@@ -17,6 +17,7 @@ export type UserRole = Database['public']['Enums']['user_role'];
 export type LanguageCode = Database['public']['Enums']['language_code'];
 export type DressStatus = Database['public']['Enums']['dress_status'];
 export type ListingType = Database['public']['Enums']['listing_type'];
+export type DressCategory = Database['public']['Enums']['dress_category'];
 export type PhotoAngle = Database['public']['Enums']['photo_angle'];
 export type MaterialCategory = Database['public']['Enums']['material_category'];
 export type MaterialUnit = Database['public']['Enums']['material_unit'];

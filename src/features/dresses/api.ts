@@ -1,5 +1,5 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { buildDressFilters, type StatusFilter } from './dressSearch';
+import { buildDressFilters, type CategoryFilter, type StatusFilter } from './dressSearch';
 import { supabase } from '@/lib/supabase';
 import type { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types';
 
@@ -13,8 +13,8 @@ const PAGE_SIZE = 12;
 export const dressKeys = {
   all: ['dresses'] as const,
   lists: () => [...dressKeys.all, 'list'] as const,
-  list: (search: string, status: StatusFilter) =>
-    [...dressKeys.lists(), { search, status }] as const,
+  list: (search: string, status: StatusFilter, category: CategoryFilter = 'all') =>
+    [...dressKeys.lists(), { search, status, category }] as const,
   counts: ['dresses', 'counts'] as const,
   detail: (id: string) => [...dressKeys.all, 'detail', id] as const,
   photos: (id: string) => [...dressKeys.all, 'photos', id] as const,
@@ -56,11 +56,15 @@ export function useDressCounts() {
   });
 }
 
-/** Paged gallery list, newest first, filtered by search and status. */
-export function useDresses(filters: { search: string; status: StatusFilter }) {
+/** Paged gallery list, newest first, filtered by search, status and category. */
+export function useDresses(filters: {
+  search: string;
+  status: StatusFilter;
+  category?: CategoryFilter;
+}) {
   const built = buildDressFilters(filters);
   return useInfiniteQuery({
-    queryKey: dressKeys.list(filters.search, filters.status),
+    queryKey: dressKeys.list(filters.search, filters.status, filters.category ?? 'all'),
     queryFn: async ({ pageParam }) => {
       const from = pageParam * PAGE_SIZE;
       const client = supabase as NonNullable<typeof supabase>;
@@ -71,6 +75,7 @@ export function useDresses(filters: { search: string; status: StatusFilter }) {
         .order('created_at', { ascending: false });
       if (built.orExpression) builder = builder.or(built.orExpression);
       if (built.status) builder = builder.eq('status', built.status);
+      if (built.category) builder = builder.eq('category', built.category);
       const { data, error } = await builder.range(from, from + PAGE_SIZE - 1);
       if (error) throw error;
       return data;
@@ -223,6 +228,8 @@ export const EXPORT_ROW_LIMIT = 2000;
 export interface ExportScopeSelection {
   search: string;
   status: DressRow['status'] | null;
+  /** The kind of garment; when set it filters the export as well. */
+  category?: DressRow['category'] | null;
   /** Specific ids (bulk selection); when set it replaces search/status. */
   ids?: string[];
 }
@@ -236,6 +243,7 @@ export async function fetchDressesForExport(selection: ExportScopeSelection): Pr
   const built = buildDressFilters({
     search: selection.search,
     status: selection.status ?? 'all',
+    category: selection.category ?? 'all',
   });
   let builder = client
     .from('dresses')
@@ -247,6 +255,7 @@ export async function fetchDressesForExport(selection: ExportScopeSelection): Pr
   } else {
     if (built.orExpression) builder = builder.or(built.orExpression);
     if (built.status) builder = builder.eq('status', built.status);
+    if (built.category) builder = builder.eq('category', built.category);
   }
   const { data, error } = await builder.limit(EXPORT_ROW_LIMIT + 1);
   if (error) throw error;
@@ -267,16 +276,27 @@ export const TABLE_PAGE_SIZE = 20;
 export function useDressesTable(filters: {
   search: string;
   status: StatusFilter;
+  category?: CategoryFilter;
   sort: TableSort;
   page: number;
 }) {
-  const built = buildDressFilters({ search: filters.search, status: filters.status });
+  const built = buildDressFilters({
+    search: filters.search,
+    status: filters.status,
+    category: filters.category,
+  });
   const from = filters.page * TABLE_PAGE_SIZE;
   return useQuery({
     queryKey: [
       ...dressKeys.lists(),
       'table',
-      { search: filters.search, status: filters.status, sort: filters.sort, page: filters.page },
+      {
+        search: filters.search,
+        status: filters.status,
+        category: filters.category ?? 'all',
+        sort: filters.sort,
+        page: filters.page,
+      },
     ],
     queryFn: async () => {
       const client = supabase as NonNullable<typeof supabase>;
@@ -288,6 +308,7 @@ export function useDressesTable(filters: {
         .range(from, from + TABLE_PAGE_SIZE - 1);
       if (built.orExpression) builder = builder.or(built.orExpression);
       if (built.status) builder = builder.eq('status', built.status);
+      if (built.category) builder = builder.eq('category', built.category);
       const { data, error, count } = await builder;
       if (error) throw error;
       return { rows: data, total: count ?? data.length };

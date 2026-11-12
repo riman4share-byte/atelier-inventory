@@ -53,7 +53,8 @@ interface DressDraft {
   is_a_garment?: boolean;
   name_en: string;
   name_ar: string;
-  garment_type: string;
+  /** The atelier's own kind of garment: wedding, party, engagement, veil, jumpsuit. */
+  category?: string;
   silhouette: string;
   neckline: string;
   sleeves: string;

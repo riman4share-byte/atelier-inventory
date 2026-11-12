@@ -406,6 +406,7 @@ export type Database = {
         Row: {
           ai_model: string | null
           ai_raw: Json | null
+          category: Database["public"]["Enums"]["dress_category"] | null
           code: string
           color: string | null
           created_at: string
@@ -438,6 +439,7 @@ export type Database = {
         Insert: {
           ai_model?: string | null
           ai_raw?: Json | null
+          category?: Database["public"]["Enums"]["dress_category"] | null
           code: string
           color?: string | null
           created_at?: string
@@ -470,6 +472,7 @@ export type Database = {
         Update: {
           ai_model?: string | null
           ai_raw?: Json | null
+          category?: Database["public"]["Enums"]["dress_category"] | null
           code?: string
           color?: string | null
           created_at?: string
@@ -846,6 +849,7 @@ export type Database = {
       get_public_dress: {
         Args: { p_token: string }
         Returns: {
+          category: Database["public"]["Enums"]["dress_category"]
           code: string
           description_ar: string
           description_en: string
@@ -888,6 +892,7 @@ export type Database = {
       suggest_dress_code: { Args: never; Returns: string }
     }
     Enums: {
+      dress_category: "wedding" | "party" | "engagement" | "veil" | "jumpsuit"
       dress_location:
         | "in_atelier"
         | "with_customer"
@@ -1065,6 +1070,7 @@ export const Constants = {
   },
   public: {
     Enums: {
+      dress_category: ["wedding", "party", "engagement", "veil", "jumpsuit"],
       dress_location: [
         "in_atelier",
         "with_customer",

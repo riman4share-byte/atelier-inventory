@@ -1,4 +1,5 @@
 import type { DressRow } from './api';
+import { categoryLabel } from './categories';
 
 /**
  * Exports are English-only by owner decision (2026-11-09) — shared files go to
@@ -45,6 +46,7 @@ const priceText = (price: DressRow['sale_price']): string =>
 export const DEFAULT_EXPORT_COLUMNS: ReadonlyArray<ExportColumn> = [
   { id: 'code', header: 'Code', get: (d) => d.code, width: 12 },
   { id: 'name_en', header: 'Name', get: (d) => d.name_en, width: 26 },
+  { id: 'category', header: 'Category', get: (d) => categoryLabel(d.category, false), width: 16 },
   { id: 'status', header: 'Status', get: (d) => STATUS_LABELS[d.status], width: 14 },
   { id: 'listing_type', header: 'Listing', get: (d) => LISTING_LABELS[d.listing_type], width: 16 },
   { id: 'size_label', header: 'Size', get: (d) => d.size_label ?? '', width: 10 },

@@ -10,7 +10,7 @@ import {
   useShareLinks,
   type DressRow,
 } from './api';
-import type { StatusFilter } from './dressSearch';
+import type { CategoryFilter, StatusFilter } from './dressSearch';
 import {
   DEFAULT_EXPORT_COLUMNS,
   EXPORT_DATE_COLUMN,
@@ -82,6 +82,7 @@ interface ExportSheetProps {
   onClose: () => void;
   search: string;
   status: StatusFilter;
+  category: CategoryFilter;
   selectedIds: string[];
   initialScope?: ExportScope;
 }
@@ -118,6 +119,7 @@ export function ExportSheet({
   onClose,
   search,
   status,
+  category,
   selectedIds,
   initialScope = 'filters',
 }: ExportSheetProps) {
@@ -157,6 +159,7 @@ export function ExportSheet({
     return fetchDressesForExport({
       search: effectiveScope === 'all' ? '' : search,
       status: effectiveScope === 'all' ? null : status === 'all' ? null : status,
+      category: effectiveScope === 'all' ? null : category === 'all' ? null : category,
       ids,
     });
   };

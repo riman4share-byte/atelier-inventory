@@ -11,6 +11,7 @@ import type { DressRow } from './api';
 const dress = {
   code: 'RF-0001',
   name_en: 'Seraphine',
+  category: 'wedding',
   status: 'available',
   listing_type: 'both',
   size_label: 'M',
@@ -105,5 +106,25 @@ describe('the printed documents', () => {
         expect(document.html, document.name).not.toContain(word);
       }
     }
+  });
+
+  it('says what kind of garment each dress is', () => {
+    // The catalogue and the stock report both carry the category, in
+    // English, so a reader knows whether it is a wedding gown or a veil.
+    expect(documents[0]!.html).toContain('Wedding dress');
+    expect(documents[1]!.html).toContain('Wedding dress');
+  });
+
+  it('keeps the prices lined up under the price headings', () => {
+    // The money columns used to be found by their position in the list, so
+    // adding the Category column quietly moved "AED" onto the wrong
+    // heading. They are found by their heading now.
+    const html = documents[1]!.html;
+    const saleHeading = html.indexOf('>Sale price<');
+    const saleCell = html.indexOf('3500 AED');
+    expect(saleHeading).toBeGreaterThan(-1);
+    expect(saleCell).toBeGreaterThan(saleHeading);
+    // The rent price is empty for this dress, so it must not carry a number.
+    expect(html).not.toContain('AED</td></tr>');
   });
 });

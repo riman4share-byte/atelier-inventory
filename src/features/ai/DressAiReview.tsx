@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { TextArea } from '@/components/ui/TextArea';
 import { TextField } from '@/components/ui/TextField';
+import { DRESS_CATEGORIES, categoryLabel } from '@/features/dresses/categories';
 import { cx } from '@/lib/cx';
 
 /** Confidence is reported by the model as a word; show it as a fixed token. */
@@ -36,7 +37,7 @@ interface DressAiReviewProps {
 
 /** Editable review of an AI-generated dress draft. AI-filled values are marked. */
 export function DressAiReview({ draft, pending, onApply, onRegenerate, onCancel }: DressAiReviewProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [values, setValues] = useState<DressDraft>(draft);
 
   const update = <K extends keyof DressDraft>(key: K, value: DressDraft[K]) =>
@@ -51,16 +52,18 @@ export function DressAiReview({ draft, pending, onApply, onRegenerate, onCancel 
   };
 
   // How many of the specific fields the model could not see.
-  const gapCount = [
-    values.garment_type,
-    values.silhouette,
-    values.neckline,
-    values.sleeves,
-    values.color,
-    values.embellishment,
-    values.hem_train,
-    values.back_closure,
-  ].filter(isGap).length;
+  const gapCount = (
+    [
+      values.category,
+      values.silhouette,
+      values.neckline,
+      values.sleeves,
+      values.color,
+      values.embellishment,
+      values.hem_train,
+      values.back_closure,
+    ] as Array<string | undefined>
+  ).filter((value) => isGap(value ?? '')).length;
 
   return (
     <div
@@ -99,11 +102,23 @@ export function DressAiReview({ draft, pending, onApply, onRegenerate, onCancel 
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <TextField
-              label={t('ai.garmentType')}
-              value={values.garment_type}
-              onChange={(event) => update('garment_type', event.target.value)}
-            />
+            {/* The category is one of the atelier's own five, so it is a
+                choice and not a free text that could be spelled wrong. */}
+            <label className="flex flex-col gap-1.5">
+              <span className="eyebrow">{t('dress.category')}</span>
+              <select
+                value={values.category ?? ''}
+                onChange={(event) => update('category', event.target.value)}
+                className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
+              >
+                <option value="">{t('dress.categoryUnset')}</option>
+                {DRESS_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {categoryLabel(category, i18n.language.startsWith('ar'))}
+                  </option>
+                ))}
+              </select>
+            </label>
             <TextField
               label={t('dress.silhouette')}
               value={values.silhouette}

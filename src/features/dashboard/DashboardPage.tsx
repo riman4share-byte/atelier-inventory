@@ -248,6 +248,7 @@ const branding = useAtelierBranding();
         onClose={() => setExportOpen(false)}
         search=""
         status="all"
+        category="all"
         selectedIds={[]}
         initialScope="all"
       />

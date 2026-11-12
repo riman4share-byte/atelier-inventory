@@ -44,4 +44,20 @@ describe('buildDressFilters', () => {
     expect(built.status).toBe('reserved');
     expect(built.orExpression).toContain('name_en.ilike.noor*');
   });
+
+  it('maps the all chip to no category filter', () => {
+    const built = buildDressFilters({ search: '', status: 'all', category: 'all' });
+    expect(built.category).toBeNull();
+  });
+
+  it('keeps a concrete category', () => {
+    const built = buildDressFilters({ search: '', status: 'all', category: 'veil' });
+    expect(built.category).toBe('veil');
+  });
+
+  it('has no category filter at all when the caller does not ask for one', () => {
+    // The callers that do not filter by category must keep working.
+    const built = buildDressFilters({ search: '', status: 'all' });
+    expect(built.category).toBeNull();
+  });
 });

@@ -27,7 +27,7 @@ WORK IN THIS ORDER. Do not skip a step.
 STEP 1 - LOOK, THEN LIST.
 Before writing anything, go through the garment feature by feature and decide what you can actually see. For each feature below, answer from the pixels only. If the photographs do not show it, the value is the exact string "not visible". "not visible" is a correct and useful answer; a plausible guess is a failure.
 
-  - the garment type (a wedding gown, an evening dress, a jumpsuit, a suit, a cape, an abaya, a kaftan, a two-piece, a veil, ...)
+  - the kind of garment, from the atelier's own list: a wedding dress, a party dress, an engagement dress, a veil or a jumpsuit
   - the silhouette, judged from the waist and the hem: does the skirt fall straight from the waist (A-line), hug the body and flare at the knee (mermaid), swell out from the waist (ball gown), follow the body closely (sheeve/sheath), sit at the natural waist or just under the bust (empire), or fit to the knee then flare (fit-and-flare)
   - the neckline: trace the actual edge across the chest and shoulders - sweetheart, V, square, illusion, bateau/scoop, halter, strapless, off-shoulder, high collar, cowl, halter
   - the sleeves: count them and name the length - sleeveless, cap, short, elbow, three-quarter, long, bishop, puff, off-shoulder
@@ -41,9 +41,16 @@ Before writing anything, go through the garment feature by feature and decide wh
 
 STEP 2 - WRITE THE FIELDS.
 
+  category      Which kind of garment this is, chosen from the atelier's own list:
+                  - wedding      a wedding dress
+                  - party        a party dress or evening gown
+                  - engagement   an engagement dress
+                  - veil         a veil or headpiece
+                  - jumpsuit     a jumpsuit
+                Choose the one that fits what you can SEE. A white gown with a
+                long train and a bridal veil is "wedding", not "party".
   name_en        Two or three words. At least one word must come from something you actually SAW: the colour, the fabric, the silhouette, the neckline or the embellishment. "Ivory Lace Mermaid", "Champagne Tulle A-Line", "Noir Sequin Column". Do NOT use a mood word on its own ("Ethereal", "Glow", "Dream", "Celestial", "Enchanted", "Whisper", "Serene") unless it is also grounded in a visible feature. The name must not fit another dress in the catalogue, so avoid words that describe every wedding dress ever made. If the existing names below are similar in feel, pick a different angle.
   name_ar        The same name in elegant Arabic, transliterating the English rather than inventing a different meaning.
-  garment_type   What it is: wedding gown, evening dress, jumpsuit, suit, cape, abaya, kaftan, two-piece, veil.
   silhouette     From the list: A-line, mermaid, ball gown, sheath, empire, trumpet, fit-and-flare, column, other.
   neckline       The real neckline, or "not visible".
   sleeves        The real sleeve, or "not visible".
@@ -59,6 +66,6 @@ STEP 2 - WRITE THE FIELDS.
 
 Return ONLY a single valid JSON object, no markdown, no code fences, no commentary:
 
-{"is_a_garment":true|false,"name_en":"","name_ar":"","garment_type":"","silhouette":"","neckline":"","sleeves":"","fabrics":[],"color":"","embellishment":"","hem_train":"","back_closure":"","description_en":"","description_ar":"","suggested_materials":[],"confidence":"high"|"medium"|"low"}
+{"is_a_garment":true|false,"category":"wedding"|"party"|"engagement"|"veil"|"jumpsuit","name_en":"","name_ar":"","silhouette":"","neckline":"","sleeves":"","fabrics":[],"color":"","embellishment":"","hem_train":"","back_closure":"","description_en":"","description_ar":"","suggested_materials":[],"confidence":"high"|"medium"|"low"}
 
 If the photographs do not show a garment - a room, a face with no clothing in frame, a screen, a document, food, a car, or a pile of loose fabric with nothing finished - set "is_a_garment" to false, leave every other field empty, and put what you actually see in description_en. Do not describe a non-garment as a dress.`;

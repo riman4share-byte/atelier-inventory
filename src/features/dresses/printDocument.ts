@@ -1,5 +1,6 @@
 import { DEFAULT_EXPORT_COLUMNS, STATUS_LABELS, LISTING_LABELS, exportRows } from './exportData';
 import type { DressRow } from './api';
+import { categoryLabel } from './categories';
 
 /**
  * Exports render through the browser's own print-to-PDF: no bundled PDF
@@ -150,6 +151,7 @@ export interface CatalogOptions {
 
 function specBlock(dress: DressRow, showPrices: boolean): string {
   const base: Array<[string, string, string?]> = [
+    ['Category', categoryLabel(dress.category, false) || '—'],
     ['Listed for', LISTING_LABELS[dress.listing_type]],
     ['Size', dress.size_label ?? '—'],
     ['Colour', dress.color ?? '—'],
@@ -205,7 +207,7 @@ function dressPage(dress: DressRow, options: CatalogOptions): string {
       </div>
       ${photoZone(dress, options.photoUrlsByCode)}
       <h2 class="name">${escapeHtml(dress.name_en || dress.code)}</h2>
-      <div class="idline"><span class="code">${escapeHtml(dress.code)}</span> · ${escapeHtml(STATUS_LABELS[dress.status])}</div>
+      <div class="idline"><span class="code">${escapeHtml(dress.code)}</span> · ${escapeHtml(categoryLabel(dress.category, false))} · ${escapeHtml(STATUS_LABELS[dress.status])}</div>
       ${dress.description_en ? `<p class="desc">${escapeHtml(dress.description_en)}</p>` : ''}
       ${specBlock(dress, options.showPrices)}
       <div class="foot">
@@ -229,7 +231,7 @@ function compactCard(dress: DressRow, options: CatalogOptions): string {
         </div>
       </div>
       <h2 class="name">${escapeHtml(dress.name_en || dress.code)}</h2>
-      <div class="idline"><span class="code">${escapeHtml(dress.code)}</span> &middot; ${escapeHtml(STATUS_LABELS[dress.status])}</div>
+      <div class="idline"><span class="code">${escapeHtml(dress.code)}</span> &middot; ${escapeHtml(categoryLabel(dress.category, false))} &middot; ${escapeHtml(STATUS_LABELS[dress.status])}</div>
       ${dress.description_en ? `<p class="desc">${escapeHtml(dress.description_en)}</p>` : ''}
       ${specBlock(dress, options.showPrices)}
       ${qrBlock(dress, options.qrByCode)}
@@ -296,9 +298,16 @@ export interface StockReportInputs {
 
 export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInputs): string {
   const columns = DEFAULT_EXPORT_COLUMNS.filter((column) => column.id !== 'description_en');
+  // The money columns are found by their id, not by their position: a column
+  // added to the export used to shift the prices out of alignment silently.
+  const moneyIndexes = new Set(
+    columns
+      .map((column, index) => (column.type === 'price' ? index : -1))
+      .filter((index) => index >= 0),
+  );
   const headerRow = (exportRows([], columns, '')[0] ?? [])
     .map((header, index) => {
-      const money = index === 7 || index === 8;
+      const money = moneyIndexes.has(index);
       return `<th class="${money ? 'num' : ''}">${escapeHtml(header)}</th>`;
     })
     .join('');
@@ -308,7 +317,7 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
       const banded = rowIndex % 2 === 1 ? ' class="band"' : '';
       const cells = row
         .map((cell, index) => {
-          const money = index === 7 || index === 8;
+          const money = moneyIndexes.has(index);
           const cls = money ? 'num money' : '';
           const value = money && cell !== '' ? `${cell} AED` : cell;
           return `<td class="${cls}">${escapeHtml(value)}</td>`;

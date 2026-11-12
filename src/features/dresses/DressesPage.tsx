@@ -6,7 +6,8 @@ import { Screen } from '@/components/layout/Screen';
 import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
-import { STATUS_FILTERS, type StatusFilter } from './dressSearch';
+import { CATEGORY_FILTERS, STATUS_FILTERS, type CategoryFilter, type StatusFilter } from './dressSearch';
+import { categoryLabel } from './categories';
 import {
   useBulkSetStatus,
   useDressCounts,
@@ -86,12 +87,13 @@ export function DressesPage() {
   const [searchInput, setSearchInput] = useState(initialSearch);
   const search = useDebouncedValue(searchInput, 300);
   const [status, setStatus] = useState<StatusFilter>('all');
+  const [category, setCategory] = useState<CategoryFilter>('all');
   const [sort, setSort] = useState<TableSort>({ column: 'created_at', dir: 'desc' });
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [exportOpen, setExportOpen] = useState(false);
 
   const counts = useDressCounts();
-  const dresses = useDresses({ search, status });
+  const dresses = useDresses({ search, status, category });
   const bulkStatus = useBulkSetStatus();
   const restore = useRestoreDress();
 
@@ -133,8 +135,17 @@ export function DressesPage() {
     label: value === 'all' ? t('gallery.chipAll') : t(`status.${value}`),
   }));
 
+  // The kind of garment: wedding, party, engagement, veil, jumpsuit.
+  const categoryChips = CATEGORY_FILTERS.map((value) => ({
+    value,
+    label:
+      value === 'all'
+        ? t('gallery.chipAllCategories')
+        : categoryLabel(value, i18n.language.startsWith('ar')),
+  }));
+
   const tiles = dresses.data?.pages.flat() ?? [];
-  const hasFilters = Boolean(searchInput) || status !== 'all';
+  const hasFilters = Boolean(searchInput) || status !== 'all' || category !== 'all';
   const setView = (next: 'grid' | 'table') => {
     const params = new URLSearchParams(searchParams);
     if (next === 'grid') params.delete('view');
@@ -201,15 +212,41 @@ export function DressesPage() {
           ))}
         </div>
 
+        {/* The kind of garment: wedding, party, engagement, veil, jumpsuit. */}
+        <div
+          className="no-scrollbar -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-0.5"
+          role="group"
+          aria-label={t('dress.category')}
+        >
+          {categoryChips.map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              aria-pressed={category === chip.value}
+              onClick={() => setCategory(chip.value)}
+              className={cx(
+                'h-7 shrink-0 rounded-field border px-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors',
+                category === chip.value
+                  ? 'border-accent bg-accent text-accent-ink'
+                  : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
+              )}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+
         {view === 'table' ? (
           <DressesTable
             search={search}
             status={status}
+            category={category}
             sort={sort}
             onSort={setSort}
             onApplyView={(next) => {
               setSearchInput(next.search);
               setStatus(next.status);
+              if (next.category) setCategory(next.category);
             }}
             selected={selected}
             onSelectionChange={setSelected}
@@ -236,6 +273,7 @@ export function DressesPage() {
                   onClick={() => {
                     setSearchInput('');
                     setStatus('all');
+                    setCategory('all');
                   }}
                 >
                   {t('gallery.clearFilters')}
@@ -339,6 +377,7 @@ export function DressesPage() {
         onClose={() => setExportOpen(false)}
         search={search}
         status={status}
+        category={category}
         selectedIds={[...selected]}
       />
     </Screen>

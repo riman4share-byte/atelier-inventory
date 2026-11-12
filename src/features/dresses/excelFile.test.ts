@@ -7,6 +7,7 @@ import type { DressRow } from './api';
 const dress = {
   code: 'RF-0001',
   name_en: 'Seraphine',
+  category: 'wedding',
   status: 'available',
   listing_type: 'both',
   size_label: 'M',
@@ -18,6 +19,21 @@ const dress = {
   created_at: '2026-11-10T06:09:33.082852+00:00',
   public_token: 'd1c70f7c-e6e5-4e44-aef8-720c08d37630',
 } as unknown as DressRow;
+
+/**
+ * Find a column by its heading, rather than by its position.
+ *
+ * The positions used to be written down as numbers, and adding the Category
+ * column shifted every price one to the right - the test then failed on the
+ * wrong cell, which reads like a broken export but is really a brittle test.
+ */
+function columnOf(sheet: ExcelJS.Worksheet, headerRow: number, heading: string): number {
+  const row = sheet.getRow(headerRow);
+  for (let index = 1; index <= row.cellCount; index += 1) {
+    if (row.getCell(index).value === heading) return index;
+  }
+  throw new Error(`no column headed "${heading}"`);
+}
 
 /**
  * The real file, built in memory and read back.
@@ -58,13 +74,17 @@ describe('the Excel file itself', () => {
     expect(sheet.getRow(headerRow).getCell(1).value).toBe('Code');
 
     const dataRow = headerRow + 1;
-    const priceCell = sheet.getRow(dataRow).getCell(8);
+    const priceCell = sheet.getRow(dataRow).getCell(columnOf(sheet, headerRow, 'Sale price'));
     expect(priceCell.value).toBe(3500);
     expect(typeof priceCell.value).toBe('number');
     expect(priceCell.numFmt).toContain('AED');
 
+    // The category, in English: the exports are English-only.
+    const categoryCell = sheet.getRow(dataRow).getCell(columnOf(sheet, headerRow, 'Category'));
+    expect(categoryCell.value).toBe('Wedding dress');
+
     // The date is a date, not the text of a date.
-    const dateCell = sheet.getRow(dataRow).getCell(12);
+    const dateCell = sheet.getRow(dataRow).getCell(columnOf(sheet, headerRow, 'Added on'));
     expect(dateCell.value).toBeInstanceOf(Date);
     expect((dateCell.value as Date).getUTCFullYear()).toBe(2026);
 
@@ -98,7 +118,8 @@ describe('the Excel file itself', () => {
     const check = new ExcelJS.Workbook();
     await check.xlsx.load(buffer);
     const sheet = check.worksheets[0]!;
-    expect(sheet.getRow(6).getCell(9).value).toBe('');
+    const headerRow = 5;
+    expect(sheet.getRow(headerRow + 1).getCell(columnOf(sheet, headerRow, 'Rent price')).value).toBe('');
   });
 
   it('never carries the software credit', async () => {

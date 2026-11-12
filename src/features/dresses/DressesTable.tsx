@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { DressStatus } from '@/lib/database.types';
+import type { DressCategory, DressStatus } from '@/lib/database.types';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { GownIcon, XIcon } from '@/components/icons';
 import { TABLE_PAGE_SIZE, useDressesTable, type TableSort } from './api';
 import { paletteForCode, StatusPill } from './StatusPill';
+import { categoryLabel } from './categories';
 import { cx } from '@/lib/cx';
 
 const SORTABLE: ReadonlyArray<{ column: TableSort['column']; labelKey: string }> = [
@@ -20,6 +21,7 @@ const SORTABLE: ReadonlyArray<{ column: TableSort['column']; labelKey: string }>
 const ALL_COLUMNS: ReadonlyArray<{ id: string; labelKey: string }> = [
   { id: 'code', labelKey: 'table.colCode' },
   { id: 'name', labelKey: 'table.colName' },
+  { id: 'category', labelKey: 'table.colCategory' },
   { id: 'status', labelKey: 'table.colStatus' },
   { id: 'listing', labelKey: 'table.colListing' },
   { id: 'size', labelKey: 'table.colSize' },
@@ -31,12 +33,13 @@ const ALL_COLUMNS: ReadonlyArray<{ id: string; labelKey: string }> = [
   { id: 'added', labelKey: 'table.colAdded' },
 ];
 
-const DEFAULT_VISIBLE = ['code', 'name', 'status', 'sale', 'materials', 'added'];
+const DEFAULT_VISIBLE = ['code', 'name', 'category', 'status', 'sale', 'materials', 'added'];
 
 export interface SavedView {
   name: string;
   search: string;
   status: DressStatus | 'all';
+  category: DressCategory | 'all';
   visible: string[];
   sort: TableSort;
 }
@@ -56,9 +59,14 @@ function loadSaved(): SavedView[] {
 export interface DressesTableProps {
   search: string;
   status: DressStatus | 'all';
+  category: DressCategory | 'all';
   sort: TableSort;
   onSort: (sort: TableSort) => void;
-  onApplyView: (view: { search: string; status: DressStatus | 'all' }) => void;
+  onApplyView: (view: {
+    search: string;
+    status: DressStatus | 'all';
+    category?: DressCategory | 'all';
+  }) => void;
   selected: ReadonlySet<string>;
   onSelectionChange: (ids: ReadonlySet<string>) => void;
   onExportSelected: () => void;
@@ -97,13 +105,14 @@ function Chip({
 export function DressesTable({
   search,
   status,
+  category,
   sort,
   onSort,
   onApplyView,
   selected,
   onSelectionChange,
 }: DressesTableProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
   const [visible, setVisible] = useState<string[]>(() => {
     try {
@@ -120,7 +129,7 @@ export function DressesTable({
   const [viewsOpen, setViewsOpen] = useState(false);
   const [viewName, setViewName] = useState('');
 
-  const table = useDressesTable({ search, status, sort, page });
+  const table = useDressesTable({ search, status, category, sort, page });
 
   useEffect(() => {
     localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(visible));
@@ -184,7 +193,7 @@ export function DressesTable({
                 if (!name) return;
                 setSaved(
                   [
-                    { name, search, status, visible: [...visible], sort },
+                    { name, search, status, category, visible: [...visible], sort },
                     ...views.filter((view) => view.name !== name),
                   ].slice(0, 10),
                 );
@@ -201,7 +210,11 @@ export function DressesTable({
                 onClick={() => {
                   setVisible(view.visible);
                   onSort(view.sort);
-                  onApplyView({ search: view.search, status: view.status });
+                  onApplyView({
+                    search: view.search,
+                    status: view.status,
+                    category: view.category ?? 'all',
+                  });
                 }}
                 className="h-8 flex-1 rounded-field border border-line bg-surface px-2 text-start text-small font-semibold text-ink transition-colors hover:border-line-strong"
               >
@@ -345,6 +358,11 @@ export function DressesTable({
                     {visible.includes('name') && (
                       <td className="max-w-[220px] truncate p-2 text-small text-ink">
                         {row.name_en || row.code}
+                      </td>
+                    )}
+                    {visible.includes('category') && (
+                      <td className="whitespace-nowrap p-2 text-small text-muted">
+                        {categoryLabel(row.category, i18n.language.startsWith('ar'))}
                       </td>
                     )}
                     {visible.includes('status') && (

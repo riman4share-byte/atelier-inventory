@@ -10,6 +10,7 @@ import { Screen } from '@/components/layout/Screen';
 import { Spinner } from '@/components/ui/Spinner';
 import { GownIcon } from '@/components/icons';
 import { paletteForCode } from '@/features/dresses/StatusPill';
+import { categoryLabel } from '@/features/dresses/categories';
 import { cx } from '@/lib/cx';
 
 /**
@@ -173,6 +174,11 @@ export function DressByCodePage() {
           <div className="border-t border-line p-4">
             <h2 className="text-title font-semibold tracking-tight text-ink">{name}</h2>
             <p className="mt-1 font-mono text-caption tracking-tight text-muted">{dress.code}</p>
+            {dress.category ? (
+              <p className="mt-2 inline-block rounded-field bg-surface-2 px-2 py-0.5 text-caption font-semibold text-muted">
+                {categoryLabel(dress.category, isArabic)}
+              </p>
+            ) : null}
             {description ? (
               <p className="mt-3 text-small leading-relaxed text-ink">{description}</p>
             ) : null}
