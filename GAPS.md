@@ -745,18 +745,26 @@ The app was built for the atelier and the atelier owns it, but nothing
 said so. The sign-in screen said "Atelier" in plain letters, the app had
 no logo anywhere, and the printed documents carried no credit.
 
-The atelier's own mark is now in the app: on the sign-in screen, on the
-public page a customer reaches by scanning the QR, on the printed hang
-tag, on the catalogue cover, on the stock report and in the exported
-spreadsheet. The credit - "Powered by Kais" - is in the footers of the
-app and of the printed documents.
+The atelier's own mark is now in the app and on its documents: on the
+sign-in screen, on the public page a customer reaches by scanning the QR,
+on the printed hang tag, on the catalogue cover, on the stock report and
+in the exported spreadsheet.
+
+The credit - "Powered by Kais" - is deliberately in the **app only**: the
+sign-in screen, the account screen and the public page. It is not on the
+hang tag, the catalogue, the stock report or the spreadsheet. The hang
+tag goes on a dress, the catalogue goes to a bride and the spreadsheet
+goes to whoever the owner sends it to; the owner's mark on the software
+has no business on those. The atelier's own name and logo stay on all of
+them.
 
 Both are settings, not hard-coded strings, so the owner can change the
 wording, replace the logo or clear the credit from one screen
 (Settings -> Atelier branding) without anyone touching the code.
 
 The settings table gained a `powered_by` column, and the public branding
-function carries it.
+function carries it. Tests build each document and fail if the credit
+appears on it.
 
 ### G-69 · The PDF catalogue was still the old design
 
