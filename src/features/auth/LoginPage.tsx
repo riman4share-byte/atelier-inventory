@@ -58,12 +58,12 @@ export function LoginPage() {
   return (
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 pt-safe">
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           {branding.logoUrl ? (
             <img
               src={branding.logoUrl}
               alt={branding.atelierName}
-              className="h-8 w-auto max-w-[7rem] object-contain"
+              className="h-11 w-auto max-w-16 object-contain"
             />
           ) : (
             <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent">
@@ -78,7 +78,7 @@ export function LoginPage() {
         </div>
       </header>
 
-      <main className="flex flex-1 items-start justify-center px-4 py-8 md:items-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-8">
         <div className="w-full max-w-sm rounded-card border border-line bg-surface">
           <div className="border-b border-line px-5 py-4">
             <h1 className="text-title font-semibold tracking-tight text-ink">{t('auth.welcome')}</h1>
@@ -119,7 +119,7 @@ export function LoginPage() {
             </Button>
           </form>
         </div>
-        <PoweredBy className="mt-6 text-center" />
+        <PoweredBy />
       </main>
     </div>
   );

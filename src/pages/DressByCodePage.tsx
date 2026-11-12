@@ -148,7 +148,7 @@ export function DressByCodePage() {
             <img
               src={branding.logoUrl}
               alt={branding.atelierName}
-              className="h-11 w-11 shrink-0 rounded-field border border-line bg-surface object-contain p-1"
+              className="h-14 w-auto max-w-20 rounded-field border border-line bg-surface object-contain p-1"
             />
           ) : null}
           <div className="min-w-0">
