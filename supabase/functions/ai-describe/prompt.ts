@@ -59,4 +59,6 @@ STEP 2 - WRITE THE FIELDS.
 
 Return ONLY a single valid JSON object, no markdown, no code fences, no commentary:
 
-{"name_en":"","name_ar":"","garment_type":"","silhouette":"","neckline":"","sleeves":"","fabrics":[],"color":"","embellishment":"","hem_train":"","back_closure":"","description_en":"","description_ar":"","suggested_materials":[],"confidence":"high"|"medium"|"low"}`;
+{"is_a_garment":true|false,"name_en":"","name_ar":"","garment_type":"","silhouette":"","neckline":"","sleeves":"","fabrics":[],"color":"","embellishment":"","hem_train":"","back_closure":"","description_en":"","description_ar":"","suggested_materials":[],"confidence":"high"|"medium"|"low"}
+
+If the photographs do not show a garment - a room, a face with no clothing in frame, a screen, a document, food, a car, or a pile of loose fabric with nothing finished - set "is_a_garment" to false, leave every other field empty, and put what you actually see in description_en. Do not describe a non-garment as a dress.`;

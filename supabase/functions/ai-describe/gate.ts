@@ -37,9 +37,26 @@ export interface GateResult {
  * The API never returns 0 or 1, and a wrong refusal costs the owner a
  * dress, so the bar is set high. Between the two thresholds the answer is
  * "unclear" and the full description gets the final say.
+ *
+ * The thresholds come from what the live model actually produced, not from
+ * a guess. Measured against eleven real photographs:
+ *
+ *   real dresses, in every condition (full, tight crop, dim room, out of
+ *   focus, a 320px upload)          0.926 - 0.951
+ *
+ *   a dark room with a person in it   0.343
+ *   a plain room                     refused
+ *   a screen of text                 refused
+ *   a face with no clothing in frame refused
+ *   a pile of loose fabric           refused
+ *   a car                            refused
+ *
+ * The widest gap is between 0.343 and 0.926, so 0.50 sits in the middle of
+ * it with room on both sides: a dress would have to look half as likely to
+ * be a garment as not before it was turned away.
  */
 export const GARMENT_THRESHOLD = 0.80;
-export const NOT_GARMENT_THRESHOLD = 0.25;
+export const NOT_GARMENT_THRESHOLD = 0.50;
 
 /** The question, and what a yes and a no mean. */
 export const GATE_QUESTION = {

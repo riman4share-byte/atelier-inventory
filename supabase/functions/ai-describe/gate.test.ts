@@ -41,7 +41,7 @@ describe('the photo gate', () => {
     // Between the thresholds the gate does not know. A real dress must
     // never be refused, so the full description gets the final say.
     const result = parseDecision({
-      answers: { is_garment: { type: 'noul', noul: 0.5, confidence: 0.5 } },
+      answers: { is_garment: { type: 'noul', noul: 0.65, confidence: 0.65 } },
     });
     expect(result?.verdict).toBe('unclear');
   });
@@ -57,6 +57,15 @@ describe('the photo gate', () => {
     expect(verdictFromProbability(0.79, 0.79)).toBe('unclear');
     expect(verdictFromProbability(GARMENT_THRESHOLD, 0.9)).toBe('garment');
     expect(verdictFromProbability(NOT_GARMENT_THRESHOLD, 0.9)).toBe('not_garment');
+  });
+
+  it('turns away a dark room but keeps a dim photograph of a dress', () => {
+    // These are the numbers the live model produced, measured against
+    // real photographs. The thresholds have to separate them.
+    const darkRoom = 0.343;
+    const dimDress = 0.944;
+    expect(verdictFromProbability(darkRoom, 0.9)).toBe('not_garment');
+    expect(verdictFromProbability(dimDress, 0.9)).toBe('garment');
   });
 
   it('never treats a probability of exactly zero as a garment', () => {

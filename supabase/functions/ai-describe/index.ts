@@ -17,7 +17,19 @@ import { SYSTEM_PROMPT } from "./prompt.ts";
  * read a garment properly and say what it cannot see.
  */
 const GATE_MODEL = "gemini-decision-1";
-const DESCRIBE_MODEL = "gemini-3-flash-preview";
+/**
+ * The description is asked of one of these, in order.
+ *
+ * The first is a stable model. The others are fallbacks: a single model
+ * can run out of quota - the free tier allows only so many calls a day -
+ * and the feature must not stop working because of it. The fallbacks are
+ * also stable models, so a dress is never described by a preview one.
+ */
+const DESCRIBE_MODELS = [
+  "gemini-3.6-flash",
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
+] as const;
 
 interface DescribeRequest {
   dressId: string;
@@ -26,6 +38,7 @@ interface DescribeRequest {
 }
 
 interface DressDraft {
+  is_a_garment?: boolean;
   name_en: string;
   name_ar: string;
   garment_type: string;
@@ -58,6 +71,8 @@ function isAllowedImageUrl(url: string): boolean {
 interface GeminiPart {
   inlineData?: { mimeType: string; data: string };
   text?: string;
+  /** How finely the model should read the picture. */
+  mediaResolution?: 'MEDIA_RESOLUTION_LOW' | 'MEDIA_RESOLUTION_MEDIUM' | 'MEDIA_RESOLUTION_HIGH';
 }
 
 /** Waits without blocking anything else. */
@@ -105,13 +120,22 @@ async function askGemini(
   }
 
   try {
+    // The resolution hint travels with each picture.
+    const parts = imageParts.map((part) => {
+      if (!part.inlineData || !part.mediaResolution) return { inlineData: part.inlineData };
+      return {
+        inlineData: part.inlineData,
+        mediaResolution: { level: part.mediaResolution },
+      };
+    });
+
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
-          contents: [{ parts: [{ text }, ...imageParts] }],
+          contents: [{ parts: [{ text }, ...parts] }],
           generationConfig,
         }),
       },
@@ -231,11 +255,20 @@ Deno.serve(async (req) => {
       if (!res.ok) continue;
       const buf = await res.arrayBuffer();
       const bytes = new Uint8Array(buf);
+      // The bytes are encoded in chunks. Building the string one character
+      // at a time is quadratic and burns the function's CPU budget on a
+      // large photograph, which is enough to get it killed.
       let binary = "";
-      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const CHUNK = 0x8000;
+      for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+      }
       const mime = res.headers.get("content-type") || "image/jpeg";
       const data = btoa(binary);
-      imageParts.push({ inlineData: { mimeType: mime, data } });
+      // The description reads the picture at medium resolution. High
+      // resolution costs more tokens and more compute in the function
+      // without showing the model anything it cannot already read.
+      imageParts.push({ inlineData: { mimeType: mime, data }, mediaResolution: 'MEDIA_RESOLUTION_MEDIUM' });
       // The gate only needs to know whether a garment is there, so it reads
       // the picture at low resolution. That is where the saving is.
       gateImages.push({ type: 'image', data, mime_type: mime, resolution: 'low' });
@@ -296,77 +329,105 @@ Deno.serve(async (req) => {
     ? `Names already used in this catalogue (do not repeat these, and do not pick a name in the same style): ${names.join(", ")}\n\nCatalogue this garment.`
     : "Catalogue this garment.";
 
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const answer = await askGemini(apiKey, DESCRIBE_MODEL, SYSTEM_PROMPT + "\n\n" + userText, imageParts, {
-      temperature: 0.3,
-      // Generous, because the thinking tokens come out of this same budget.
-      maxOutputTokens: 8192,
-      json: true,
-      // Enough reasoning to read the garment carefully, but not the default
-      // "high", which spent the budget thinking and truncated the answer.
-      thinkingLevel: 'medium',
-    });
+  // The models are tried in turn. A model that is out of quota is skipped
+  // rather than being reported to the owner as a broken feature.
+  let lastError = '';
+  let lastRateLimit = false;
 
-    if (!answer) {
-      if (attempt < 2) {
-        await sleep(800 * (attempt + 1));
+  for (const model of DESCRIBE_MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const answer = await askGemini(apiKey, model, SYSTEM_PROMPT + "\n\n" + userText, imageParts, {
+        temperature: 0.3,
+        // Generous, because the thinking tokens come out of this same budget.
+        maxOutputTokens: 8192,
+        json: true,
+        // Enough reasoning to read the garment carefully, but not the default
+        // "high", which spent the budget thinking and truncated the answer.
+        thinkingLevel: 'medium',
+      });
+
+      if (!answer) {
+        lastError = 'The vision service did not answer.';
+        await sleep(600);
         continue;
       }
-      return jsonError(502, { error: "network_error", message: "The vision service did not answer." }, origin);
-    }
-    if ('error' in answer) {
-      // A rate limit is not a failure: the atelier describes several dresses
-      // in a row and the free tier allows only so many per minute. Wait and
-      // try again rather than telling the owner the AI is broken.
-      if (answer.error.startsWith('429')) {
-        if (attempt < 2) {
-          await sleep(4000 * (attempt + 1));
-          continue;
+      if ('error' in answer) {
+        lastError = answer.error;
+        // A rate limit is not a failure: the atelier describes several
+        // dresses in a row and the free tier allows only so many a day.
+        // Wait a moment and try the same model again, then move on to the
+        // next one rather than telling the owner the AI is broken.
+        if (answer.error.startsWith('429')) {
+          lastRateLimit = true;
+          if (attempt < 1) {
+            await sleep(3000);
+            continue;
+          }
+          break;
         }
-        return jsonError(429, {
-          error: 'rate_limited',
-          message: 'The AI service is busy. Wait a moment and describe again.',
-        }, origin);
+        break;
       }
-      if (attempt < 2) continue;
-      // The provider refused the request. Its own message is the only useful
-      // thing to report.
-      return jsonError(502, { error: "provider_error", message: answer.error }, origin);
-    }
 
-    let parsed: DressDraft;
-    try {
-      const cleaned = answer.text
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/```\s*$/i, "")
-        .trim();
-      parsed = JSON.parse(cleaned);
-    } catch {
-      if (attempt === 0) continue;
-      // The answer is included so the failure can be read, not guessed at.
-      return jsonError(502, {
-        error: "parse_error",
-        message: "AI returned invalid JSON",
-        raw: answer.text.slice(0, 600),
-        finishReason: (answer.raw as { candidates?: { finishReason?: string }[] } | null)?.candidates?.[0]?.finishReason ?? null,
-      }, origin);
-    }
+      let parsed: DressDraft;
+      try {
+        const cleaned = answer.text
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/```\s*$/i, "")
+          .trim();
+        parsed = JSON.parse(cleaned);
+      } catch {
+        // The answer is included so the failure can be read, not guessed at.
+        lastError = 'AI returned invalid JSON';
+        if (attempt < 1) continue;
+        break;
+      }
 
-    return new Response(
-      JSON.stringify({
-        draft: parsed,
-        model: DESCRIBE_MODEL,
-        raw: answer.raw,
-        usage: {
-          gate: gateUsage,
-          describe: answer.usage,
-          total: gateUsage.total + answer.usage.total,
-        },
-      }),
-      { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
-    );
+      // The second safety net. The gate is a probability and can be wrong;
+      // the description model has read every photograph carefully and can
+      // say there is no garment here either.
+      if (parsed.is_a_garment === false) {
+        return new Response(
+          JSON.stringify({
+            rejected: true,
+            subject: '',
+            reason: parsed.description_en || 'The photographs do not show a garment.',
+            model,
+            gateProbability: gate.probability,
+            usage: {
+              gate: gateUsage,
+              describe: answer.usage,
+              total: gateUsage.total + answer.usage.total,
+            },
+          }),
+          { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          draft: parsed,
+          model,
+          raw: answer.raw,
+          gateProbability: gate.probability,
+          usage: {
+            gate: gateUsage,
+            describe: answer.usage,
+            total: gateUsage.total + answer.usage.total,
+          },
+        }),
+        { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
+      );
+    }
   }
 
-  return jsonError(500, { error: "unknown", message: "Unexpected failure" }, origin);
+  // Every model was out of quota or failed.
+  if (lastRateLimit) {
+    return jsonError(429, {
+      error: 'rate_limited',
+      message: 'The AI service is busy. Wait a moment and describe again.',
+      detail: lastError,
+    }, origin);
+  }
+  return jsonError(502, { error: "provider_error", message: lastError || "Unexpected failure" }, origin);
 });
