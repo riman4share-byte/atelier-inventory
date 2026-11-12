@@ -786,6 +786,41 @@ disappeared into it. It carries its own ground now.
 The catalogue gains the tagline and the contact details, like the other
 documents.
 
+### G-70 · The printed catalogue and the stock report were never designed
+
+**Status:** resolved 2026-11-12 · **Phase:** 12
+Both were judged by rendering them and looking at them, which is how the
+Excel bugs were found too.
+
+**The stock report was not designed at all.** It was a bare HTML table
+with no header, no rules and no spacing, so the columns ran together:
+"RF-0016Floral RadianceAvailableSale and rent". The four status counts
+were full-width pastel bands that looked like screen furniture, and the
+prices had no currency. It now carries the atelier's mark and name, the
+date, four quiet count tiles, and a real table: a bold header, hairline
+rules, banded rows, the code in mono, and the prices right-aligned in
+AED.
+
+**The catalogue asked for three photographs and used one.** The design has
+always had a front, a back and a detail slot, and the back and the detail
+were hardcoded empty - the app holds those photographs, the export simply
+never asked for them. It does now: the first photograph is the front, one
+tagged back or side is the back, and one tagged detail or neckline is the
+detail.
+
+**The denser layouts said nothing.** The two-up and four-up versions had
+no cover and no atelier name on any page, so a printed catalogue did not
+say whose it was. They have the cover and a running header now.
+
+**The labels on the photographs were dark grey on a light dress** and
+disappeared into it. They carry their own ground now.
+
+**The hang tag had a logo too small to see** and a name that wrapped onto
+two lines. The mark carries the name now, so the name is not written out
+beside it, and there is room for both.
+
+The dead function that fetched only the first photograph is gone.
+
 ---
 
 ## Resolved
