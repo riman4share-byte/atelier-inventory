@@ -22,3 +22,6 @@ coverage
 logs
 *.log
 npm-debug.log*
+
+# Local helpers for building and checking the printed documents.
+*.local.mjs
