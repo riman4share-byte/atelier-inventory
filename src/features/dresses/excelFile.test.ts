@@ -100,4 +100,43 @@ describe('the Excel file itself', () => {
     const sheet = check.worksheets[0]!;
     expect(sheet.getRow(6).getCell(9).value).toBe('');
   });
+
+  it('never carries the software credit', async () => {
+    // The credit belongs to the app. The spreadsheet goes to whoever the
+    // owner sends it to, and it has no business carrying it.
+    const columns = [...DEFAULT_EXPORT_COLUMNS, QR_URL_COLUMN, EXPORT_DATE_COLUMN];
+    const workbook = await buildExcelWorkbook(
+      ExcelJS,
+      [dress],
+      columns,
+      'https://example.com',
+      { atelierName: 'Riman Fashion' },
+      {
+        title: 'Dress catalogue',
+        generatedAt: '12 November 2026',
+        summary: '1 dress',
+        sheetName: 'Dresses',
+        tableName: 'Dresses',
+      },
+    );
+    const buffer = await workbook.xlsx.writeBuffer();
+    const check = new ExcelJS.Workbook();
+    await check.xlsx.load(buffer);
+    const sheet = check.worksheets[0]!;
+
+    // The footer under the table.
+    for (let r = 1; r <= sheet.rowCount; r++) {
+      sheet.getRow(r).eachCell((cell) => {
+        if (typeof cell.value === 'string') {
+          expect(cell.value).not.toMatch(/Powered by/i);
+        }
+      });
+    }
+    // And the footer printed on the page.
+    expect(sheet.headerFooter?.oddFooter ?? '').not.toMatch(/Powered by/i);
+    expect(sheet.headerFooter?.oddHeader ?? '').not.toMatch(/Powered by/i);
+
+    // The atelier's own name is still on it, though.
+    expect(sheet.headerFooter?.oddFooter ?? '').toContain('Riman Fashion');
+  });
 });

@@ -406,7 +406,7 @@
     "hint": "The name and logo printed on the hang tags and the catalogue, and shown on the public page a customer reaches by scanning the QR code.",
     "atelierName": "Atelier name",
     "poweredBy": "Software credit",
-    "poweredByHint": "Shown in the footers of the app and of the printed documents. Clear it to remove the credit.",
+    "poweredByHint": "Shown in the footers of the app. It is not printed on the hang tags, the catalogue or the spreadsheet. Clear it to remove the credit.",
     "saveName": "Save the name",
     "nameSaved": "The name is saved. New tags and catalogues will use it.",
     "saveFailed": "Could not save. Try again.",

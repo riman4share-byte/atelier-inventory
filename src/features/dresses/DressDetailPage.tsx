@@ -586,7 +586,7 @@ function ExistingDress({ id }: { id: string }) {
                 const url = `${window.location.origin}/d/${dress.public_token}`;
                 const QRCode = (await import('qrcode')).default;
                 const qr = await QRCode.toDataURL(url, { margin: 1, width: 240 });
-                printHtml(buildHangTagHtml(dress, branding.atelierName, qr, branding.logoUrl, branding.poweredBy));
+                printHtml(buildHangTagHtml(dress, branding.atelierName, qr, branding.logoUrl));
               }}
             >
               <QrIcon className="h-3.5 w-3.5" />

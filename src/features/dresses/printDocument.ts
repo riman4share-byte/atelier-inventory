@@ -43,11 +43,6 @@ const PAGE_STYLE = `
     .cover .meta { font-size: 8.5pt; color: #8b939f;
       display: flex; justify-content: space-between;
       font-family: Consolas, ui-monospace, monospace; letter-spacing: 0.4px; }
-    .cover .credit { margin-top: 4mm; font-size: 7pt; letter-spacing: 1.5px;
-      text-transform: uppercase; color: #a4abb5;
-      font-family: Consolas, ui-monospace, monospace; }
-    .foot .credit { font-size: 7pt; color: #a4abb5; letter-spacing: 1px;
-      font-family: Consolas, ui-monospace, monospace; }
 
     /* ---- editorial header shared by dress pages ---- */
     .dress-page { padding: 10mm 12mm 8mm; }
@@ -145,8 +140,6 @@ export interface CatalogOptions {
   tagline?: string | null;
   /** How to reach the atelier: phone, email, address. */
   contact?: string | null;
-  /** The software credit: "Powered by Kais". */
-  poweredBy?: string | null;
   /** Pre-rendered QR data URLs keyed by dress code. */
   qrByCode?: Record<string, string>;
   /** Signed display URLs (first photo per dress), keyed by dress code. */
@@ -217,7 +210,6 @@ function dressPage(dress: DressRow, options: CatalogOptions): string {
       ${specBlock(dress, options.showPrices)}
       <div class="foot">
         <span class="follio">Code ${escapeHtml(dress.code)}</span>
-        ${options.poweredBy ? `<span class="credit">${escapeHtml(options.poweredBy)}</span>` : ''}
         ${qrBlock(dress, options.qrByCode)}
       </div>
     </div>`;
@@ -252,7 +244,6 @@ export function buildCatalogHtml(
       </div>
       <div class="cover-foot">
         <div class="meta"><span>${dresses.length} dresses</span><span>${new Date().toLocaleDateString('en-GB')}</span></div>
-        ${options.poweredBy ? `<div class="credit">${escapeHtml(options.poweredBy)}</div>` : ''}
       </div>
     </div>`;
 
@@ -272,8 +263,6 @@ export interface StockReportInputs {
   atelierName: string;
   /** The atelier's logo, as a URL the printed document may load. */
   logoUrl?: string | null;
-  /** The software credit: "Powered by Kais". */
-  poweredBy?: string | null;
   counts: Record<DressRow['status'], number>;
 }
 
@@ -305,7 +294,6 @@ export function buildStockReportHtml(dresses: DressRow[], inputs: StockReportInp
         <tr>${headerRow}</tr>
         ${body}
       </table>
-      ${inputs.poweredBy ? `<p class="credit">${escapeHtml(inputs.poweredBy)}</p>` : ''}
     </body></html>`;
 }
 
@@ -314,7 +302,6 @@ export function buildHangTagHtml(
   atelierName: string,
   qrDataUrl: string | undefined,
   logoUrl?: string | null,
-  poweredBy?: string | null,
 ): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8">${PRINT_CSP}
     <title>Tag ${escapeHtml(dress.code)}</title>
@@ -332,8 +319,6 @@ export function buildHangTagHtml(
       .code { font-size: 11pt; font-weight: 700; color: #0b0d0f; margin-top: 1mm;
         font-family: Consolas, ui-monospace, monospace; }
       .name { font-size: 8pt; color: #0b0d0f; margin-top: 1mm; line-height: 1.2; }
-      .credit { font-size: 5.5pt; color: #b6bcc4; margin-top: 0.8mm; letter-spacing: 0.5px;
-        font-family: Consolas, ui-monospace, monospace; }
     </style></head>
     <body>
       <div class="qr">${qrDataUrl ? `<img src="${qrDataUrl}" alt="QR">` : ''}</div>
@@ -341,7 +326,6 @@ export function buildHangTagHtml(
         <div class="brand">${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="">` : ''}<span>${escapeHtml(atelierName)}</span></div>
         <div class="code">${escapeHtml(dress.code)}</div>
         <div class="name">${escapeHtml(dress.name_en || dress.code)}</div>
-        ${poweredBy ? `<div class="credit">${escapeHtml(poweredBy)}</div>` : ''}
       </div>
     </body></html>`;
 }
@@ -351,7 +335,6 @@ export function buildTagSheetHtml(
   atelierName: string,
   qrByCode: Record<string, string> | undefined,
   logoUrl?: string | null,
-  poweredBy?: string | null,
 ): string {
   const tags = dresses.map((dress) => {
     const qr = qrByCode?.[dress.code];
@@ -361,7 +344,6 @@ export function buildTagSheetHtml(
         <div class="brand">${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="">` : ''}<span>${escapeHtml(atelierName)}</span></div>
         <div class="code">${escapeHtml(dress.code)}</div>
         <div class="name">${escapeHtml(dress.name_en || dress.code)}</div>
-        ${poweredBy ? `<div class="credit">${escapeHtml(poweredBy)}</div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -380,8 +362,6 @@ export function buildTagSheetHtml(
       .brand { display: flex; align-items: center; gap: 1mm; font-size: 6pt; letter-spacing: 2px;
         text-transform: uppercase; color: #8b939f; font-family: Consolas, ui-monospace, monospace; }
       .brand img { height: 4mm; width: auto; max-width: 10mm; object-fit: contain; }
-    .credit { font-size: 5.5pt; color: #b6bcc4; margin-top: 0.8mm; letter-spacing: 0.5px;
-      font-family: Consolas, ui-monospace, monospace; }
       .code { font-size: 9pt; font-weight: 700; color: #0b0d0f; margin-top: 1mm;
         font-family: Consolas, ui-monospace, monospace; }
       .name { font-size: 7pt; color: #0b0d0f; margin-top: 1mm; line-height: 1.2; }

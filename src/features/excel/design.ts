@@ -39,8 +39,6 @@ export interface ExcelBranding {
   tagline?: string | null;
   /** How to reach the atelier: phone, email, address. */
   contact?: string | null;
-  /** The software credit: "Powered by Kais". */
-  poweredBy?: string | null;
 }
 
 export interface ExcelMeta {
@@ -321,8 +319,7 @@ export function writeFooter(
   row: number,
 ): void {
   const cell = sheet.getCell(row, 1);
-  const credit = branding.poweredBy ? ` · ${branding.poweredBy}` : '';
-  cell.value = `Prepared by ${branding.atelierName} · ${meta.generatedAt}${credit}`;
+  cell.value = `Prepared by ${branding.atelierName} · ${meta.generatedAt}`;
   cell.font = { name: 'Calibri', size: 9, color: { argb: FAINT } };
 }
 
@@ -337,8 +334,6 @@ export function setupPrint(sheet: Worksheet, branding: ExcelBranding, meta: Exce
   };
   sheet.headerFooter = {
     oddHeader: `&L&"Calibri,Bold"${branding.atelierName}&R&"Calibri"${meta.title}`,
-    oddFooter: `&L&"Calibri"Prepared by ${branding.atelierName}` +
-      (branding.poweredBy ? ` · ${branding.poweredBy}` : '') +
-      `&R&"Calibri"Page &P of &N`,
+    oddFooter: `&L&"Calibri"Prepared by ${branding.atelierName}&R&"Calibri"Page &P of &N`,
   };
 }
