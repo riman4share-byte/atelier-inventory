@@ -229,7 +229,8 @@ const branding = useAtelierBranding();
                     minute: '2-digit',
                   }),
                   summary: t('export.movementsSummary', { count: allMovements.data?.length ?? 0 }),
-                  sheetName: t('export.movementsSheetName'),
+                  // Exports are English-only by owner decision (2026-09-09).
+                  sheetName: 'Movements',
                   tableName: 'Movements',
                 },
               )

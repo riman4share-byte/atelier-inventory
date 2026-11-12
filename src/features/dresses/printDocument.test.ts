@@ -94,4 +94,16 @@ describe('the printed documents', () => {
   it('still exports the catalogue columns', () => {
     expect(DEFAULT_EXPORT_COLUMNS.length).toBeGreaterThan(5);
   });
+
+  it('is written in English whatever language the app is in', () => {
+    // Exports are English-only by owner decision (2026-09-09). The sheet
+    // names came out in Arabic once, because they were translated like the
+    // rest of the interface.
+    const arabic = ['الفساتين', 'الحركات', 'تصدير', 'حفظ'];
+    for (const document of documents) {
+      for (const word of arabic) {
+        expect(document.html, document.name).not.toContain(word);
+      }
+    }
+  });
 });

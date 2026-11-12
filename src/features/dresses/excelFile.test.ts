@@ -139,4 +139,31 @@ describe('the Excel file itself', () => {
     // The atelier's own name is still on it, though.
     expect(sheet.headerFooter?.oddFooter ?? '').toContain('Riman Fashion');
   });
+
+  it('names the sheet in English, whatever language the app is in', async () => {
+    // Exports are English-only by owner decision (2026-09-09). The sheet
+    // name came out in Arabic once, because it was translated like the rest
+    // of the interface.
+    const columns = [...DEFAULT_EXPORT_COLUMNS, QR_URL_COLUMN, EXPORT_DATE_COLUMN];
+    const workbook = await buildExcelWorkbook(
+      ExcelJS,
+      [dress],
+      columns,
+      'https://example.com',
+      { atelierName: 'Riman Fashion' },
+      {
+        title: 'Dress catalogue',
+        generatedAt: '12 November 2026',
+        summary: '1 dress',
+        sheetName: 'Dresses',
+        tableName: 'Dresses',
+      },
+    );
+    const buffer = await workbook.xlsx.writeBuffer();
+    const check = new ExcelJS.Workbook();
+    await check.xlsx.load(buffer);
+    const sheet = check.worksheets[0]!;
+    expect(sheet.name).toBe('Dresses');
+    expect(sheet.name).not.toMatch(/[\u0600-\u06FF]/);
+  });
 });

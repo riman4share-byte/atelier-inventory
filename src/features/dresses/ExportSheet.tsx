@@ -216,7 +216,9 @@ export function ExportSheet({
               minute: '2-digit',
             }),
             summary: t('export.excelSummary', { count: dresses.length }),
-            sheetName: t('export.excelSheetName'),
+            // Exports are English-only by owner decision (2026-09-09), so
+            // the sheet is named in English whatever language the app is in.
+            sheetName: 'Dresses',
             tableName: 'Dresses',
           },        );
 
