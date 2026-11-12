@@ -758,6 +758,26 @@ wording, replace the logo or clear the credit from one screen
 The settings table gained a `powered_by` column, and the public branding
 function carries it.
 
+### G-69 · The PDF catalogue was still the old design
+
+**Status:** resolved 2026-11-12 · **Phase:** 12
+The catalogue was the last document that had not been through the branding
+work. It carried the atelier's name but not its mark, and its cover was a
+title page with a large empty bordered box in it and the brand crammed at
+the top, so half the page was blank.
+
+The cover is now a proper title page - the mark in the middle, the name
+under it, what the atelier makes and where it is, and the facts and the
+credit at the foot. The mark is 46mm on the cover and 12mm in the page
+header: the logo is nearly square, so a fixed height made it a speck and
+the wordmark inside it was unreadable.
+
+The "Front view" label on a photograph was dark grey on the photograph and
+disappeared into it. It carries its own ground now.
+
+The catalogue gains the tagline and the contact details, like the other
+documents.
+
 ---
 
 ## Resolved
