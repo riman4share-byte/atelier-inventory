@@ -43,36 +43,45 @@ export type Database = {
         Row: {
           atelier_name: string
           code_prefix: string
+          contact: string | null
           created_at: string
           default_language: Database["public"]["Enums"]["language_code"]
           id: number
           logo_path: string | null
           next_code_number: number
+          powered_by: string | null
           public_qr_page: boolean
+          tagline: string | null
           updated_at: string
           western_digits: boolean
         }
         Insert: {
           atelier_name?: string
           code_prefix?: string
+          contact?: string | null
           created_at?: string
           default_language?: Database["public"]["Enums"]["language_code"]
           id?: number
           logo_path?: string | null
           next_code_number?: number
+          powered_by?: string | null
           public_qr_page?: boolean
+          tagline?: string | null
           updated_at?: string
           western_digits?: boolean
         }
         Update: {
           atelier_name?: string
           code_prefix?: string
+          contact?: string | null
           created_at?: string
           default_language?: Database["public"]["Enums"]["language_code"]
           id?: number
           logo_path?: string | null
           next_code_number?: number
+          powered_by?: string | null
           public_qr_page?: boolean
+          tagline?: string | null
           updated_at?: string
           western_digits?: boolean
         }
@@ -827,8 +836,11 @@ export type Database = {
         Args: never
         Returns: {
           atelier_name: string
+          contact: string
           logo_path: string
+          powered_by: string
           public_qr_page: boolean
+          tagline: string
         }[]
       }
       get_public_dress: {

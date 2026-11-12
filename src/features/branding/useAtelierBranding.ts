@@ -8,6 +8,13 @@ export interface AtelierBranding {
   tagline: string | null;
   /** How to reach the atelier: phone, email, address. */
   contact: string | null;
+  /**
+   * The software credit: "Powered by Kais".
+   *
+   * It appears in the footers of the app and of the printed documents. It
+   * is empty when the owner has cleared it.
+   */
+  poweredBy: string | null;
   /** The path of the logo in the `atelier-logo` bucket, or null. */
   logoPath: string | null;
   /** The public URL of the logo, ready for an <img> or a printed document. */
@@ -31,6 +38,7 @@ export function useAtelierBranding(): AtelierBranding {
       atelier_name: string;
       tagline: string | null;
       contact: string | null;
+      powered_by: string | null;
       logo_path: string | null;
     } | null> => {
       const { data: rows, error } = await client.rpc('get_atelier_branding');
@@ -39,6 +47,7 @@ export function useAtelierBranding(): AtelierBranding {
         atelier_name?: string;
         tagline?: string | null;
         contact?: string | null;
+        powered_by?: string | null;
         logo_path?: string | null;
       }[] | null)?.[0];
       if (!row) return null;
@@ -46,6 +55,7 @@ export function useAtelierBranding(): AtelierBranding {
         atelier_name: row.atelier_name || 'Atelier',
         tagline: row.tagline ?? null,
         contact: row.contact ?? null,
+        powered_by: row.powered_by ?? null,
         logo_path: row.logo_path ?? null,
       };
     },
@@ -61,6 +71,7 @@ export function useAtelierBranding(): AtelierBranding {
     atelierName: data?.atelier_name || 'Atelier',
     tagline: data?.tagline ?? null,
     contact: data?.contact ?? null,
+    poweredBy: data?.powered_by ?? null,
     logoPath,
     logoUrl,
   };

@@ -21,6 +21,7 @@ export function BrandingPanel() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [atelierName, setAtelierName] = useState('');
+  const [poweredBy, setPoweredBy] = useState('');
   const [logoPath, setLogoPath] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -32,7 +33,7 @@ export function BrandingPanel() {
     const client = supabase as NonNullable<typeof supabase>;
     void client
       .from('app_settings')
-      .select('atelier_name, logo_path')
+      .select('atelier_name, logo_path, powered_by')
       .eq('id', 1)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -41,6 +42,7 @@ export function BrandingPanel() {
           return;
         }
         setAtelierName(data?.atelier_name ?? '');
+        setPoweredBy(data?.powered_by ?? '');
         setLogoPath(data?.logo_path ?? null);
         setLoaded(true);
       });
@@ -51,7 +53,10 @@ export function BrandingPanel() {
     setMessage(null);
     const { error } = await (supabase as NonNullable<typeof supabase>)
       .from('app_settings')
-      .update({ atelier_name: atelierName.trim() || 'Atelier' })
+      .update({
+        atelier_name: atelierName.trim() || 'Atelier',
+        powered_by: poweredBy.trim(),
+      })
       .eq('id', 1);
     setSaving(false);
     if (error) {
@@ -132,6 +137,15 @@ export function BrandingPanel() {
         >
           {t('branding.saveName')}
         </Button>
+
+        <TextField
+          label={t('branding.poweredBy')}
+          value={poweredBy}
+          onChange={(event) => setPoweredBy(event.target.value)}
+          placeholder="Powered by Kais"
+          mono
+        />
+        <p className="-mt-2 text-note text-faint">{t('branding.poweredByHint')}</p>
 
         <div className="border-t border-line pt-3">
           <span className="eyebrow">{t('branding.logo')}</span>

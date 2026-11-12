@@ -205,6 +205,7 @@ export function ExportSheet({
             logoDataUrl,
             tagline: branding.tagline,
             contact: branding.contact,
+            poweredBy: branding.poweredBy,
           },
           {
             title: t('export.excelTitle'),
@@ -249,6 +250,7 @@ export function ExportSheet({
             showPrices,
             atelierName: branding.atelierName,
             logoUrl: branding.logoUrl,
+            poweredBy: branding.poweredBy,
             qrByCode,
             photoUrlByCode,
           }),
@@ -262,6 +264,7 @@ export function ExportSheet({
           buildStockReportHtml(dresses, {
             atelierName: branding.atelierName,
             logoUrl: branding.logoUrl,
+            poweredBy: branding.poweredBy,
             counts: countByStatus(dresses),
           }),
         );

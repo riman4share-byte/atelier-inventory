@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Screen } from '@/components/layout/Screen';
+import { PoweredBy } from '@/features/branding/PoweredBy';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
@@ -99,6 +100,8 @@ export function AccountPage() {
             {t('auth.signOut')}
           </Button>
         </Panel>
+
+        <PoweredBy className="text-center" />
       </div>
     </Screen>
   );

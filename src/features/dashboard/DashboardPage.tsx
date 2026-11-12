@@ -218,6 +218,7 @@ const branding = useAtelierBranding();
                   logoDataUrl: null,
                   tagline: branding.tagline,
                   contact: branding.contact,
+                  poweredBy: branding.poweredBy,
                 },
                 {
                   title: t('export.movementsTitle'),

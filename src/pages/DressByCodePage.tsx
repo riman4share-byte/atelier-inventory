@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/features/auth/useAuth';
 import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
+import { PoweredBy } from '@/features/branding/PoweredBy';
 import { Screen } from '@/components/layout/Screen';
 import { Spinner } from '@/components/ui/Spinner';
 import { GownIcon } from '@/components/icons';
@@ -178,6 +179,7 @@ export function DressByCodePage() {
           </div>
         </article>
         <p className="mt-1 text-note text-faint">{t('dress.publicCardFooter')}</p>
+        <PoweredBy className="mt-1 text-center" />
       </main>
     </div>
   );

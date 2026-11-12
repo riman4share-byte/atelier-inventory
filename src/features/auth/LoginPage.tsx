@@ -7,6 +7,8 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Button } from '@/components/ui/Button';
 import { TextField } from '@/components/ui/TextField';
+import { PoweredBy } from '@/features/branding/PoweredBy';
+import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useAuth } from './useAuth';
 
@@ -20,6 +22,8 @@ export function LoginPage() {
   const { status, signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  // The atelier's name and logo.
+  const branding = useAtelierBranding();
   const from = (location.state as { from?: string } | null)?.from ?? '/dresses';
   // Only an internal, single-slash path may be used as a redirect target.
   // "//evil.example.com" is protocol-relative and would leave the app.
@@ -54,10 +58,18 @@ export function LoginPage() {
   return (
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="flex items-center justify-between border-b border-line bg-surface px-4 py-3 pt-safe">
-        <div className="flex items-baseline gap-2">
-          <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent">
-            Atelier
-          </span>
+        <div className="flex items-center gap-2.5">
+          {branding.logoUrl ? (
+            <img
+              src={branding.logoUrl}
+              alt={branding.atelierName}
+              className="h-8 w-auto max-w-[7rem] object-contain"
+            />
+          ) : (
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-widest text-accent">
+              Atelier
+            </span>
+          )}
           <span className="text-note text-muted">{t('app.tagline')}</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -107,6 +119,7 @@ export function LoginPage() {
             </Button>
           </form>
         </div>
+        <PoweredBy className="mt-6 text-center" />
       </main>
     </div>
   );
