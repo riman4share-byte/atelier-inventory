@@ -72,6 +72,17 @@ Rental status and the movement ledger live in the app.
 ERPNext import files need a reachable URL; app photo links are private and
 expire. Only the direct API path (Phase 11) can attach photos.
 
+### G-14 · Dress categories are the atelier's own five kinds of garment
+
+**Status:** resolved 2026-11-12 · **Phase:** 1
+Postgres enum `dress_category` ('wedding', 'party', 'engagement', 'veil',
+'jumpsuit') with `dresses.category`, mirrored by `DRESS_CATEGORIES` in
+`src/features/dresses/categories.ts`. The two sets are asserted equal by
+`categories.test.ts`, which parses the migration SQL. The AI prompt now
+asks for `category` (one of the five) plus `is_a_garment` as a gate safety
+net. Wired through the form, table, filters, exports, catalogue and the
+public card. Existing five dresses backfilled to 'wedding'.
+
 ### G-12 · Arabic PDF rendering must be proven
 
 **Status:** resolved 2026-11-09 · **Phase:** 1
