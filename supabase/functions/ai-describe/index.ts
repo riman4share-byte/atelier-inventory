@@ -20,15 +20,27 @@ const GATE_MODEL = "gemini-decision-1";
 /**
  * The description is asked of one of these, in order.
  *
- * The first is a stable model. The others are fallbacks: a single model
- * can run out of quota - the free tier allows only so many calls a day -
- * and the feature must not stop working because of it. The fallbacks are
- * also stable models, so a dress is never described by a preview one.
+ * Every model has its own quota on the free tier, and the good ones run
+ * out at different times, so more than one is needed: a model that is out
+ * of quota is skipped and the next is used, and the feature keeps working.
+ *
+ * Measured against a real photograph of a wedding gown on the free tier:
+ *
+ *   gemini-3.1-flash-lite   4.5s   3,446 tokens   works
+ *   gemini-3.5-flash-lite  11.8s   4,222 tokens   works
+ *   gemini-3.6-flash        out of quota
+ *   gemini-3.8-flash        temporarily overloaded
+ *   gemini-3-flash-preview  out of quota
+ *
+ * The 3.1 flash-lite is first: it is the fastest and the cheapest of the
+ * ones that work. The 3.6 and 3.8 stay in the list behind it, because
+ * their quotas come back and they are the stronger models.
  */
 const DESCRIBE_MODELS = [
+  "gemini-3.1-flash-lite",
+  "gemini-3.5-flash-lite",
   "gemini-3.6-flash",
   "gemini-3.8-flash",
-  "gemini-3.5-flash-lite",
 ] as const;
 
 interface DescribeRequest {
