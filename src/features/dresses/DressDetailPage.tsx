@@ -363,9 +363,11 @@ function ExistingDress({ id }: { id: string }) {
                           ? t('ai.badImage')
                           : aiError === 'parse_error'
                             ? t('ai.parseFailed')
-                            : aiError === 'provider_error' || aiError === 'network_error'
-                              ? t('ai.providerFailed')
-                              : t('ai.failed')}
+                            : aiError === 'rate_limited'
+                              ? t('ai.rateLimited')
+                              : aiError === 'provider_error' || aiError === 'network_error'
+                                ? t('ai.providerFailed')
+                                : t('ai.failed')}
                 </p>
               ) : null}
             </div>

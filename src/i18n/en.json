@@ -278,6 +278,7 @@
     "badImage": "The photos could not be read. Upload them again and retry.",
     "providerFailed": "The AI service did not answer. Try again in a moment.",
     "parseFailed": "The AI answer could not be read. Try again.",
+    "rateLimited": "The AI service is busy right now. Wait a moment and describe again.",
     "failed": "AI description failed. Try again.",
     "notAGarment": "Not a garment",
     "notAGarmentBody": "This photo does not show a garment. The AI read it as \"{subject}\", so it was not described.",

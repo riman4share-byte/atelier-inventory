@@ -10,8 +10,10 @@
  * fiction. The gate refuses those photos before the expensive call happens,
  * which is also the cheapest way to keep the token bill down.
  *
- * The gate only ever answers yes or no. It never sees the catalogue and it
- * never writes a name.
+ * The gate is asked through the Decisions API, which is built for exactly
+ * this: one yes/no question, a calibrated probability instead of a word to
+ * parse, and no output tokens at all. It costs a tenth of a cent per
+ * thousand image tokens and nothing for the answer.
  */
 
 /** The gate's answer. */
@@ -23,74 +25,78 @@ export interface GateResult {
   subject: string;
   /** The model's own words for the reason, when it refused. */
   reason: string;
+  /** How sure the gate was, 0 to 1. */
+  confidence: number;
+  /** The probability that this is a garment, 0 to 1. */
+  probability: number;
 }
 
-export const GATE_PROMPT = `You are a photo classifier for a wedding dress atelier.
+/**
+ * Above this probability the photo is a garment.
+ *
+ * The API never returns 0 or 1, and a wrong refusal costs the owner a
+ * dress, so the bar is set high. Between the two thresholds the answer is
+ * "unclear" and the full description gets the final say.
+ */
+export const GARMENT_THRESHOLD = 0.80;
+export const NOT_GARMENT_THRESHOLD = 0.25;
 
-Look at the photo and decide ONE thing: is any wearable garment of clothing visible in it?
-
-Answer "garment" if you can see a dress, gown, jumpsuit, suit, cape, bolero, veil, abaya, kaftan or similar wearable garment - whether it is being WORN by a person, on a mannequin, on a hanger, or laid flat.
-
-A BRIDE WEARING HER WEDDING GOWN IS A GARMENT PHOTO. This is the most common catalogue photograph there is. A face in the frame does NOT make the answer "not_garment". If the person is wearing something and you can see the fabric, the neckline, the sleeve, the bodice or the skirt, the answer is "garment".
-
-Answer "not_garment" only when NO wearable garment is visible at all: a bare face, or a head-and-shoulders portrait with no clothing in frame, a room, a wall, a computer screen, a document, food, a landscape, a car, a bag, shoes alone, jewellery alone, or a pile of fabric with no finished garment.
-
-Answer "unclear" if you genuinely cannot tell - the photo is so dark or so blurred that you cannot see whether anyone is wearing anything.
-
-Be strict about refusing a photograph with no garment in it, but do NOT refuse a photograph of a person who is wearing a garment. Low light and blur are not reasons to refuse: if you can tell it is a bridal gown, answer "garment" even if the picture is dim.
-
-Reply with JSON only, no other text:
-{"verdict":"garment"|"not_garment"|"unclear","subject":"what you actually see, 4 words max","reason":"one short sentence"}`;
+/** The question, and what a yes and a no mean. */
+export const GATE_QUESTION = {
+  type: 'noul' as const,
+  instructions:
+    'Is a wearable garment of clothing visible in this photograph? ' +
+    'A dress, gown, jumpsuit, suit, cape, bolero, veil, abaya, kaftan or similar ' +
+    'counts, whether it is being worn by a person, on a mannequin, on a hanger, or laid flat. ' +
+    'A bride wearing her wedding gown IS a garment photograph - this is the most common catalogue ' +
+    'photograph there is, and a face in the frame does not change the answer. ' +
+    'Low light and blur are not reasons to say no.',
+  criteria: {
+    true_description:
+      'A wearable garment is visible: worn by a person, on a mannequin, on a hanger, or laid flat. ' +
+      'You can see the fabric, a neckline, a sleeve, a bodice or a skirt.',
+    false_description:
+      'No wearable garment is visible at all: a bare face, a head-and-shoulders portrait with no clothing ' +
+      'in frame, a room, a wall, a computer screen, a document, food, a landscape, a car, a bag, ' +
+      'shoes alone, jewellery alone, or a pile of fabric with no finished garment.',
+  },
+};
 
 /**
- * Turns the gate's raw answer into a verdict.
+ * Turns the Decisions API answer into a verdict.
  *
- * The model is asked for JSON, but a small model can still answer in prose,
- * so the text is searched for the verdict rather than trusted blindly.
+ * The answer is a calibrated probability, so there is no text to parse and
+ * no JSON to break. The middle band is deliberately "unclear": a real dress
+ * must never be refused, so anything the gate is not sure about is passed
+ * on to the full description instead of being turned away.
  */
-export function parseGate(raw: string): GateResult {
-  const cleaned = raw
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim();
+export function verdictFromProbability(probability: number, _confidence: number): GateVerdict {
+  if (probability >= GARMENT_THRESHOLD) return 'garment';
+  if (probability <= NOT_GARMENT_THRESHOLD) return 'not_garment';
+  return 'unclear';
+}
 
-  let subject = '';
-  let reason = '';
-  let verdict: GateVerdict | null = null;
+/**
+ * Reads the answer out of the Decisions API response.
+ *
+ * Returns null when the response does not carry the answer, so the caller
+ * can fall back to describing the photo rather than refusing it.
+ */
+export function parseDecision(raw: unknown): GateResult | null {
+  const body = raw as {
+    answers?: Record<string, { type?: string; noul?: number; confidence?: number }>;
+  } | null;
+  const answer = body?.answers?.is_garment;
+  if (!answer || typeof answer.noul !== 'number') return null;
 
-  try {
-    const parsed = JSON.parse(cleaned) as unknown;
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      const record = parsed as Record<string, unknown>;
-      const v = typeof record.verdict === 'string' ? record.verdict.trim().toLowerCase() : '';
-      if (v === 'garment' || v === 'not_garment' || v === 'unclear') {
-        verdict = v;
-      }
-      if (typeof record.subject === 'string') subject = record.subject.trim().slice(0, 80);
-      if (typeof record.reason === 'string') reason = record.reason.trim().slice(0, 200);
-    } else if (typeof parsed === 'string') {
-      // A bare string answer, e.g. "garment".
-      const v = parsed.trim().toLowerCase();
-      if (v === 'garment' || v === 'not_garment' || v === 'unclear') verdict = v;
-    }
-  } catch {
-    // Not JSON. Fall back to reading the words out of it.
-    const lower = cleaned.toLowerCase();
-    if (lower.includes('not_garment') || lower.includes('not a garment')) {
-      verdict = 'not_garment';
-    } else if (lower.includes('unclear')) {
-      verdict = 'unclear';
-    } else if (lower.includes('garment')) {
-      verdict = 'garment';
-    }
-  }
+  const probability = answer.noul;
+  const confidence = typeof answer.confidence === 'number' ? answer.confidence : probability;
 
-  if (!verdict) {
-    // The model said something we cannot read. Treat it as unclear and let
-    // the full description decide, rather than refusing a real dress.
-    return { verdict: 'unclear', subject, reason };
-  }
-
-  return { verdict, subject, reason };
+  return {
+    verdict: verdictFromProbability(probability, confidence),
+    subject: '',
+    reason: '',
+    confidence,
+    probability,
+  };
 }

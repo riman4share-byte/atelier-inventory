@@ -1,20 +1,22 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { authenticate, jsonError, allowedOrigin, corsHeaders } from "../_shared/auth.ts";
-import { GATE_PROMPT, parseGate, type GateResult } from "./gate.ts";
+import { GATE_QUESTION, parseDecision, type GateResult } from "./gate.ts";
 import { SYSTEM_PROMPT } from "./prompt.ts";
 
 /**
  * Two models, on purpose.
  *
- * The gate is a cheap question asked of a small model: is this a garment?
- * A photo of a room or a face is refused there, before the expensive
- * description is asked for. That is what keeps the token bill down: the
- * rejected photos never reach the big call.
+ * The gate is one yes/no question asked through the Decisions API: is this
+ * a garment? A photo of a room or a face is refused there, before the
+ * expensive description is asked for. The Decisions API answers with a
+ * calibrated probability and no output tokens at all, so the gate is
+ * nearly free. That is what keeps the token bill down: the rejected photos
+ * never reach the big call.
  *
  * The description itself is asked of a stronger model, because it has to
  * read a garment properly and say what it cannot see.
  */
-const GATE_MODEL = "gemini-3.5-flash-lite";
+const GATE_MODEL = "gemini-decision-1";
 const DESCRIBE_MODEL = "gemini-3-flash-preview";
 
 interface DescribeRequest {
@@ -58,19 +60,49 @@ interface GeminiPart {
   text?: string;
 }
 
-/** One call to Gemini. Returns the raw text, or null if the call failed. */
+/** Waits without blocking anything else. */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** What one Gemini call cost, in tokens. */
+interface TokenUsage {
+  input: number;
+  output: number;
+  total: number;
+}
+
+interface GeminiAnswer {
+  text: string;
+  usage: TokenUsage;
+  raw: unknown;
+}
+
+/** One call to Gemini. Returns the answer and what it cost. */
 async function askGemini(
   apiKey: string,
   model: string,
   text: string,
   imageParts: GeminiPart[],
-  options: { temperature: number; maxOutputTokens: number; json?: boolean },
-): Promise<string | null> {
+  options: {
+    temperature: number;
+    maxOutputTokens: number;
+    json?: boolean;
+    thinkingLevel?: 'minimal' | 'low' | 'medium' | 'high';
+  },
+): Promise<GeminiAnswer | { error: string } | null> {
   const generationConfig: Record<string, unknown> = {
     temperature: options.temperature,
     maxOutputTokens: options.maxOutputTokens,
   };
   if (options.json) generationConfig.responseMimeType = "application/json";
+  // Thinking tokens are billed as output and are counted against
+  // maxOutputTokens, so a model left on its default "high" reasoning can
+  // spend the whole budget thinking and return a truncated answer. The
+  // budget is set here instead.
+  if (options.thinkingLevel) {
+    generationConfig.thinkingConfig = { thinkingLevel: options.thinkingLevel };
+  }
 
   try {
     const res = await fetch(
@@ -84,9 +116,74 @@ async function askGemini(
         }),
       },
     );
+    if (!res.ok) {
+      // The provider's own words, so a failure can be read rather than
+      // guessed at.
+      const detail = await res.text().catch(() => "");
+      return { error: `${res.status} ${detail.slice(0, 300)}` };
+    }
+    const data = await res.json();
+    const usage = (data?.usageMetadata ?? {}) as {
+      promptTokenCount?: number;
+      candidatesTokenCount?: number;
+      totalTokenCount?: number;
+    };
+    return {
+      text: data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "",
+      usage: {
+        input: usage.promptTokenCount ?? 0,
+        output: usage.candidatesTokenCount ?? 0,
+        total: usage.totalTokenCount ?? 0,
+      },
+      raw: data,
+    };
+  } catch (e) {
+    return { error: `request failed: ${e instanceof Error ? e.message : String(e)}` };
+  }
+}
+
+/**
+ * One yes/no question, asked through the Decisions API.
+ *
+ * The answer is a calibrated probability and there are no output tokens, so
+ * this costs a fraction of what a text model would. Returns null when the
+ * API could not answer, so the caller can go on to describe the photo
+ * rather than refusing it.
+ */
+async function askDecision(
+  apiKey: string,
+  image: { type: 'image'; data: string; mime_type: string; resolution: 'low' },
+): Promise<(GateResult & { usage: TokenUsage }) | null> {
+  try {
+    const res = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/decisions",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        body: JSON.stringify({
+          model: GATE_MODEL,
+          input: [image],
+          questions: { is_garment: GATE_QUESTION },
+        }),
+      },
+    );
     if (!res.ok) return null;
     const data = await res.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+    const usage = (data?.usage ?? {}) as {
+      total_input_tokens?: number;
+      total_output_tokens?: number;
+      total_tokens?: number;
+    };
+    const answer = parseDecision(data);
+    if (!answer) return null;
+    return {
+      ...answer,
+      usage: {
+        input: usage.total_input_tokens ?? 0,
+        output: usage.total_output_tokens ?? 0,
+        total: usage.total_tokens ?? 0,
+      },
+    };
   } catch {
     return null;
   }
@@ -127,6 +224,7 @@ Deno.serve(async (req) => {
 
   // Fetch images and base64-encode them.
   const imageParts: GeminiPart[] = [];
+  const gateImages: { type: 'image'; data: string; mime_type: string; resolution: 'low' }[] = [];
   for (const url of urls) {
     try {
       const res = await fetch(url);
@@ -136,7 +234,11 @@ Deno.serve(async (req) => {
       let binary = "";
       for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
       const mime = res.headers.get("content-type") || "image/jpeg";
-      imageParts.push({ inlineData: { mimeType: mime, data: btoa(binary) } });
+      const data = btoa(binary);
+      imageParts.push({ inlineData: { mimeType: mime, data } });
+      // The gate only needs to know whether a garment is there, so it reads
+      // the picture at low resolution. That is where the saving is.
+      gateImages.push({ type: 'image', data, mime_type: mime, resolution: 'low' });
     } catch {
       // skip failed images
     }
@@ -151,17 +253,19 @@ Deno.serve(async (req) => {
   // "garment" verdict stops the search, so a good photo costs one call. A
   // photo that looks like something else is checked against the next
   // picture, because staff sometimes photograph a detail shot first.
-  let gate: GateResult = { verdict: 'unclear', subject: '', reason: '' };
+  let gate: GateResult = { verdict: 'unclear', subject: '', reason: '', confidence: 0, probability: 0 };
   let gateSeenGarment = false;
+  let gateUsage: TokenUsage = { input: 0, output: 0, total: 0 };
 
-  for (const part of imageParts) {
-    const gateText = await askGemini(apiKey, GATE_MODEL, GATE_PROMPT, [part], {
-      temperature: 0,
-      maxOutputTokens: 120,
-      json: true,
-    });
-    if (!gateText) continue;
-    const answer = parseGate(gateText);
+  for (const image of gateImages) {
+    const answer = await askDecision(apiKey, image);
+    if (!answer) continue;
+    gateUsage = {
+      input: gateUsage.input + answer.usage.input,
+      // The Decisions API never produces output tokens.
+      output: gateUsage.output + answer.usage.output,
+      total: gateUsage.total + answer.usage.total,
+    };
     if (answer.verdict === 'garment') {
       gate = answer;
       gateSeenGarment = true;
@@ -180,6 +284,7 @@ Deno.serve(async (req) => {
         subject: gate.subject,
         reason: gate.reason,
         model: GATE_MODEL,
+        usage: gateUsage,
       }),
       { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
     );
@@ -191,54 +296,76 @@ Deno.serve(async (req) => {
     ? `Names already used in this catalogue (do not repeat these, and do not pick a name in the same style): ${names.join(", ")}\n\nCatalogue this garment.`
     : "Catalogue this garment.";
 
-  const geminiBody = {
-    contents: [{
-      parts: [{ text: SYSTEM_PROMPT + "\n\n" + userText }, ...imageParts],
-    }],
-    generationConfig: {
-      // Low temperature on purpose: this is a catalogue entry, not a poem.
-      // The name still has to be picked, but it must follow the picture.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const answer = await askGemini(apiKey, DESCRIBE_MODEL, SYSTEM_PROMPT + "\n\n" + userText, imageParts, {
       temperature: 0.3,
-      maxOutputTokens: 2048,
-      responseMimeType: "application/json",
-    },
-  };
+      // Generous, because the thinking tokens come out of this same budget.
+      maxOutputTokens: 8192,
+      json: true,
+      // Enough reasoning to read the garment carefully, but not the default
+      // "high", which spent the budget thinking and truncated the answer.
+      thinkingLevel: 'medium',
+    });
 
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${DESCRIBE_MODEL}:generateContent`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-          body: JSON.stringify(geminiBody),
-        },
-      );
-
-      if (!res.ok) {
-        const errText = await res.text();
-        return jsonError(502, { error: "provider_error", message: errText.slice(0, 300) }, origin);
+    if (!answer) {
+      if (attempt < 2) {
+        await sleep(800 * (attempt + 1));
+        continue;
       }
-
-      const data = await res.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-      let parsed: DressDraft;
-      try {
-        const cleaned = rawText.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
-        parsed = JSON.parse(cleaned);
-      } catch {
-        if (attempt === 0) continue;
-        return jsonError(502, { error: "parse_error", message: "AI returned invalid JSON" }, origin);
-      }
-
-      return new Response(
-        JSON.stringify({ draft: parsed, model: DESCRIBE_MODEL, raw: data }),
-        { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
-      );
-    } catch (e) {
-      if (attempt === 0) continue;
-      return jsonError(502, { error: "network_error", message: String(e) }, origin);
+      return jsonError(502, { error: "network_error", message: "The vision service did not answer." }, origin);
     }
+    if ('error' in answer) {
+      // A rate limit is not a failure: the atelier describes several dresses
+      // in a row and the free tier allows only so many per minute. Wait and
+      // try again rather than telling the owner the AI is broken.
+      if (answer.error.startsWith('429')) {
+        if (attempt < 2) {
+          await sleep(4000 * (attempt + 1));
+          continue;
+        }
+        return jsonError(429, {
+          error: 'rate_limited',
+          message: 'The AI service is busy. Wait a moment and describe again.',
+        }, origin);
+      }
+      if (attempt < 2) continue;
+      // The provider refused the request. Its own message is the only useful
+      // thing to report.
+      return jsonError(502, { error: "provider_error", message: answer.error }, origin);
+    }
+
+    let parsed: DressDraft;
+    try {
+      const cleaned = answer.text
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/```\s*$/i, "")
+        .trim();
+      parsed = JSON.parse(cleaned);
+    } catch {
+      if (attempt === 0) continue;
+      // The answer is included so the failure can be read, not guessed at.
+      return jsonError(502, {
+        error: "parse_error",
+        message: "AI returned invalid JSON",
+        raw: answer.text.slice(0, 600),
+        finishReason: (answer.raw as { candidates?: { finishReason?: string }[] } | null)?.candidates?.[0]?.finishReason ?? null,
+      }, origin);
+    }
+
+    return new Response(
+      JSON.stringify({
+        draft: parsed,
+        model: DESCRIBE_MODEL,
+        raw: answer.raw,
+        usage: {
+          gate: gateUsage,
+          describe: answer.usage,
+          total: gateUsage.total + answer.usage.total,
+        },
+      }),
+      { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
+    );
   }
 
   return jsonError(500, { error: "unknown", message: "Unexpected failure" }, origin);
