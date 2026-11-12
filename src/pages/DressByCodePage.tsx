@@ -53,27 +53,22 @@ function usePublicDress(token: string, enabled: boolean) {
  * The first photograph of the dress, for the public card.
  *
  * A bride who scans the tag on her own dress has to see the dress. The
- * photos live in a private bucket, so the public card asks for one through
- * a function that only answers for a token the caller already holds.
+ * photographs live in a private bucket, and a visitor who has never signed
+ * in cannot sign them, so a small function signs the link here. It only
+ * answers for a token the caller already holds.
  */
 function usePublicDressPhoto(token: string, enabled: boolean) {
+  const client = supabase as NonNullable<typeof supabase>;
   return useQuery({
     queryKey: ['public-dress-photo', token],
     enabled,
     queryFn: async (): Promise<string | null> => {
-      const client = supabase as NonNullable<typeof supabase>;
-      const { data, error } = await client.rpc('get_public_dress_photo', { p_token: token });
+      const { data, error } = await client.functions.invoke('public-photo', { body: { token } });
       if (error) return null;
-      const row = (data as { original_path?: string }[] | null)?.[0];
-      if (!row?.original_path) return null;
-      // The bucket is private, so the path has to be signed. The signature
-      // is short-lived: the page is read once, when the customer scans.
-      const { data: signed, error: signError } = await client.storage
-        .from('dress-originals')
-        .createSignedUrl(row.original_path, 600);
-      if (signError || !signed) return null;
-      return signed.signedUrl;
+      const url = (data as { url?: string | null } | null)?.url;
+      return url ?? null;
     },
+    staleTime: 5 * 60 * 1000,
   });
 }
 
