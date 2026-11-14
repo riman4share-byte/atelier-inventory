@@ -186,7 +186,14 @@ def process_job(job):
         # app's code goes into the item NAME - which is how the atelier's
         # own catalogue is written ("WD-", "PD-" prefixes) and what staff
         # search by.
-        item_name = f"{code} {name}".strip() if code else name
+        #
+        # A dress with no name yet would otherwise be called
+        # "RF-0188 RF-0188" - the code twice.
+        clean_name = (name or "").strip()
+        if code and clean_name and clean_name != code:
+            item_name = f"{code} {clean_name}"
+        else:
+            item_name = code or clean_name or "Unnamed dress"
 
         existing = find_item_by_code_prefix(code)
         if existing:
