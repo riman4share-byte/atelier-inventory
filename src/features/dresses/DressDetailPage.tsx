@@ -607,6 +607,7 @@ function ExistingDress({ id }: { id: string }) {
                   code: dress.code,
                   name: dress.name_en || dress.code,
                   description: dress.description_en,
+                  category: dress.category,
                 })
               }
               loading={erpSync.isPending}

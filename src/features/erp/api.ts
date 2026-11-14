@@ -4,11 +4,11 @@ import { supabase } from '@/lib/supabase';
 export function useEnqueueErpSync() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: async ({ dressId, code, name, description }: { dressId: string; code: string; name: string; description?: string | null }) => {
+    mutationFn: async ({ dressId, code, name, description, category }: { dressId: string; code: string; name: string; description?: string | null; category?: string | null }) => {
       const db = supabase as NonNullable<typeof supabase>;
       const { data: job, error: jobError } = await db
         .from('erp_jobs')
-        .insert({ type: 'create_dress_item', payload: { dressId, code, name, description } })
+        .insert({ type: 'create_dress_item', payload: { dressId, code, name, description, category } })
         .select()
         .single();
       if (jobError) throw jobError;

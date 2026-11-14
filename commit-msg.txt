@@ -1,0 +1,35 @@
+fix: the ERP sync now works end to end against the real ERPNext
+
+Tested against the atelier's real ERPNext (production catalogue, WD-/PD-
+prefixed items). Four bugs found and fixed:
+
+1. The agent fetched nothing at all. datetime.isoformat() writes the UTC
+   offset as '+00:00', and the '+' in a URL query string is decoded as a
+   space, so PostgREST rejected every poll with 400 'invalid input syntax
+   for type timestamp with time zone'. The agent looked healthy and
+   silently did nothing. Timestamps now end in Z.
+
+2. The Frappe filter was single-nested. Frappe wants a double-nested
+   array; a single-level one 404s, so every sync created a duplicate
+   item. The filter is now double-nested and matches on the code prefix,
+   so a renamed item is still found and updated rather than duplicated.
+
+3. ERPNext overrides item_code with its own naming series, so the code the
+   app asked for was never the code ERPNext used. The app was recording a
+   code that did not exist. It now stores the code ERPNext really gave,
+   and the app's code goes into the item name - which is how the atelier's
+   own catalogue is written ('WD-', 'PD-' prefixes).
+
+4. Every dress went into one generic 'Dresses' group. The app's five
+   categories now map to the atelier's real ERPNext item groups: Wedding
+   (Bridal), Party (Evening), Milka (Engagement), Veil (Tarha), Dresses.
+   The mapping is set by environment variable, so it can be changed
+   without touching the code.
+
+The Edge Function hands a job back to the queue immediately when the
+network is unreachable (the normal case: ERPNext is on a private network
+the cloud is not part of), so the agent on the ERPNext machine picks it up
+on its next poll instead of waiting a minute.
+
+Verified: RF-0002 synced to RAW-2026-00084 'RF-0002 Noor' in Wedding
+(Bridal); re-syncing updates the same item instead of duplicating it.

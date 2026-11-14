@@ -59,15 +59,31 @@ Deno.serve(async (req) => {
       await supabase.from("erp_jobs").update({ status: "processing", attempts: job.attempts + 1 }).eq("id", job.id);
 
       if (job.type === "create_dress_item") {
-        const payload = job.payload as { code: string; name: string; description?: string };
+        const payload = job.payload as { code: string; name: string; description?: string; category?: string };
+        // The atelier's own ERPNext item groups, one per app category.
+        const groups: Record<string, string> = {
+          wedding: Deno.env.get("ERP_GROUP_WEDDING") ?? "Wedding (Bridal)",
+          party: Deno.env.get("ERP_GROUP_PARTY") ?? "Party (Evening)",
+          engagement: Deno.env.get("ERP_GROUP_ENGAGEMENT") ?? "Milka (Engagement)",
+          veil: Deno.env.get("ERP_GROUP_VEIL") ?? "Veil (Tarha)",
+          jumpsuit: Deno.env.get("ERP_GROUP_JUMPSUIT") ?? "Dresses",
+        };
+        const group = groups[(payload.category ?? "").toLowerCase()] ??
+          (Deno.env.get("ERP_GROUP_DEFAULT") ?? "Dresses");
+
+        // ERPNext gives every item its own code from its naming series
+        // ("RAW-2026-00081"); the code the app wants cannot be forced. The
+        // app's code goes into the item NAME, which is how the atelier's own
+        // catalogue is written ("WD-", "PD-" prefixes).
+        const itemName = payload.code ? `${payload.code} ${payload.name}`.trim() : payload.name;
+
         const itemRes = await fetch(`${ERP_BASE}/api/resource/Item`, {
           method: "POST",
           headers,
           body: JSON.stringify({
-            item_code: payload.code,
-            item_name: payload.name,
+            item_name: itemName,
             description: payload.description ?? "",
-            item_group: "Dresses",
+            item_group: group,
             stock_uom: "Nos",
             is_stock_item: 1,
           }),
@@ -75,28 +91,42 @@ Deno.serve(async (req) => {
         const itemData = await itemRes.json();
         if (!itemRes.ok) throw new Error(JSON.stringify(itemData));
 
+        // Store the code ERPNext really gave, not the one we asked for.
+        const itemCode = itemData?.data?.item_code ?? payload.code;
         await supabase
           .from("dresses")
-          .update({ erp_item_code: payload.code, erp_sync_status: "synced", erp_synced_at: new Date().toISOString() })
+          .update({ erp_item_code: itemCode, erp_sync_status: "synced", erp_synced_at: new Date().toISOString() })
           .eq("code", payload.code);
         await supabase.from("erp_sync_log").insert({
           entity: "dress",
           entity_id: job.payload && "dressId" in job.payload ? (job.payload as { dressId: string }).dressId : null,
           action: "create",
           http_status: itemRes.status,
-          message: `Created ${payload.code}`,
+          message: `Created ${itemCode} (${itemName}) in ${group}`,
         });
         await supabase.from("erp_jobs").update({ status: "done" }).eq("id", job.id);
-        results.push({ id: job.id, status: "done" });
+        results.push({ id: job.id, status: "done", item_code: itemCode });
       } else {
         await supabase.from("erp_jobs").update({ status: "failed", last_error: "unknown job type" }).eq("id", job.id);
         results.push({ id: job.id, status: "failed", error: "unknown job type" });
       }
     } catch (e) {
       const message = String(e).slice(0, 500);
+      // A network failure here means the cloud cannot reach the ERPNext
+      // server - which is the normal case when ERPNext sits on a private
+      // network (Tailscale) that Supabase is not part of. The job is handed
+      // back to the queue immediately so the sync agent on the ERPNext
+      // machine can pick it up on its next poll. Any other failure waits a
+      // minute, so a broken ERPNext is not hammered every few seconds.
+      const unreachable = /dns|resolve|connect|network|fetch failed|TLS/i.test(message);
+      const retryInMs = unreachable ? 0 : 60000;
       await supabase
         .from("erp_jobs")
-        .update({ status: "pending", last_error: message, run_after: new Date(Date.now() + 60000).toISOString() })
+        .update({
+          status: "pending",
+          last_error: message,
+          run_after: new Date(Date.now() + retryInMs).toISOString(),
+        })
         .eq("id", job.id);
       await supabase.from("erp_sync_log").insert({
         entity: "dress",
@@ -105,7 +135,11 @@ Deno.serve(async (req) => {
         http_status: null,
         message,
       });
-      results.push({ id: job.id, status: "failed", error: message.slice(0, 200) });
+      results.push({
+        id: job.id,
+        status: unreachable ? "queued_for_agent" : "failed",
+        error: message.slice(0, 200),
+      });
     }
   }
 
