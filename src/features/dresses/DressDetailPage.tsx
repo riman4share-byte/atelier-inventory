@@ -582,6 +582,7 @@ function ExistingDress({ id }: { id: string }) {
         ) : null}
 
         {!isDraft ? (
+          <>
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="secondary"
@@ -615,7 +616,19 @@ function ExistingDress({ id }: { id: string }) {
               <LinkIcon className="h-3.5 w-3.5" />
               {t('dress.syncErp')}
             </Button>
-          </div>
+            </div>
+
+            {/* The ERPNext state, so tapping the button is not a black box.
+                The item is created by the agent on the atelier server, so
+                "synced" can take up to half a minute to appear. */}
+            <p className="mt-1.5 text-note text-muted" data-testid="erp-state">
+              {erpSync.isPending
+                ? t('dress.erpQueued')
+                : dress.erp_sync_status === 'synced' && dress.erp_item_code
+                  ? t('dress.erpSynced', { code: dress.erp_item_code })
+                  : t('dress.erpNotSynced')}
+            </p>
+          </>
         ) : null}
 
         </div>

@@ -1,15 +1,20 @@
 [Unit]
 Description=Atelier Inventory ERP sync agent
-After=network-online.target
+After=network-online.target docker.service
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=erpnext
+# The user that owns the ERPNext install. The agent only needs to read the
+# credentials file and reach the network.
+User=mohamed123
+Group=mohamed123
 EnvironmentFile=/etc/atelier-erp-sync.env
 ExecStart=/usr/bin/python3 /opt/atelier/erp-sync-agent.py
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

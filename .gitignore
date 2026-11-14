@@ -25,3 +25,5 @@ npm-debug.log*
 
 # Local helpers for building and checking the printed documents.
 *.local.mjs
+*.local.cjs
+*.local.py
