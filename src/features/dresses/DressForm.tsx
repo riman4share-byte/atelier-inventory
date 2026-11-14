@@ -132,11 +132,35 @@ export function formToPayload(values: DressFormValues): DressFormPayload {
     const trimmed = text.trim();
     return trimmed === '' ? null : Number(trimmed);
   };
+  // The description is written once (often by the AI) and then edited by hand.
+  // Material/color/size are separate fields that the owner keeps correcting,
+  // so the description must follow them: strip any previously appended
+  // attribute lines and re-append the current ones, so a change to fabric or
+  // color is never left out of the text.
+  const fabrics = values.fabricsText
+    .split(',')
+    .map((fabric) => fabric.trim())
+    .filter((fabric) => fabric !== '');
+  const detailLines: string[] = [];
+  if (fabrics.length > 0) detailLines.push('Fabrics: ' + fabrics.join(', '));
+  if (values.color.trim()) detailLines.push('Color: ' + values.color.trim());
+  if (values.size_label.trim()) detailLines.push('Size: ' + values.size_label.trim());
+  const stripDetails = (text: string) =>
+    text
+      .split('\n')
+      .filter((line) => !/^(Fabrics|Color|Size):\s/.test(line.trim()))
+      .join('\n')
+      .trim();
+  const baseDescription = stripDetails(values.description_en);
+  const composedDescription =
+    detailLines.length > 0
+      ? (baseDescription ? baseDescription + '\n\n' : '') + detailLines.join('\n')
+      : baseDescription;
   return {
     code: values.code.trim(),
     name_en: values.name_en.trim(),
     name_ar: values.name_ar.trim(),
-    description_en: toOptionalText(values.description_en),
+    description_en: toOptionalText(composedDescription),
     description_ar: toOptionalText(values.description_ar),
     category: values.category,
     silhouette: toOptionalText(values.silhouette),
@@ -144,10 +168,7 @@ export function formToPayload(values: DressFormValues): DressFormPayload {
     sleeves: toOptionalText(values.sleeves),
     color: toOptionalText(values.color),
     size_label: toOptionalText(values.size_label),
-    fabrics: values.fabricsText
-      .split(',')
-      .map((fabric) => fabric.trim())
-      .filter((fabric) => fabric !== ''),
+    fabrics,
     notes: toOptionalText(values.notes),
     status: values.status,
     listing_type: values.listing_type,
