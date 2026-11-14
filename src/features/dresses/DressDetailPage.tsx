@@ -608,6 +608,9 @@ function ExistingDress({ id }: { id: string }) {
                   code: dress.code,
                   name: dress.name_en || dress.code,
                   description: dress.description_en,
+                  fabrics: dress.fabrics,
+                  color: dress.color,
+                  size_label: dress.size_label,
                   category: dress.category,
                 })
               }

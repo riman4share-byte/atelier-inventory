@@ -159,10 +159,26 @@ def process_job(job):
     payload = job.get("payload") or {}
     code = payload.get("code")
     name = payload.get("name")
-    description = payload.get("description") or ""
+    description = (payload.get("description") or "").strip()
+    fabrics = payload.get("fabrics") or []
+    color = (payload.get("color") or "").strip()
+    size_label = (payload.get("size_label") or "").strip()
     dress_id = payload.get("dressId")
     category = payload.get("category")
     group = item_group_for(category)
+
+    # The owner edits material/color/size on the dress and expects ERPNext
+    # to reflect them. They are not separate fields on the ERPNext Item, so
+    # fold them into the description so a re-sync always pushes the latest.
+    detail_parts = []
+    if fabrics:
+        detail_parts.append("Fabrics: " + ", ".join(str(f) for f in fabrics))
+    if color:
+        detail_parts.append("Color: " + color)
+    if size_label:
+        detail_parts.append("Size: " + size_label)
+    if detail_parts:
+        description = (description + "\n\n" + "\n".join(detail_parts)).strip()
 
     log.info(f"Processing job {job_id} ({job.get('type')}) - {code} -> group '{group}'")
 
@@ -199,10 +215,14 @@ def process_job(job):
         if existing:
             # Already there: update it rather than fail.
             item_code = existing["item_code"]
+            # ERPNext keeps the item name as "CODE Name" (how the atelier's own
+            # catalogue is written), so re-syncing must push the latest name too
+            # - otherwise a renamed dress never reaches ERPNext.
             status, data = erp_request(
                 "PUT",
                 f"/api/resource/Item/{quote(item_code)}",
                 {
+                    "item_name": item_name,
                     "description": description,
                     "item_group": group,
                     "stock_uom": "Nos",
