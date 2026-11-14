@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup 1 — Warm Atelier</title>
+<style>
+  :root {
+    --bg: #faf7f2;
+    --surface: #ffffff;
+    --ink: #2a2420;
+    --muted: #8a7e72;
+    --faint: #c4b8a8;
+    --line: #e8e0d4;
+    --accent: #b8860b;
+    --accent-soft: #f5ecd7;
+    --accent-ink: #5a4208;
+    --success: #5a7a5a;
+    --danger: #a05040;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    max-width: 420px;
+    margin: 0 auto;
+    padding: 0 0 80px;
+    min-height: 100vh;
+  }
+  /* Header */
+  .header {
+    padding: 24px 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header .mark {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    font-style: italic;
+  }
+  .header .theme-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  /* Greeting */
+  .greeting {
+    padding: 8px 24px 24px;
+  }
+  .greeting .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  .greeting h2 {
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .greeting h2 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  /* Metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0 24px 24px;
+  }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .metric .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 8px;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  .metric .value {
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1;
+  }
+  .metric .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  /* Section */
+  .section {
+    padding: 0 24px 16px;
+  }
+  .section-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-family: 'Helvetica Neue', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+  /* Dress cards */
+  .dress-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    transition: transform 0.2s;
+  }
+  .dress-card:hover { transform: translateY(-2px); }
+  .dress-photo {
+    height: 200px;
+    background: linear-gradient(135deg, #e8e0d4 0%, #d4c8b8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    position: relative;
+  }
+  .dress-photo .badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: var(--surface);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--success);
+  }
+  .dress-info {
+    padding: 16px;
+  }
+  .dress-info .code {
+    font-family: 'SF Mono', 'Consolas', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .dress-info h3 {
+    font-size: 18px;
+    font-weight: 400;
+    margin: 4px 0 8px;
+    letter-spacing: -0.01em;
+  }
+  .dress-info .meta {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  .dress-info .meta span + span::before {
+    content: ' · ';
+    color: var(--faint);
+  }
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 420px;
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-around;
+    padding: 8px 0 12px;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: 'Helvetica Neue', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .nav-item.active { color: var(--accent); }
+  .nav-item .icon { font-size: 20px; }
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 48px 24px;
+  }
+  .empty .illustration {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+  }
+  .empty h3 {
+    font-size: 18px;
+    font-weight: 400;
+    margin-bottom: 6px;
+  }
+  .empty p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  /* Powered by */
+  .powered {
+    text-align: center;
+    padding: 24px;
+    font-size: 11px;
+    color: var(--faint);
+    font-family: 'Helvetica Neue', sans-serif;
+  }
+  .powered strong { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="mark">R</div>
+      <h1>Riman Fashion</h1>
+    </div>
+    <button class="theme-btn">☀</button>
+  </header>
+
+  <div class="greeting">
+    <p class="eyebrow">Wednesday, 14 November</p>
+    <h2>Good morning. <em>Three dresses</em> are out today.</h2>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="label">In the atelier</div>
+      <div class="value">42</div>
+      <div class="sub">available now</div>
+    </div>
+    <div class="metric">
+      <div class="label">Out with brides</div>
+      <div class="value">3</div>
+      <div class="sub">2 due this week</div>
+    </div>
+    <div class="metric">
+      <div class="label">Reserved</div>
+      <div class="value">5</div>
+      <div class="sub">this month</div>
+    </div>
+    <div class="metric">
+      <div class="label">Overdue</div>
+      <div class="value">1</div>
+      <div class="sub" style="color:var(--danger)">needs attention</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">Recent dresses</p>
+
+    <div class="dress-card">
+      <div class="dress-photo">
+        Front view
+        <span class="badge">Available</span>
+      </div>
+      <div class="dress-info">
+        <div class="code">RF-0002</div>
+        <h3>Noor</h3>
+        <div class="meta">
+          <span>Wedding dress</span>
+          <span>Ivory silk</span>
+          <span>Mermaid</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dress-card">
+      <div class="dress-photo">
+        Front view
+        <span class="badge" style="color:var(--accent);">Rented</span>
+      </div>
+      <div class="dress-info">
+        <div class="code">RF-0003</div>
+        <h3>Layla</h3>
+        <div class="meta">
+          <span>Party dress</span>
+          <span>Blush tulle</span>
+          <span>A-line</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty">
+    <div class="illustration">✨</div>
+    <h3>Your first dress is waiting</h3>
+    <p>Tap the camera button to capture a dress. The app will read it, name it, and remember it for you.</p>
+  </div>
+
+  <div class="powered">Powered by <strong>Kais</strong></div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active"><span class="icon">⌂</span>Home</div>
+    <div class="nav-item"><span class="icon">👗</span>Dresses</div>
+    <div class="nav-item"><span class="icon">📦</span>Materials</div>
+    <div class="nav-item"><span class="icon">👥</span>Customers</div>
+    <div class="nav-item"><span class="icon">⚙</span>Account</div>
+  </nav>
+</div>
+</body>
+</html>

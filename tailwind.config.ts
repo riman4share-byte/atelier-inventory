@@ -60,8 +60,9 @@ export default {
         c4: 'var(--c4)',
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans Variable', 'Segoe UI', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['JetBrains Mono Variable', 'SFMono-Regular', 'ui-monospace', 'Cascadia Mono', 'monospace'],
+        sans: ['Instrument Sans Variable', 'Segoe UI', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['Instrument Serif', 'Georgia', 'serif'],
+        mono: ['Geist Mono Variable', 'SFMono-Regular', 'ui-monospace', 'Cascadia Mono', 'monospace'],
         arabic: ['Cairo Variable', 'Noto Naskh Arabic', 'system-ui', 'sans-serif'],
       },
       fontSize: {

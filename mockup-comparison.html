@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Direction Comparison</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e;
+    color: #fff;
+    padding: 24px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: 24px;
+  }
+  .container {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .mockup {
+    flex: 1;
+    min-width: 360px;
+    max-width: 440px;
+  }
+  .mockup h2 {
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #fff;
+  }
+  .mockup .desc {
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  .frame {
+    border: 2px solid #333;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  iframe {
+    width: 100%;
+    height: 700px;
+    border: none;
+    display: block;
+  }
+  .label {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .label-1 { background: #b8860b22; color: #d4a843; border: 1px solid #b8860b44; }
+  .label-2 { background: #4f46e522; color: #818cf8; border: 1px solid #4f46e544; }
+  .label-3 { background: #e8734a22; color: #f09070; border: 1px solid #e8734a44; }
+</style>
+</head>
+<body>
+  <h1>Design Direction Comparison</h1>
+  <p class="subtitle">Three directions for the Atelier Inventory app. Open each file individually for the full experience.</p>
+  <div class="container">
+    <div class="mockup">
+      <div style="text-align:center;"><span class="label label-1">Option 1</span></div>
+      <h2>Warm Atelier</h2>
+      <p class="desc">Editorial boutique. Cream + gold + serif. Quiet, elegant, unhurried.</p>
+      <div class="frame">
+        <iframe src="mockup-1-warm-atelier.html"></iframe>
+      </div>
+    </div>
+    <div class="mockup">
+      <div style="text-align:center;"><span class="label label-2">Option 2</span></div>
+      <h2>Modern Minimal</h2>
+      <p class="desc">Clean SaaS. White + indigo. Professional tool that happens to be for dresses.</p>
+      <div class="frame">
+        <iframe src="mockup-2-modern-minimal.html"></iframe>
+      </div>
+    </div>
+    <div class="mockup">
+      <div style="text-align:center;"><span class="label label-3">Option 3</span></div>
+      <h2>Celebration</h2>
+      <p class="desc">Joyful. Peach + gradient + rounded. Warm, friendly, personal.</p>
+      <div class="frame">
+        <iframe src="mockup-3-celebration.html"></iframe>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
