@@ -22,8 +22,9 @@ import { buildExcelWorkbook } from './excelExport';
 import { buildCatalogHtml, buildStockReportHtml, printHtml } from './printDocument';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
+import { Sheet } from '@/components/ui/Sheet';
 import { SegmentedControl, type SegmentOption } from '@/components/ui/SegmentedControl';
-import { XIcon } from '@/components/icons';
+
 import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { cx } from '@/lib/cx';
 
@@ -320,29 +321,14 @@ export function ExportSheet({
   ];
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end" data-testid="export-sheet">
-      <button
-        type="button"
-        aria-label={t('common.close')}
-        onClick={onClose}
-        className="flex-1 bg-black/30"
-      />
-      <div className="flex max-h-[85dvh] flex-col overflow-y-auto rounded-t-sheet border-t border-line bg-surface pb-safe">
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2">
-          <h2 className="text-title font-semibold tracking-tight text-ink">{t('export.title')}</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            fullWidth={false}
-            aria-label={t('common.close')}
-            onClick={onClose}
-            className="w-8 !px-0"
-          >
-            <XIcon className="h-4 w-4" />
-          </Button>
-        </header>
-
-        <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      testId="export-sheet"
+      maxHeight="85dvh"
+      title={t('export.title')}
+    >
+      <div className="flex flex-col gap-3">
           <Panel>
             <div className="flex flex-col gap-3">
               {/* Format */}
@@ -537,7 +523,6 @@ export function ExportSheet({
             </Panel>
           ) : null}
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 }

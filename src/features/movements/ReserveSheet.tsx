@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useCreateReservation } from './api';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
+import { Sheet } from '@/components/ui/Sheet';
 import { TextArea } from '@/components/ui/TextArea';
 import { TextField } from '@/components/ui/TextField';
-import { XIcon } from '@/components/icons';
+
 
 interface ReserveSheetProps {
   open: boolean;
@@ -64,26 +65,14 @@ export function ReserveSheet({ open, onClose, dressId, dressCode }: ReserveSheet
   };
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col justify-end" data-testid="reserve-sheet">
-      <button type="button" aria-label={t('common.close')} onClick={onClose} className="flex-1 bg-black/30" />
-      <div className="flex max-h-[85dvh] flex-col overflow-y-auto rounded-t-sheet border-t border-line bg-surface pb-safe">
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2">
-          <h2 className="text-title font-semibold tracking-tight text-ink">
-            <TitleWithCode title={t('movements.reserveTitle', { code: dressCode })} code={dressCode} />
-          </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            fullWidth={false}
-            aria-label={t('common.close')}
-            onClick={onClose}
-            className="w-8 !px-0"
-          >
-            <XIcon className="h-4 w-4" />
-          </Button>
-        </header>
-
-        <div className="flex flex-col gap-3 px-3 pb-3 pt-3">
+    <Sheet
+      open={open}
+      onClose={onClose}
+      testId="reserve-sheet"
+      maxHeight="85dvh"
+      title={<TitleWithCode title={t('movements.reserveTitle', { code: dressCode })} code={dressCode} />}
+    >
+      <div className="flex flex-col gap-3">
           {/* The window the dress is held for — dates are the record. */}
           <Panel>
             <div className="flex flex-col gap-3">
@@ -132,7 +121,6 @@ export function ReserveSheet({ open, onClose, dressId, dressCode }: ReserveSheet
             {t('movements.reserve')}
           </Button>
         </div>
-      </div>
-    </div>
+    </Sheet>
   );
 }

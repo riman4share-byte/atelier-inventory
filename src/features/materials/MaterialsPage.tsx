@@ -252,9 +252,15 @@ export function MaterialsPage() {
           <div
             className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4"
             data-testid="adjust-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="adjust-title"
+            onClick={(e) => { if (e.target === e.currentTarget) setAdjustId(null); }}
+            onKeyDown={(e) => { if (e.key === 'Escape') setAdjustId(null); }}
+            tabIndex={-1}
           >
             <div className="w-full max-w-sm rounded-card border border-line bg-surface p-3">
-              <p className="eyebrow mb-2">{t('materials.adjustStock')}</p>
+              <p id="adjust-title" className="eyebrow mb-2">{t('materials.adjustStock')}</p>
               <div className="flex flex-col gap-2.5">
                 <TextField
                   label={t('materials.stock')}
