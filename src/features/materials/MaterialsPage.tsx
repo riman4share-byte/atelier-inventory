@@ -78,7 +78,7 @@ export function MaterialsPage() {
             aria-pressed={category === 'all'}
             onClick={() => setCategory('all')}
             className={cx(
-              'h-8 shrink-0 rounded-field border px-2.5 text-caption font-semibold tracking-tight transition-colors',
+              'h-9 shrink-0 rounded-field border px-2.5 text-caption font-semibold tracking-tight transition-colors',
               category === 'all'
                 ? 'border-accent bg-accent text-accent-ink'
                 : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
@@ -93,7 +93,7 @@ export function MaterialsPage() {
               aria-pressed={category === c}
               onClick={() => setCategory(c)}
               className={cx(
-                'h-8 shrink-0 rounded-field border px-2.5 text-caption font-semibold tracking-tight transition-colors',
+                'h-9 shrink-0 rounded-field border px-2.5 text-caption font-semibold tracking-tight transition-colors',
                 category === c
                   ? 'border-accent bg-accent text-accent-ink'
                   : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',

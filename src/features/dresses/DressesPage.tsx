@@ -201,7 +201,7 @@ export function DressesPage() {
               aria-pressed={status === chip.value}
               onClick={() => setStatus(chip.value)}
               className={cx(
-                'h-7 shrink-0 rounded-field border px-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors',
+                'h-9 shrink-0 rounded-field border px-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors',
                 status === chip.value
                   ? 'border-accent bg-accent text-accent-ink'
                   : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',
@@ -225,7 +225,7 @@ export function DressesPage() {
               aria-pressed={category === chip.value}
               onClick={() => setCategory(chip.value)}
               className={cx(
-                'h-7 shrink-0 rounded-field border px-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors',
+                'h-9 shrink-0 rounded-field border px-2.5 text-[11px] font-semibold uppercase tracking-wider transition-colors',
                 category === chip.value
                   ? 'border-accent bg-accent text-accent-ink'
                   : 'border-line bg-surface text-muted hover:border-line-strong hover:text-ink',

@@ -64,7 +64,7 @@ export function ThemeToggle({ className, showLabel }: ThemeToggleProps) {
       role="group"
       aria-label={t('theme.label')}
       className={cx(
-        'inline-flex h-8 overflow-hidden rounded-field border border-line bg-surface-2',
+        'inline-flex h-9 overflow-hidden rounded-field border border-line bg-surface-2',
         className,
       )}
     >
@@ -79,7 +79,7 @@ export function ThemeToggle({ className, showLabel }: ThemeToggleProps) {
             title={t(option.labelKey)}
             onClick={() => choose(option.value)}
             className={cx(
-              'grid h-full w-8 place-items-center transition-colors duration-100',
+              'grid h-full w-9 place-items-center transition-colors duration-100',
               index > 0 && 'border-l border-line',
               active
                 ? 'bg-accent text-accent-ink'
