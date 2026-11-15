@@ -50,6 +50,7 @@
   "nav": {
     "home": "الرئيسية",
     "dresses": "الفساتين",
+    "dates": "الإتاحة",
     "capture": "التصوير",
     "materials": "المواد",
     "settings": "الإعدادات",
@@ -415,6 +416,22 @@
     "datesRequired": "تاريخا البداية والنهاية مطلوبان.",
     "conflict": "هذا الفستان لديه حجز متداخل.",
     "saveFailed": "فشل الحفظ. تحقّق من الاتصال ثم حاول مجدداً."
+  },
+  "availability": {
+    "title": "الإتاحة حسب التاريخ",
+    "subtitle": "{{free}} من {{total}} متاح",
+    "subtitleEmpty": "جارٍ قراءة التقويم",
+    "subtitleFailed": "تعذّرت قراءة التقويم",
+    "from": "من",
+    "to": "إلى",
+    "freeTitle": "متاح",
+    "takenTitle": "غير متاح",
+    "noneFree": "كل الفساتين في هذا التصنيف محجوزة في هذه التواريخ.",
+    "empty": "لا توجد فساتين في هذا التصنيف بعد.",
+    "reasonSold": "مُباع",
+    "reasonOut": "خارج منذ {{span}}",
+    "reasonBooked": "مؤجّر {{span}}",
+    "reasonReserved": "محجوز {{span}}"
   },
   "materials": {
     "title": "المواد",

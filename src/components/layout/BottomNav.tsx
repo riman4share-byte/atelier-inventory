@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import {
   BoxesIcon,
+  CalendarIcon,
   CameraIcon,
   GownIcon,
   GridIcon,
@@ -12,13 +13,16 @@ import type { ComponentType, SVGProps } from 'react';
 
 interface NavItem {
   to: string;
-  labelKey: 'nav.home' | 'nav.dresses' | 'nav.capture' | 'nav.materials' | 'nav.account';
+  labelKey: 'nav.home' | 'nav.dresses' | 'nav.dates' | 'nav.capture' | 'nav.materials' | 'nav.account';
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
 const ITEMS: NavItem[] = [
   { to: '/dashboard', labelKey: 'nav.home', Icon: GridIcon },
   { to: '/dresses', labelKey: 'nav.dresses', Icon: GownIcon },
+  // The daily question — "who is free on the 20th?" — sits in the bar, not
+  // behind a filter on the gallery.
+  { to: '/availability', labelKey: 'nav.dates', Icon: CalendarIcon },
   { to: '/capture', labelKey: 'nav.capture', Icon: CameraIcon },
   { to: '/materials', labelKey: 'nav.materials', Icon: BoxesIcon },
   // Every role gets the account tab: it is where sign-out lives, and a staff

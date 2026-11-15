@@ -50,6 +50,7 @@
   "nav": {
     "home": "Home",
     "dresses": "Dresses",
+    "dates": "Free dates",
     "capture": "Capture",
     "materials": "Materials",
     "settings": "Settings",
@@ -413,6 +414,22 @@
     "datesRequired": "From and to dates are required.",
     "conflict": "This dress already has an overlapping reservation.",
     "saveFailed": "Saving failed. Check your connection and try again."
+  },
+  "availability": {
+    "title": "Free by date",
+    "subtitle": "{{free}} of {{total}} free",
+    "subtitleEmpty": "Reading the calendar",
+    "subtitleFailed": "The calendar could not be read",
+    "from": "From",
+    "to": "To",
+    "freeTitle": "Free",
+    "takenTitle": "Not free",
+    "noneFree": "Every dress in this filter is taken for these dates.",
+    "empty": "No dresses in this filter yet.",
+    "reasonSold": "Sold",
+    "reasonOut": "Out since {{span}}",
+    "reasonBooked": "Rented {{span}}",
+    "reasonReserved": "Reserved {{span}}"
   },
   "materials": {
     "title": "Materials",

@@ -9,6 +9,7 @@ import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DressesPage } from '@/features/dresses/DressesPage';
 import { DressDetailPage } from '@/features/dresses/DressDetailPage';
 import { MaterialsPage } from '@/features/materials/MaterialsPage';
+import { AvailabilityPage } from '@/features/movements/AvailabilityPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { useDocumentLanguage } from '@/i18n/useDocumentLanguage';
 import { ForbiddenPage } from '@/pages/ForbiddenPage';
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="dresses" element={<DressesPage />} />
           <Route path="dresses/new" element={<DressDetailPage />} />
           <Route path="dresses/:id" element={<DressDetailPage />} />
+          <Route path="availability" element={<AvailabilityPage />} />
           <Route path="capture" element={<CapturePage />} />
           <Route path="materials" element={<MaterialsPage />} />
           <Route path="customers" element={<CustomersPage />} />

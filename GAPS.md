@@ -473,9 +473,10 @@ sheets, the dress page "where is it now" + timeline, the append-only ledger
 trigger, dashboard counters (out now, overdue, due this week, reserved this
 month), a customer list/detail page, movement-history Excel export from the
 dashboard, and a hand-over/return receipt PDF (printable, with signature
-lines) from any movement. Still to build: dress history card PDF (one dress,
+lines) from any movement. The cross-dress availability screen shipped on
+2026-11-15 (G-71). Still to build: dress history card PDF (one dress,
 full timeline, photos), customer statement (items taken, dates, returns,
-deposits), a reservation calendar view, audit_log writes on customer exports,
+deposits), a month-grid calendar view, audit_log writes on customer exports,
 and customer create/edit UI beyond the inline add in the check-out sheet. The
 ledger is append-only and correcting entries work via `corrects_movement_id`.
 
@@ -831,6 +832,69 @@ two lines. The mark carries the name now, so the name is not written out
 beside it, and there is room for both.
 
 The dead function that fetched only the first photograph is gone.
+
+### G-71 · There was no way to ask which dresses are free on a date
+
+**Status:** resolved 2026-11-15 · **Phase:** 8
+The app could answer "what is the status of RF-0002?" and, on one dress, "is
+this one booked in November?". It could not answer the question the atelier
+asks every morning: **which dresses can a bride take on the 20th?** That is the
+one screen a rental business needs and it did not exist; the availability
+calendar was per-dress only, buried in the detail page.
+
+There is now a **Free by date** screen (`/availability`, in the bottom bar): a
+window of days, two date inputs, the five category chips, the dresses nothing
+is holding, and beside them the reason each unavailable one cannot go out
+("Rented 18–20 Nov", "Reserved 18–20 Nov", "In cleaning", "Sold").
+
+Two things were wrong in the obvious implementation and are worth recording:
+
+**A rental returned early still carries its old due date.** Reading `due_at`
+alone keeps a dress booked after it is back on the rail, so a dress returned on
+the 12th looked unavailable until the 15th. The outgoing movement is now closed
+by the next incoming one for the same dress, and that return time wins. A
+superseded movement (one a correcting entry points at) is dropped entirely.
+
+**A due date near midnight falls in the wrong UTC day.** A rental due at 22:00Z
+is 01:00 the next morning in the atelier, and a filter on the UTC day drops a
+dress that is still out for part of the day being asked about. The query bounds
+are padded by a day at each end and the exact test happens in local time.
+
+The current state (rented, reserved, at the cleaner) is honoured only when the
+window contains today: a gown at the cleaner is not available today and is fine
+for a date next month. A hold in the calendar always wins over the state.
+
+`availability.test.ts` covers 29 cases on the pure logic (early returns, open
+endings, sale deliveries, corrections, buffers, boundaries). Verified in a
+browser against the live project: today reads 3 of 7 free with the reasons
+Reserved / Rented / Sold / Reserved; the same dresses a month out read 6 of 7
+free, only the sold one held. Arabic and RTL checked on a phone and a tablet.
+
+What is still missing: a month grid of free days per dress, which is the other
+half of G-47.
+
+### G-72 · A dress's state lives in three places and nothing reconciles them
+
+**Status:** open · **Phase:** 8
+A dress has a `status` (available / reserved / rented / sold), a `location`
+(in atelier / with customer / alteration / cleaning / photoshoot / other) and a
+trail of movements whose last entry also implies a state. Three answers to
+"where is this dress", kept in step by triggers, bulk actions and the forms.
+
+The live project shows the cost: four of its eight dresses carry a status with
+no movement behind it at all, so the calendar says one thing and the status says
+another. The availability screen trusts the movement and the reservation first
+and falls back to the status only for the current day.
+
+Nothing is broken enough to block a launch, but a bulk status change is not
+reconciled with the ledger, so the three can drift further. The fix is to make
+movements the only source and derive status from them, which is a schema change,
+not a UI change.
+
+Related: the turnover days after a return are a constant
+(`TURNOVER_DAYS = 0` in `availability.ts`), not a setting, so a returned dress
+can still be offered for the next day. The buffer is implemented and tested;
+it needs a Settings value before it can be turned on.
 
 ---
 

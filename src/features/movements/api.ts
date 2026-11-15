@@ -7,6 +7,7 @@ export type DressMovementRow = Tables<'dress_movements'>;
 export type DressReservationRow = Tables<'dress_reservations'>;
 export type DressLocation = Tables<'dresses'>['location'];
 import { dressKeys } from '@/features/dresses/api';
+import type { DressRow } from '@/features/dresses/api';
 
 // ---- Customers -----------------------------------------------------------
 
@@ -269,6 +270,111 @@ export function useCustomerMovements(customerId: string) {
         .select('*')
         .eq('customer_id', customerId)
         .order('occurred_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// ---- Availability by date -------------------------------------------------
+//
+// Three reads answer "which dresses are free on the 20th": the inventory, the
+// outgoing movements that could still be running when the window opens, and
+// the active holds. The closing returns are fetched separately so a rental
+// that came back early frees the dress before its due date.
+
+/** The columns the availability screen needs — not the whole dress. */
+export type AvailabilityDress = Pick<
+  DressRow,
+  'id' | 'code' | 'name_en' | 'name_ar' | 'category' | 'status' | 'location'
+>;
+
+export const availabilityKeys = {
+  dresses: ['availability', 'dresses'] as const,
+  window: (from: string, to: string) => ['availability', 'window', from, to] as const,
+};
+
+export function useAvailabilityDresses() {
+  return useQuery({
+    queryKey: availabilityKeys.dresses,
+    queryFn: async (): Promise<AvailabilityDress[]> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await client
+        .from('dresses')
+        .select('id, code, name_en, name_ar, category, status, location')
+        .is('deleted_at', null)
+        .order('code')
+        .limit(1000);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+/**
+ * Every movement that can hold a dress during the window.
+ *
+ * The window is a pair of YYYY-MM-DD days, both inclusive. Outgoing movements
+ * with no due date are included because they block every future date.
+ */
+export function useAvailabilityMovements(window: { from: string; to: string }) {
+  return useQuery({
+    queryKey: availabilityKeys.window(window.from, window.to),
+    queryFn: async (): Promise<DressMovementRow[]> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      // The query bounds are padded by a day at each end and the exact test is
+      // done in local time afterwards. A due timestamp of 22:00Z is 01:00 the
+      // next morning in the atelier, and a filter on the UTC day would drop a
+      // dress that is still out for part of the day being asked about.
+      const pad = 24 * 3600_000;
+      const firstDay = new Date(
+        new Date(`${window.from}T00:00:00.000Z`).getTime() - pad,
+      ).toISOString();
+      const lastDay = new Date(
+        new Date(`${window.to}T23:59:59.999Z`).getTime() + pad,
+      ).toISOString();
+
+      const { data: outgoing, error } = await client
+        .from('dress_movements')
+        .select('*')
+        .eq('direction', 'out')
+        .lte('occurred_at', lastDay)
+        // A movement that ended before the window opens cannot block it.
+        .or(`due_at.is.null,due_at.gte.${firstDay}`);
+      if (error) throw error;
+      if (!outgoing || outgoing.length === 0) return [];
+
+      const dressIds = [...new Set(outgoing.map((movement) => movement.dress_id))];
+      const earliest = outgoing.reduce(
+        (min, movement) => (movement.occurred_at < min ? movement.occurred_at : min),
+        outgoing[0]!.occurred_at,
+      );
+      const { data: incoming, error: incomingError } = await client
+        .from('dress_movements')
+        .select('*')
+        .eq('direction', 'in')
+        .in('dress_id', dressIds)
+        .gte('occurred_at', earliest);
+      if (incomingError) throw incomingError;
+
+      return [...outgoing, ...(incoming ?? [])];
+    },
+  });
+}
+
+/** Active holds that touch the window. */
+export function useAvailabilityReservations(window: { from: string; to: string }) {
+  return useQuery({
+    queryKey: [...availabilityKeys.window(window.from, window.to), 'reservations'],
+    queryFn: async (): Promise<DressReservationRow[]> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await client
+        .from('dress_reservations')
+        .select('*')
+        .eq('status', 'active')
+        .lte('from_date', window.to)
+        .gte('to_date', window.from)
+        .limit(1000);
       if (error) throw error;
       return data;
     },

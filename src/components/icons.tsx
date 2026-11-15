@@ -64,6 +64,14 @@ export const BoxesIcon = glyph(
   </>,
 );
 
+/** A calendar: the availability screen asks a question about a day. */
+export const CalendarIcon = glyph(
+  <>
+    <rect x="3.5" y="5" width="17" height="15.5" rx="1.5" />
+    <path d="M3.5 9.5h17M8 3.2v3.4M16 3.2v3.4" />
+  </>,
+);
+
 export const PersonIcon = glyph(
   <>
     <circle cx="12" cy="8" r="3.6" />
