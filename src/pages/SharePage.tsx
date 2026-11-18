@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSharedDresses } from '@/features/dresses/api';
-import { Spinner } from '@/components/ui/Spinner';
+import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 
 /**
  * Public read-only page behind a share link (Phase 3). No login, no app
@@ -15,6 +15,7 @@ export function SharePage() {
   const { t, i18n } = useTranslation();
   const { token = '' } = useParams<{ token: string }>();
   const dresses = useSharedDresses(token);
+  const branding = useAtelierBranding();
 
   const isArabic = i18n.language.startsWith('ar');
   const pick = (en: string, ar: string | null): string => (isArabic ? ar || en : en);
@@ -25,7 +26,7 @@ export function SharePage() {
       dir={isArabic ? 'rtl' : 'ltr'}
     >
       <header className="pb-6">
-        <h1 className="text-hero font-semibold tracking-tight text-ink">{t('app.name')}</h1>
+        <h1 className="text-hero font-semibold tracking-tight text-ink">{branding.atelierName}</h1>
         <p className="mt-1.5 text-small text-muted">{t('share.pageSubtitle')}</p>
       </header>
 

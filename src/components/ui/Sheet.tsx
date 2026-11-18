@@ -23,6 +23,8 @@ interface SheetProps {
 export function Sheet({ open, onClose, title, children, maxHeight = '90dvh', testId }: SheetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
@@ -40,7 +42,7 @@ export function Sheet({ open, onClose, title, children, maxHeight = '90dvh', tes
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (event.key !== 'Tab') return;
@@ -68,7 +70,7 @@ export function Sheet({ open, onClose, title, children, maxHeight = '90dvh', tes
       document.body.style.overflow = prevOverflow;
       previousFocus.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
