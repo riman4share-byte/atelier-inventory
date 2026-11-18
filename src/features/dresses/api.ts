@@ -1,6 +1,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { buildDressFilters, type CategoryFilter, type StatusFilter } from './dressSearch';
 import { supabase } from '@/lib/supabase';
+import { fetchAllPages } from '@/lib/pagedFetch';
 import type { Tables, TablesInsert, TablesUpdate } from '@/lib/database.types';
 
 export type DressRow = Tables<'dresses'>;
@@ -237,6 +238,10 @@ export interface ExportScopeSelection {
 /**
  * Every row matching the export scope, capped at EXPORT_ROW_LIMIT. Larger
  * exports need an Edge Function (recorded in GAPS.md, not built yet).
+ *
+ * The rows come in pages: the API refuses to return more than 1000 at a
+ * time, so asking for everything in one request would quietly cut the
+ * spreadsheet off at the thousandth dress.
  */
 export async function fetchDressesForExport(selection: ExportScopeSelection): Promise<DressRow[]> {
   const client = supabase as NonNullable<typeof supabase>;
@@ -257,12 +262,7 @@ export async function fetchDressesForExport(selection: ExportScopeSelection): Pr
     if (built.status) builder = builder.eq('status', built.status);
     if (built.category) builder = builder.eq('category', built.category);
   }
-  const { data, error } = await builder.limit(EXPORT_ROW_LIMIT + 1);
-  if (error) throw error;
-  if (data.length > EXPORT_ROW_LIMIT) {
-    throw new Error('too_many_rows');
-  }
-  return data;
+  return fetchAllPages<DressRow>((from, to) => builder.range(from, to), { maxRows: EXPORT_ROW_LIMIT });
 }
 
 /** Server-paginated table rows with the material count per dress. */

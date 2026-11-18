@@ -17,7 +17,7 @@
     "types:gen": "supabase gen types typescript --local > src/lib/database.generated.ts",
     "seed": "node scripts/seed.mjs",
     "rls:test": "node scripts/rls-test.mjs",
-    "deploy": "npm run build && npx wrangler pages deploy dist --project-name=atelier-inventory"
+    "deploy": "npm run build && node scripts/deploy-pages.mjs"
   },
   "dependencies": {
     "@fontsource-variable/cairo": "^5.1.1",

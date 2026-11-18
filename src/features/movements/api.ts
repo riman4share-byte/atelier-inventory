@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { fetchAllPages } from '@/lib/pagedFetch';
 import type { Tables } from '@/lib/database.types';
 
 export type CustomerRow = Tables<'customers'>;
@@ -68,9 +69,8 @@ export function useAllMovements(filters: { from?: string; to?: string; dressId?:
       if (filters.to) builder = builder.lte('occurred_at', filters.to);
       if (filters.dressId) builder = builder.eq('dress_id', filters.dressId);
       if (filters.customerId) builder = builder.eq('customer_id', filters.customerId);
-      const { data, error } = await builder.limit(5000);
-      if (error) throw error;
-      return data;
+      const movements = await fetchAllPages<DressMovementRow>((from, to) => builder.range(from, to));
+      return movements;
     },
   });
 }
@@ -367,13 +367,17 @@ export function useMovementSummary() {
 
       // Only movements that are still open (no closing "in") count as overdue
       // or due this week. A dress returned early must not look overdue forever.
-      const { data: movements, error: movementError } = await client
+      const movementBuilder = client
         .from('dress_movements')
-        .select('dress_id, direction, occurred_at, due_at, corrects_movement_id')
-        .limit(5000);
-      if (movementError) throw movementError;
-
-      const live = (movements ?? []).filter((m) => !m.corrects_movement_id);
+        .select('dress_id, direction, occurred_at, due_at, corrects_movement_id');
+      const movements = await fetchAllPages<{
+        dress_id: string;
+        direction: string;
+        occurred_at: string;
+        due_at: string | null;
+        corrects_movement_id: string | null;
+      }>((from, to) => movementBuilder.range(from, to));
+      const live = movements.filter((m) => !m.corrects_movement_id);
       const outMovements = live.filter((m) => m.direction === 'out');
       const inMovements = live.filter((m) => m.direction === 'in');
 
