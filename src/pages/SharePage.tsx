@@ -1,8 +1,24 @@
 import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/lib/supabase';
 import { useSharedDresses } from '@/features/dresses/api';
 import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { Spinner } from '@/components/ui/Spinner';
+
+function useSharePhotos(token: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ['share-photos', token],
+    enabled,
+    queryFn: async (): Promise<Record<string, string>> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await client.functions.invoke('share-photos', { body: { token } });
+      if (error) return {};
+      return (data as { photos?: Record<string, string> } | null)?.photos ?? {};
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
 
 /**
  * Public read-only page behind a share link (Phase 3). No login, no app
@@ -15,10 +31,11 @@ import { Spinner } from '@/components/ui/Spinner';
 export function SharePage() {
   const { t, i18n } = useTranslation();
   const { token = '' } = useParams<{ token: string }>();
+  const isArabic = i18n.language.startsWith('ar');
   const dresses = useSharedDresses(token);
   const branding = useAtelierBranding();
+  const photos = useSharePhotos(token, (dresses.data ?? []).length > 0);
 
-  const isArabic = i18n.language.startsWith('ar');
   const pick = (en: string, ar: string | null): string => (isArabic ? ar || en : en);
 
   return (
@@ -44,6 +61,14 @@ export function SharePage() {
         <main className="flex flex-1 flex-col gap-3" data-testid="share-list">
           {dresses.data?.map((dress) => (
             <article key={dress.id} className="rounded-card border border-line bg-surface p-4">
+              {photos.data?.[dress.id] ? (
+                <img
+                  src={photos.data[dress.id]}
+                  alt={pick(dress.name_en, dress.name_ar) || dress.code}
+                  className="mb-3 aspect-[4/3] w-full rounded-card object-cover"
+                  loading="lazy"
+                />
+              ) : null}
               <h2 className="text-title font-semibold tracking-tight text-ink">
                 {pick(dress.name_en, dress.name_ar) || dress.code}
               </h2>
@@ -75,7 +100,6 @@ export function SharePage() {
               ) : null}
             </article>
           ))}
-          <p className="mt-1 text-note text-faint">{t('share.footerNote')}</p>
         </main>
       )}
     </div>

@@ -82,6 +82,9 @@ verify_jwt = false
 [functions.public-photo]
 verify_jwt = false
 
+[functions.share-photos]
+verify_jwt = false
+
 [db.migrations]
 # If disabled, migrations will be skipped during a db push or reset.
 enabled = true
