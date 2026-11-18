@@ -9,6 +9,48 @@ import { preparePhoto, photoPath } from './photoPipeline';
  * delete and reorder. All writes ride RLS as the signed-in staff member.
  */
 
+export function useDressThumbnails(dressIds: readonly string[]): Record<string, string> {
+  const signature = [...dressIds].sort().join(',');
+  const query = useQuery({
+    queryKey: ['dress-thumbnails', signature],
+    staleTime: 10 * 60_000,
+    queryFn: async (): Promise<Record<string, string>> => {
+      if (dressIds.length === 0) return {};
+      const client = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await client
+        .from('dress_photos')
+        .select('dress_id, original_path, sort_order')
+        .in('dress_id', [...dressIds])
+        .order('sort_order');
+      if (error) return {};
+      const firstByDress = new Map<string, string>();
+      for (const row of data ?? []) {
+        if (!firstByDress.has(row.dress_id)) {
+          firstByDress.set(row.dress_id, row.original_path);
+        }
+      }
+      const paths = [...firstByDress.values()];
+      if (paths.length === 0) return {};
+      const { data: signed, error: signError } = await client.storage
+        .from('dress-originals')
+        .createSignedUrls(paths, 900);
+      if (signError || !signed) return {};
+      const result: Record<string, string> = {};
+      for (const entry of signed) {
+        if (!entry.signedUrl || !entry.path) continue;
+        for (const [dressId, path] of firstByDress) {
+          if (path === entry.path) {
+            result[dressId] = entry.signedUrl;
+            break;
+          }
+        }
+      }
+      return result;
+    },
+  });
+  return query.data ?? {};
+}
+
 /** Short-lived display URLs; refreshed by TanStack before they expire. */
 export function useSignedPhotoUrls(photos: readonly DressPhotoRow[]): string[] {
   const signature = photos.map((photo) => photo.id).join(',');

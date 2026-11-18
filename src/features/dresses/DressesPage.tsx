@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Button } from '@/components/ui/Button';
 import { CATEGORY_FILTERS, STATUS_FILTERS, type CategoryFilter, type StatusFilter } from './dressSearch';
 import { categoryLabel } from './categories';
+import { paletteForCode, StatusPill } from './StatusPill';
 import {
   useBulkSetStatus,
   useDressCounts,
@@ -16,7 +17,7 @@ import {
   type DressRow,
   type TableSort,
 } from './api';
-import { paletteForCode, StatusPill } from './StatusPill';
+import { useDressThumbnails } from '@/features/photos/api';
 import { DressesTable, BulkBar } from './DressesTable';
 import { ExportSheet } from './ExportSheet';
 import { cx } from '@/lib/cx';
@@ -34,7 +35,7 @@ function displayName(dress: DressRow, language: string): string {
   return primary || fallback || dress.code;
 }
 
-function DressTile({ dress, language, onOpen }: { dress: DressRow; language: string; onOpen: () => void }) {
+function DressTile({ dress, language, thumbnail, onOpen }: { dress: DressRow; language: string; thumbnail?: string; onOpen: () => void }) {
   const { t } = useTranslation();
   const palette = paletteForCode(dress.code);
   return (
@@ -44,14 +45,23 @@ function DressTile({ dress, language, onOpen }: { dress: DressRow; language: str
       className="group flex flex-col overflow-hidden rounded-card border border-line bg-surface text-start transition-colors hover:border-line-strong"
       data-testid="dress-tile"
     >
-      <span
-        className={cx(
-          'flex aspect-[3/4] w-full items-center justify-center border-b border-line',
-          palette.tile,
-        )}
-      >
-        <GownIcon className={cx('h-10 w-auto', palette.icon)} />
-      </span>
+      {thumbnail ? (
+        <img
+          src={thumbnail}
+          alt=""
+          className="aspect-[3/4] w-full object-cover border-b border-line"
+          loading="lazy"
+        />
+      ) : (
+        <span
+          className={cx(
+            'flex aspect-[3/4] w-full items-center justify-center border-b border-line',
+            palette.tile,
+          )}
+        >
+          <GownIcon className={cx('h-10 w-auto', palette.icon)} />
+        </span>
+      )}
       <span className="flex flex-1 flex-col gap-1 px-2.5 py-2">
         <span className="block truncate text-small font-semibold leading-snug text-ink">
           {displayName(dress, language)}
@@ -145,6 +155,7 @@ export function DressesPage() {
   }));
 
   const tiles = dresses.data?.pages.flat() ?? [];
+  const thumbnails = useDressThumbnails(tiles.map((d) => d.id));
   const hasFilters = Boolean(searchInput) || status !== 'all' || category !== 'all';
   const setView = (next: 'grid' | 'table') => {
     const params = new URLSearchParams(searchParams);
@@ -309,6 +320,7 @@ export function DressesPage() {
                       key={dress.id}
                       dress={dress}
                       language={i18n.language}
+                      thumbnail={thumbnails[dress.id]}
                       onOpen={() => navigate(`/dresses/${dress.id}`)}
                     />
                   ))}
