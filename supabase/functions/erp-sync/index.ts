@@ -120,24 +120,30 @@ Deno.serve(async (req) => {
       // minute, so a broken ERPNext is not hammered every few seconds.
       const unreachable = /dns|resolve|connect|network|fetch failed|TLS/i.test(message);
       const retryInMs = unreachable ? 0 : 60000;
-      await supabase
+      const maxAttempts = 5;
+      const newStatus = (job.attempts ?? 0) + 1 >= maxAttempts ? "failed" : "pending";
+      const { error: updateError } = await supabase
         .from("erp_jobs")
         .update({
-          status: "pending",
+          status: newStatus,
           last_error: message,
           run_after: new Date(Date.now() + retryInMs).toISOString(),
         })
         .eq("id", job.id);
-      await supabase.from("erp_sync_log").insert({
+      if (updateError) console.error("job update failed:", updateError.message);
+
+      const { error: logError } = await supabase.from("erp_sync_log").insert({
         entity: "dress",
-        entity_id: null,
+        entity_id: (job.payload as { dressId?: string })?.dressId ?? null,
         action: "error",
         http_status: null,
         message,
       });
+      if (logError) console.error("log insert failed:", logError.message);
+
       results.push({
         id: job.id,
-        status: unreachable ? "queued_for_agent" : "failed",
+        status: unreachable ? "queued_for_agent" : newStatus,
         error: message.slice(0, 200),
       });
     }
