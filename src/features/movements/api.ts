@@ -68,7 +68,7 @@ export function useAllMovements(filters: { from?: string; to?: string; dressId?:
       if (filters.to) builder = builder.lte('occurred_at', filters.to);
       if (filters.dressId) builder = builder.eq('dress_id', filters.dressId);
       if (filters.customerId) builder = builder.eq('customer_id', filters.customerId);
-      const { data, error } = await builder.limit(500);
+      const { data, error } = await builder.limit(5000);
       if (error) throw error;
       return data;
     },

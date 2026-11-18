@@ -1,4 +1,13 @@
-# Atelier Inventory – Design System
+# Atelier Inventory - Design System (OBSOLETE)
+
+> **Do not follow this document.** It describes a raspberry/violet design
+> that was never shipped. The app uses the "Workshop" direction: warm cream
+> surfaces, brown-tinted neutrals, amber accent, Instrument Sans + Instrument
+> Serif + Geist Mono. See `src/styles/index.css` for the actual tokens.
+
+---
+
+# Atelier Inventory - Design System (v1, obsolete)
 
 Source of truth for the look and feel. The visual reference is `mockup/atelier-inventory-mockup.html` (open it in a browser; it follows light/dark mode). If this file and the mockup disagree, ask the owner before choosing.
 

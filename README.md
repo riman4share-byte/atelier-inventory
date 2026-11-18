@@ -168,11 +168,15 @@ supabase/migrations/    schema, RLS, storage policies, code-suggestion and share
 
 ## Design
 
-The visual source of truth is `docs/design/02_DESIGN.md` plus the twelve-screen
-mockup at `docs/design/atelier-inventory-mockup.html` (open it in a browser).
-Tokens live only in `src/styles/index.css` and are exposed to Tailwind; no
-component hard-codes a colour. Arabic switches the document to `dir="rtl"`,
-`lang="ar"` and the Cairo typeface, and every screen uses logical spacing.
+The visual direction is "Workshop": warm cream surfaces, brown-tinted
+neutrals, a single amber accent (like lamplight), and serif headlines
+(Instrument Serif) over an Instrument Sans interface. Tokens live only in
+`src/styles/index.css` and are exposed to Tailwind; no component hard-codes a
+colour. Arabic switches the document to `dir="rtl"`, `lang="ar"` and the
+Cairo typeface, and every screen uses logical spacing.
+
+The older raspberry/violet mockup in `docs/design/02_DESIGN.md` is obsolete
+and should not be followed.
 
 ## Phase status
 

@@ -14,7 +14,6 @@ import type { CategoryFilter, StatusFilter } from './dressSearch';
 import {
   DEFAULT_EXPORT_COLUMNS,
   EXPORT_DATE_COLUMN,
-  QR_URL_COLUMN,
   excelCompatibleCsv,
   exportRows,
 } from './exportData';
@@ -173,7 +172,7 @@ export function ExportSheet({
       const filenameDate = new Date().toISOString().slice(0, 10);
       if (format === 'excel') {
         const dresses = await resolveSelection();
-        const columns = [...activeColumns, QR_URL_COLUMN, EXPORT_DATE_COLUMN];
+        const columns = [...activeColumns, EXPORT_DATE_COLUMN];
         // The spreadsheet library is large. Loading it only when an Excel
         // export is actually requested keeps it out of the first download.
         const ExcelJS = await import('exceljs');
@@ -238,7 +237,7 @@ export function ExportSheet({
       }
       if (format === 'csv') {
         const dresses = await resolveSelection();
-        const rows = exportRows(dresses, [...activeColumns, QR_URL_COLUMN, EXPORT_DATE_COLUMN], origin);
+        const rows = exportRows(dresses, [...activeColumns, EXPORT_DATE_COLUMN], origin);
         downloadCsv(excelCompatibleCsv(rows), `dresses-${filenameDate}.csv`);
         onClose();
         return;

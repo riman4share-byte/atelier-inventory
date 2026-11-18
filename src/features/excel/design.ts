@@ -159,6 +159,55 @@ export function formatFor<TRow>(column: ExcelColumn<TRow>): string | undefined {
  * contains the letters "svg" by chance about one time in eight, and a
  * search would throw away a perfectly good PNG.
  */
+/**
+ * Reads the pixel dimensions of a PNG or JPEG from its base64 data URL,
+ * so a logo keeps its aspect ratio instead of being forced into a square.
+ * Returns null when the format is unsupported or the header is truncated.
+ */
+export function imageDimensions(dataUrl: string): { width: number; height: number } | null {
+  const base64 = dataUrl.split(',')[1];
+  if (!base64) return null;
+  let bytes: Uint8Array;
+  try {
+    const binary = atob(base64);
+    bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  } catch {
+    return null;
+  }
+
+  // PNG: IHDR chunk at offset 16, width (4 bytes) then height (4 bytes).
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    if (bytes.length < 24) return null;
+    const width = (bytes[16]! << 24) | (bytes[17]! << 16) | (bytes[18]! << 8) | bytes[19]!;
+    const height = (bytes[20]! << 24) | (bytes[21]! << 16) | (bytes[22]! << 8) | bytes[23]!;
+    if (width > 0 && height > 0) return { width, height };
+    return null;
+  }
+
+  // JPEG: scan for a SOF marker (0xFF 0xC0..0xCF, excluding 0xC4 and 0xCC).
+  if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+    let i = 2;
+    while (i < bytes.length - 9) {
+      if (bytes[i] !== 0xff) { i++; continue; }
+      const marker = bytes[i + 1]!;
+      if (marker === 0xd9 || marker === 0xda) break; // EOI or SOS
+      if (marker === 0xc4 || marker === 0xcc) { i += 2; continue; }
+      if (marker >= 0xc0 && marker <= 0xcf) {
+        const height = (bytes[i + 5]! << 8) | bytes[i + 6]!;
+        const width = (bytes[i + 7]! << 8) | bytes[i + 8]!;
+        if (width > 0 && height > 0) return { width, height };
+        return null;
+      }
+      // Skip this segment.
+      const len = (bytes[i + 2]! << 8) | bytes[i + 3]!;
+      i += 2 + len;
+    }
+  }
+
+  return null;
+}
+
 export function imageKind(dataUrl: string): { mime: string; extension: 'png' | 'jpeg' | 'svg' } {
   const match = /^data:image\/([a-zA-Z0-9+.-]+)\s*;/.exec(dataUrl.trim());
   const mime = (match?.[1] ?? 'png').toLowerCase();
@@ -190,14 +239,17 @@ export function writeBrandHeader(
     // Excel will not take an SVG, so a vector logo is left out rather than
     // breaking the file.
     if (extension !== 'svg') {
+      const dims = imageDimensions(branding.logoDataUrl);
+      const logoWidth = 56;
+      const logoHeight = dims ? Math.round((logoWidth * dims.height) / dims.width) : 56;
       const imageId = workbook.addImage({
         base64: branding.logoDataUrl.split(',')[1] ?? branding.logoDataUrl,
         extension,
       });
-      sheet.getRow(row).height = 64;
+      sheet.getRow(row).height = Math.max(64, logoHeight + 8);
       sheet.addImage(imageId, {
         tl: { col: 0.08, row: 0.06 },
-        ext: { width: 56, height: 56 },
+        ext: { width: logoWidth, height: logoHeight },
         editAs: 'oneCell',
       });
     }
