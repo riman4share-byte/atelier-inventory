@@ -18,14 +18,16 @@ export async function uploadBatch(batch: QueuedBatch): Promise<{ dressId: string
 
   let dressId = batch.dressId;
   if (!dressId) {
-    const { data: dress, error: createError } = await db
+    // Use the batch id as the dress id so two tabs cannot create two dresses
+    // for the same batch: the second insert conflicts on the primary key.
+    dressId = batch.id;
+    const { error: createError } = await db
       .from('dresses')
       // name_en stays empty so the detail page's auto-describe trigger fires.
-      .insert({ code: null as never, name_en: '', listing_type: 'both', status: 'available' })
+      .insert({ id: dressId, code: null as never, name_en: '', listing_type: 'both', status: 'available' })
       .select('id')
       .single();
-    if (createError) throw createError;
-    dressId = dress.id;
+    if (createError && createError.code !== '23505') throw createError;
     await putBatch({ ...batch, dressId });
   }
 
