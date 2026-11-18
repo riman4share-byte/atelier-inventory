@@ -47,6 +47,7 @@ export type Database = {
           powered_by: string | null
           public_qr_page: boolean
           tagline: string | null
+          turnover_days: number
           updated_at: string
           western_digits: boolean
         }
@@ -62,6 +63,7 @@ export type Database = {
           powered_by?: string | null
           public_qr_page?: boolean
           tagline?: string | null
+          turnover_days?: number
           updated_at?: string
           western_digits?: boolean
         }
@@ -77,6 +79,7 @@ export type Database = {
           powered_by?: string | null
           public_qr_page?: boolean
           tagline?: string | null
+          turnover_days?: number
           updated_at?: string
           western_digits?: boolean
         }

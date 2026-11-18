@@ -12,6 +12,7 @@ import {
   useAvailabilityDresses,
   useAvailabilityMovements,
   useAvailabilityReservations,
+  useTurnoverDays,
   type AvailabilityDress,
 } from './api';
 import {
@@ -23,7 +24,6 @@ import {
   parseDay,
   reservationBookings,
   startOfDay,
-  TURNOVER_DAYS,
   type Availability,
   type BlockingRange,
 } from './availability';
@@ -115,20 +115,21 @@ export function AvailabilityPage() {
   const dresses = useAvailabilityDresses();
   const movements = useAvailabilityMovements(windowKey);
   const reservations = useAvailabilityReservations(windowKey);
+  const turnoverDays = useTurnoverDays();
 
   const bookingsByDress = useMemo(() => {
     const map = new Map<string, BlockingRange[]>();
     const ranges = [
       ...movementBookings(movements.data ?? []),
       ...reservationBookings(reservations.data ?? []),
-    ].map((range) => applyBuffer(range, TURNOVER_DAYS));
+    ].map((range) => applyBuffer(range, turnoverDays.data ?? 0));
     for (const range of ranges) {
       const list = map.get(range.dressId);
       if (list) list.push(range);
       else map.set(range.dressId, [range]);
     }
     return map;
-  }, [movements.data, reservations.data]);
+  }, [movements.data, reservations.data, turnoverDays.data]);
 
   const dateWindow = useMemo(
     () => ({ from: startOfDay(parseDay(from)), to: endOfDay(parseDay(to)) }),

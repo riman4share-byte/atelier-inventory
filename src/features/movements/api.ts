@@ -412,6 +412,23 @@ export function useMovementSummary() {
   });
 }
 
+export function useTurnoverDays() {
+  return useQuery({
+    queryKey: ['app_settings', 'turnover_days'],
+    queryFn: async (): Promise<number> => {
+      const client = supabase as NonNullable<typeof supabase>;
+      const { data, error } = await client
+        .from('app_settings')
+        .select('turnover_days')
+        .eq('id', 1)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.turnover_days ?? 0;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useCustomerMovements(customerId: string) {
   return useQuery({
     queryKey: ['movements', 'customer', customerId],
