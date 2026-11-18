@@ -47,20 +47,34 @@ async function main() {
   const npxCli = join(process.execPath, '..', 'node_modules', 'npm', 'bin', 'npx-cli.js');
   const npx = existsSync(npxCli) ? npxCli : 'npx';
 
-  execFileSync(
+  const deployOutput = execFileSync(
     process.execPath,
     [npx, 'wrangler', 'pages', 'deploy', 'dist', `--project-name=${PROJECT}`, '--branch=main', `--commit-hash=${sha}`, `--commit-message=${message}`],
-    { stdio: 'inherit' },
+    { stdio: ['inherit', 'pipe', 'inherit'], encoding: 'utf8' },
   );
+  process.stdout.write(deployOutput);
 
-  // The live site must serve this bundle, not an older one.
-  const html = await (await fetch(`${SITE}/`, { headers: { 'cache-control': 'no-cache' } })).text();
-  const live = html.match(/\/assets\/index-[A-Za-z0-9_-]+\.js/)?.[0];
-  if (!live || !live.endsWith(bundle)) {
-    console.error(`The live site is serving ${live ?? 'nothing'} but this build is ${bundle}.`);
+  // The live site must serve this deployment.
+  //
+  // The asset name is not compared on its own: Cloudflare's own build of the
+  // same commit can differ by a byte or two (a trailing newline), which
+  // changes the hash without changing the app. The code is compared instead.
+  const deploymentUrl = deployOutput.match(/https:\/\/[a-z0-9]+\.atelier-inventory\.pages\.dev/)?.[0];
+  if (!deploymentUrl) throw new Error('The deploy did not report a deployment address.');
+
+  const liveHtml = await (await fetch(`${SITE}/`, { headers: { 'cache-control': 'no-cache' } })).text();
+  const liveAsset = liveHtml.match(/\/assets\/index-[A-Za-z0-9_-]+\.js/)?.[0];
+  if (!liveAsset) throw new Error('The live site serves no app bundle.');
+
+  const liveCode = await (await fetch(`${SITE}${liveAsset}`)).text();
+  const deploymentCode = await (await fetch(`${deploymentUrl}${liveAsset}`)).text();
+  const same = liveCode.replace(/\s+/g, '') === deploymentCode.replace(/\s+/g, '');
+
+  if (!same) {
+    console.error(`The live site is serving ${liveAsset}, which is not this build.`);
     process.exit(1);
   }
-  console.log(`Live: ${SITE} is serving ${bundle} (commit ${sha.slice(0, 7)}).`);
+  console.log(`Live: ${SITE} is serving ${liveAsset} (commit ${sha.slice(0, 7)}).`);
 }
 
 await main();
