@@ -402,8 +402,8 @@ Function, the `apps/erp-bridge` Docker service, and the `erp_jobs` table are
 not built. The control panel has a placeholder `erp` integration kind only.
 
 Discovered on 2026-11-10: ERPNext runs in a Docker container
-`erpnext-riman:v8` on host `rimanserver` (Tailscale 100.75.94.52), reachable
-at `http://rimanserver:8080` (port 8080), logged in as riman4share@gmail.com.
+`erpnext-riman:v8` on host `rimanserver` (Tailscale IP redacted), reachable
+at `http://rimanserver:8080` (port 8080), logged in as the owner's email.
 Company: **Riman Fashion** (AED, UAE, abbr RF). Warehouses: Finished Goods /
 Stores / Work In Progress / Goods In Transit (under "All Warehouses - RF").
 Item groups: Wedding (Bridal), Party (Evening), Engagement Dresses, Accessories,
@@ -424,9 +424,8 @@ control panel (Phase 10), not hard-coded — the owner picks it per deployment.
 **Sandbox:** created `sandboxriman` site on the same container with
 ERPNext 15.31.2 installed. The site and ERPNext are installed; the first-login
 setup wizard (company, warehouses, fiscal year) still needs to be completed in
-the browser before it's usable. Access via `http://sandboxriman:8080` (add
-`100.75.94.52 sandboxriman` to your hosts file). Admin password is
-`Sandbox@2026`.
+the browser before it's usable. Access via `http://sandboxriman:8080` (add the sandbox host to your hosts file).
+Admin password is stored in the owner's password manager, not in this repo.
 
 **Remaining before Phase 11 code:** complete the sandbox setup wizard in the
 browser, then build erp-client package + erp-sync Edge Function + erp-bridge

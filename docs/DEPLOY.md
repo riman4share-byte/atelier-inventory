@@ -34,7 +34,7 @@ VITE_SUPABASE_URL=https://<ref>.supabase.co
 VITE_SUPABASE_ANON_KEY=<anon key from Project Settings → API>
 SUPABASE_SERVICE_ROLE_KEY=<service_role key>
 SEED_ADMIN_EMAIL=owner@atelier.local
-SEED_ADMIN_PASSWORD=Atelier-dev-2026
+SEED_ADMIN_PASSWORD=<choose a strong password>
 SEED_ATELIER_NAME=Atelier
 ```
 
@@ -138,7 +138,7 @@ VITE_SUPABASE_URL=http://127.0.0.1:54341
 VITE_SUPABASE_ANON_KEY=<local anon key>
 SUPABASE_SERVICE_ROLE_KEY=<local service role key>
 SEED_ADMIN_EMAIL=owner@atelier.local
-SEED_ADMIN_PASSWORD=Atelier-dev-2026
+SEED_ADMIN_PASSWORD=<choose a strong password>
 SEED_ATELIER_NAME=Atelier
 ```
 
