@@ -143,22 +143,36 @@ export async function cataloguePhotoUrls(
     }
   }
 
+  // Collect every path that needs a signature, then sign them in one batch.
+  const allPaths: string[] = [];
+  const pathIndex = new Map<string, { dress: { id: string; code: string }; slot: 'front' | 'back' | 'detail' }>();
   for (const dress of dresses) {
     const found = paths.get(dress.id);
     if (!found) continue;
-    const urls: CataloguePhotos = {};
     for (const slot of ['front', 'back', 'detail'] as const) {
       const path = found[slot];
       if (!path) continue;
-      const { data: signed, error: signError } = await client.storage
-        .from('dress-originals')
-        .createSignedUrl(path, 3600);
-      // One bad file must not kill the export.
-      if (signError || !signed) continue;
-      urls[slot] = signed.signedUrl;
+      pathIndex.set(path, { dress, slot });
+      allPaths.push(path);
     }
-    if (urls.front || urls.back || urls.detail) out[dress.code] = urls;
   }
+
+  if (allPaths.length === 0) return out;
+
+  const { data: signed, error: signError } = await client.storage
+    .from('dress-originals')
+    .createSignedUrls(allPaths, 3600);
+  if (signError || !signed) return out;
+
+  for (const entry of signed) {
+    if (!entry.signedUrl || !entry.path) continue;
+    const info = pathIndex.get(entry.path);
+    if (!info) continue;
+    const urls = (out[info.dress.code] ?? {}) as CataloguePhotos;
+    urls[info.slot] = entry.signedUrl;
+    out[info.dress.code] = urls;
+  }
+
   return out;
 }
 
