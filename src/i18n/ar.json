@@ -400,6 +400,7 @@
     "dueDate": "الاستحقاق",
     "deposit": "العربون",
     "conditionNotes": "ملاحظات الحالة",
+    "depositReturned": "تم إرجاع الوديعة",
     "nextLocation": "الموقع التالي",
     "fromDate": "من",
     "toDate": "إلى",
@@ -415,6 +416,7 @@
     "pickCustomer": "اختر أو أضف زبوناً.",
     "datesRequired": "تاريخا البداية والنهاية مطلوبان.",
     "conflict": "هذا الفستان لديه حجز متداخل.",
+    "notInAtelier": "هذا الفستان ليس في الأتيليه حالياً.",
     "saveFailed": "فشل الحفظ. تحقّق من الاتصال ثم حاول مجدداً."
   },
   "availability": {

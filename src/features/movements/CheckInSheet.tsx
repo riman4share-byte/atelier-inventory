@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCreateMovement } from './api';
+import { useCheckInDress } from './api';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { Sheet } from '@/components/ui/Sheet';
@@ -33,14 +33,15 @@ function TitleWithCode({ title, code }: { title: string; code: string }) {
   );
 }
 
-export function CheckInSheet({ open, onClose, dressId, dressCode, currentCustomerId }: CheckInSheetProps) {
+export function CheckInSheet({ open, onClose, dressId, dressCode, currentCustomerId: _currentCustomerId }: CheckInSheetProps) {
   const { t } = useTranslation();
   const locationId = useId();
   const [nextLocation, setNextLocation] = useState<string>('in_atelier');
   const [notes, setNotes] = useState('');
+  const [depositReturned, setDepositReturned] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  const createMovement = useCreateMovement();
+  const createMovement = useCheckInDress();
 
   if (!open) return null;
 
@@ -49,12 +50,9 @@ export function CheckInSheet({ open, onClose, dressId, dressCode, currentCustome
     try {
       await createMovement.mutateAsync({
         dress_id: dressId,
-        direction: 'in',
-        reason: 'return',
-        customer_id: currentCustomerId,
-        from_location: 'with_customer',
         to_location: nextLocation,
         condition_notes: notes.trim() || null,
+        deposit_returned: depositReturned,
       });
       onClose();
     } catch {
@@ -102,6 +100,18 @@ export function CheckInSheet({ open, onClose, dressId, dressCode, currentCustome
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
             />
+          </Panel>
+
+          <Panel>
+            <label className="flex items-center gap-2 text-small text-ink">
+              <input
+                type="checkbox"
+                checked={depositReturned}
+                onChange={(event) => setDepositReturned(event.target.checked)}
+                className="h-4 w-4 rounded border-line accent-accent"
+              />
+              {t('movements.depositReturned')}
+            </label>
           </Panel>
 
           {errorText ? (

@@ -140,7 +140,7 @@ export function useCreateMovement() {
       const { data: session } = await db.auth.getSession();
       const { error } = await db.from('dress_movements').insert({
         ...values,
-        performed_by: session?.session?.user?.id ?? null,
+        performed_by: session?.session?.user?.id ?? undefined,
         source: 'app',
       });
       if (error) throw error;
@@ -149,6 +149,136 @@ export function useCreateMovement() {
       client.invalidateQueries({ queryKey: ['movements', variables.dress_id] });
       client.invalidateQueries({ queryKey: dressKeys.all });
       client.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+  });
+}
+
+// ---- Transactional movement functions -------------------------------------
+//
+// These wrap a single database function that locks the dress, validates
+// availability, writes the ledger entry and updates the dress atomically.
+// Use them instead of useCreateMovement / useCreateReservation for check-out,
+// check-in and reserve, so a second tablet cannot race past the checks.
+
+export function useCheckOutDress() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: {
+      dress_id: string;
+      customer_id: string;
+      reason: 'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'other';
+      to_location: string;
+      occurred_at?: string;
+      due_at?: string | null;
+      deposit_amount?: number | null;
+      condition_notes?: string | null;
+    }) => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { data: session } = await db.auth.getSession();
+      const { data, error } = await db.rpc('check_out_dress', {
+        p_dress_id: values.dress_id,
+        p_customer_id: values.customer_id,
+        p_reason: values.reason,
+        p_to_location: values.to_location,
+        p_occurred_at: values.occurred_at ?? undefined,
+        p_due_at: values.due_at ?? undefined,
+        p_deposit_amount: values.deposit_amount ?? undefined,
+        p_condition_notes: values.condition_notes ?? undefined,
+        p_performed_by: session?.session?.user?.id ?? undefined,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (_data, variables) => {
+      client.invalidateQueries({ queryKey: ['movements', variables.dress_id] });
+      client.invalidateQueries({ queryKey: dressKeys.all });
+      client.invalidateQueries({ queryKey: ['dashboard'] });
+      client.invalidateQueries({ queryKey: ['availability'] });
+    },
+  });
+}
+
+export function useCheckInDress() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: {
+      dress_id: string;
+      to_location: string;
+      occurred_at?: string;
+      condition_notes?: string | null;
+      deposit_returned?: boolean;
+    }) => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { data: session } = await db.auth.getSession();
+      const { data, error } = await db.rpc('check_in_dress', {
+        p_dress_id: values.dress_id,
+        p_to_location: values.to_location,
+        p_occurred_at: values.occurred_at ?? undefined,
+        p_condition_notes: values.condition_notes ?? undefined,
+        p_deposit_returned: values.deposit_returned ?? false,
+        p_performed_by: session?.session?.user?.id ?? undefined,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (_data, variables) => {
+      client.invalidateQueries({ queryKey: ['movements', variables.dress_id] });
+      client.invalidateQueries({ queryKey: dressKeys.all });
+      client.invalidateQueries({ queryKey: ['dashboard'] });
+      client.invalidateQueries({ queryKey: ['availability'] });
+    },
+  });
+}
+
+export function useReserveDress() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: {
+      dress_id: string;
+      customer_id: string | null;
+      from_date: string;
+      to_date: string;
+      event_date?: string | null;
+      notes?: string | null;
+    }) => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { data: session } = await db.auth.getSession();
+      const { data, error } = await db.rpc('reserve_dress', {
+        p_dress_id: values.dress_id,
+        p_customer_id: values.customer_id ?? undefined,
+        p_from_date: values.from_date,
+        p_to_date: values.to_date,
+        p_event_date: values.event_date ?? undefined,
+        p_notes: values.notes ?? undefined,
+        p_performed_by: session?.session?.user?.id ?? undefined,
+      });
+      if (error) throw error;
+      return data as string;
+    },
+    onSuccess: (_data, variables) => {
+      client.invalidateQueries({ queryKey: ['reservations', variables.dress_id] });
+      client.invalidateQueries({ queryKey: dressKeys.all });
+      client.invalidateQueries({ queryKey: ['availability'] });
+    },
+  });
+}
+
+export function useCancelReservationRpc() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const db = supabase as NonNullable<typeof supabase>;
+      const { data: session } = await db.auth.getSession();
+      const { error } = await db.rpc('cancel_reservation', {
+        p_reservation_id: id,
+        p_performed_by: session?.session?.user?.id ?? undefined,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      client.invalidateQueries({ queryKey: ['reservations'] });
+      client.invalidateQueries({ queryKey: dressKeys.all });
+      client.invalidateQueries({ queryKey: ['availability'] });
     },
   });
 }

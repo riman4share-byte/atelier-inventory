@@ -398,6 +398,7 @@
     "dueDate": "Due back",
     "deposit": "Deposit",
     "conditionNotes": "Condition notes",
+    "depositReturned": "Deposit returned",
     "nextLocation": "Next location",
     "fromDate": "From",
     "toDate": "To",
@@ -413,6 +414,7 @@
     "pickCustomer": "Pick or add a customer.",
     "datesRequired": "From and to dates are required.",
     "conflict": "This dress already has an overlapping reservation.",
+    "notInAtelier": "This dress is not in the atelier right now.",
     "saveFailed": "Saving failed. Check your connection and try again."
   },
   "availability": {

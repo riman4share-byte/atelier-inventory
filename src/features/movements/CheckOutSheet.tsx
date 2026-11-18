@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCustomers, useCreateCustomer, useCreateMovement, useDressMovements } from './api';
+import { useCustomers, useCreateCustomer, useCheckOutDress, useDressMovements } from './api';
 import { bookingsFromMovements, conflictsWithBooking } from './availability';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
@@ -43,7 +43,7 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
-  const [reason, setReason] = useState<'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'return' | 'other'>('rental');
+  const [reason, setReason] = useState<'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'other'>('rental');
   const [dueDate, setDueDate] = useState('');
   const [deposit, setDeposit] = useState('');
   const [notes, setNotes] = useState('');
@@ -51,7 +51,7 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
 
   const customers = useCustomers(customerSearch);
   const createCustomer = useCreateCustomer();
-  const createMovement = useCreateMovement();
+  const createMovement = useCheckOutDress();
   const movementsQuery = useDressMovements(dressId);
 
   // Bookings already on this dress. If the chosen due date overlaps one of
@@ -93,10 +93,8 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
     try {
       await createMovement.mutateAsync({
         dress_id: dressId,
-        direction: 'out',
-        reason,
         customer_id: customerId,
-        from_location: 'in_atelier',
+        reason,
         to_location: 'with_customer',
         due_at: dueDate ? new Date(dueDate).toISOString() : null,
         deposit_amount: deposit ? Number(deposit) : null,
@@ -104,8 +102,10 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
       });
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : '';
-      setErrorText(message === 'conflict' ? t('movements.conflict') : t('movements.saveFailed'));
+      const code = (error as { code?: string })?.code;
+      if (code === 'P0003') setErrorText(t('movements.notInAtelier'));
+      else if (code === 'P0004' || code === 'P0005') setErrorText(t('movements.conflict'));
+      else setErrorText(t('movements.saveFailed'));
     }
   };
 
@@ -205,7 +205,7 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
                 <select
                   id={reasonId}
                   value={reason}
-                  onChange={(event) => setReason(event.target.value as 'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'return' | 'other')}
+                  onChange={(event) => setReason(event.target.value as 'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'other')}
                   className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
                 >
                   {REASONS.map((value) => (

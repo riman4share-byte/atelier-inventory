@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.18"
-  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -214,6 +209,7 @@ export type Database = {
           created_at: string
           customer_id: string | null
           deposit_amount: number | null
+          deposit_returned: boolean
           direction: Database["public"]["Enums"]["movement_direction"]
           dress_id: string
           due_at: string | null
@@ -234,6 +230,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           deposit_amount?: number | null
+          deposit_returned?: boolean
           direction: Database["public"]["Enums"]["movement_direction"]
           dress_id: string
           due_at?: string | null
@@ -254,6 +251,7 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           deposit_amount?: number | null
+          deposit_returned?: boolean
           direction?: Database["public"]["Enums"]["movement_direction"]
           dress_id?: string
           due_at?: string | null
@@ -835,6 +833,35 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      cancel_reservation: {
+        Args: { p_performed_by?: string; p_reservation_id: string }
+        Returns: undefined
+      }
+      check_in_dress: {
+        Args: {
+          p_condition_notes?: string
+          p_deposit_returned?: boolean
+          p_dress_id: string
+          p_occurred_at?: string
+          p_performed_by?: string
+          p_to_location: string
+        }
+        Returns: string
+      }
+      check_out_dress: {
+        Args: {
+          p_condition_notes?: string
+          p_customer_id: string
+          p_deposit_amount?: number
+          p_dress_id: string
+          p_due_at?: string
+          p_occurred_at?: string
+          p_performed_by?: string
+          p_reason: string
+          p_to_location: string
+        }
+        Returns: string
+      }
       get_atelier_branding: {
         Args: never
         Returns: {
@@ -883,6 +910,18 @@ export type Database = {
       public_qr_page_enabled: { Args: never; Returns: boolean }
       read_integration_secret: {
         Args: { p_secret_name: string }
+        Returns: string
+      }
+      reserve_dress: {
+        Args: {
+          p_customer_id?: string
+          p_dress_id: string
+          p_event_date?: string
+          p_from_date: string
+          p_notes?: string
+          p_performed_by?: string
+          p_to_date: string
+        }
         Returns: string
       }
       store_integration_secret: {
@@ -955,12 +994,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -984,11 +1023,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1009,11 +1048,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends (DefaultSchemaTableNameOrOptions extends {
+  TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1034,11 +1073,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never) = never,
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1051,11 +1090,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never) = never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1125,3 +1164,4 @@ export const Constants = {
     },
   },
 } as const
+

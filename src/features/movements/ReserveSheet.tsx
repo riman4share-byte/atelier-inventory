@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCreateReservation } from './api';
+import { useReserveDress } from './api';
 import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { Sheet } from '@/components/ui/Sheet';
@@ -39,7 +39,7 @@ export function ReserveSheet({ open, onClose, dressId, dressCode }: ReserveSheet
   const [notes, setNotes] = useState('');
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  const createReservation = useCreateReservation();
+  const createReservation = useReserveDress();
 
   if (!open) return null;
 
@@ -52,6 +52,7 @@ export function ReserveSheet({ open, onClose, dressId, dressCode }: ReserveSheet
     try {
       await createReservation.mutateAsync({
         dress_id: dressId,
+        customer_id: null,
         from_date: fromDate,
         to_date: toDate,
         event_date: eventDate || null,
@@ -59,8 +60,9 @@ export function ReserveSheet({ open, onClose, dressId, dressCode }: ReserveSheet
       });
       onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : '';
-      setErrorText(message === 'conflict' ? t('movements.conflict') : t('movements.saveFailed'));
+      const code = (error as { code?: string })?.code;
+      if (code === 'P0006' || code === 'P0003') setErrorText(t('movements.conflict'));
+      else setErrorText(t('movements.saveFailed'));
     }
   };
 
