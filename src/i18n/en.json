@@ -454,6 +454,7 @@
   "tools": {
     "title": "Tools and APIs",
     "hint": "Admin only. Keys are stored securely and never shown again.",
+    "envNote": "Integrations (AI, background removal, ERPNext) are configured through environment variables set at deploy time, not through this screen.",
     "kind": { "vision": "Vision (AI)", "background_removal": "Background removal", "translation": "Translation", "storage": "Storage", "erp": "ERPNext", "custom": "Custom" },
     "provider": "Provider",
     "model": "Model / endpoint",

@@ -82,5 +82,8 @@ export function allowedOrigin(req: Request): string {
     "http://localhost:4173", // vite preview
     "http://127.0.0.1:4173",
   ];
-  return allowed.includes(origin) ? origin : "";
+  if (allowed.includes(origin)) return origin;
+  // Cloudflare Pages preview deploys: https://<hash>.atelier-inventory.pages.dev
+  if (/^https:\/\/[a-z0-9-]+\.atelier-inventory\.pages\.dev$/.test(origin)) return origin;
+  return "";
 }

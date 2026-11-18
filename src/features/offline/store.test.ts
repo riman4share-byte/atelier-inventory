@@ -15,6 +15,7 @@ describe('the offline queue store', () => {
 
     await expect(putBatch({
       id: 'a', createdAt: 0, dressId: null, attempts: 0, status: 'pending', error: null, photos: [],
+      processingStartedAt: null,
     })).resolves.toBe(false);
     await expect(allBatches()).resolves.toEqual([]);
     await expect(countBatches()).resolves.toBe(0);

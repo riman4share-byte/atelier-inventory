@@ -75,7 +75,7 @@ function isAllowedImageUrl(url: string): boolean {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:") return false;
     const host = parsed.hostname.toLowerCase();
-    return host === "ofnkpyzmzhxtpwwvrbci.supabase.co" || host.endsWith(".supabase.co");
+    return host === "ofnkpyzmzhxtpwwvrbci.supabase.co";
   } catch {
     return false;
   }

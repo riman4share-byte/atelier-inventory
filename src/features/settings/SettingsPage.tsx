@@ -9,7 +9,6 @@ import { PersonIcon } from '@/components/icons';
 import { useAuth } from '@/features/auth/useAuth';
 import type { LanguageCode } from '@/lib/database.types';
 
-import { ToolsPanel } from './ToolsPanel';
 import { BrandingPanel } from './BrandingPanel';
 
 export function SettingsPage() {
@@ -88,7 +87,13 @@ export function SettingsPage() {
         </Panel>
 
         {profile.role === 'admin' ? <BrandingPanel /> : null}
-        {profile.role === 'admin' ? <ToolsPanel /> : null}
+        {profile.role === 'admin' ? (
+          <Panel title={t('tools.title')}>
+            <p className="text-small text-muted">
+              {t('tools.envNote')}
+            </p>
+          </Panel>
+        ) : null}
       </div>
     </Screen>
   );

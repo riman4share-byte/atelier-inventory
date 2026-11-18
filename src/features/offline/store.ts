@@ -27,9 +27,11 @@ export interface QueuedBatch {
   /** The dress row, once it has been created. Reused on a retry. */
   dressId: string | null;
   attempts: number;
-  status: 'pending' | 'failed';
+  status: 'pending' | 'processing' | 'failed';
   error: string | null;
   photos: QueuedPhoto[];
+  /** When this batch was last marked as processing, to detect stale claims. */
+  processingStartedAt: number | null;
 }
 
 const DB_NAME = 'atelier-offline';

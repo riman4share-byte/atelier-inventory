@@ -25,6 +25,7 @@ export async function saveCaptureBatch(photos: QueuedPhoto[]): Promise<{
     status: 'pending',
     error: null,
     photos,
+    processingStartedAt: null,
   };
 
   const stored = await putBatch(batch);

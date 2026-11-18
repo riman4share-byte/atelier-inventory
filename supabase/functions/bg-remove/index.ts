@@ -12,7 +12,7 @@ function isAllowedImageUrl(url: string): boolean {
     const parsed = new URL(url);
     if (parsed.protocol !== "https:") return false;
     const host = parsed.hostname.toLowerCase();
-    return host === "ofnkpyzmzhxtpwwvrbci.supabase.co" || host.endsWith(".supabase.co");
+    return host === "ofnkpyzmzhxtpwwvrbci.supabase.co";
   } catch {
     return false;
   }
@@ -63,7 +63,10 @@ Deno.serve(async (req) => {
           const buf = await providerRes.arrayBuffer();
           const bytes = new Uint8Array(buf);
           let binary = "";
-          for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+          const chunkSize = 8192;
+          for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize) as unknown as number[]);
+          }
           return new Response(
             JSON.stringify({ cutout: btoa(binary), mimeType: "image/png", provider: "photoroom" }),
             { status: 200, headers: { ...corsHeaders(origin), "Content-Type": "application/json" } },
