@@ -17,6 +17,7 @@ import { DressByCodePage } from '@/pages/DressByCodePage';
 import { AccountPage } from '@/pages/AccountPage';
 import { HelpPage } from '@/pages/HelpPage';
 import { AuditLogPage } from '@/pages/AuditLogPage';
+import { DepositsPage } from '@/pages/DepositsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { SharePage } from '@/pages/SharePage';
 import { SetupPage } from '@/pages/SetupPage';
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="customers/:id" element={<CustomersPage />} />
           <Route path="account" element={<AccountPage />} />
           <Route path="audit-log" element={<AuditLogPage />} />
+          <Route path="deposits" element={<DepositsPage />} />
 <Route path="help" element={<HelpPage />} />
           <Route path="settings" element={<RequireAdmin />}>
             <Route index element={<SettingsPage />} />

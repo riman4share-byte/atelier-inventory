@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Screen } from '@/components/layout/Screen';
 import { ThemeToggle } from '@/components/layout/ThemeToggle';
@@ -13,6 +14,7 @@ import { BrandingPanel } from './BrandingPanel';
 
 export function SettingsPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { profile, session, setLanguage, signOut } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
 
@@ -92,6 +94,18 @@ export function SettingsPage() {
             <p className="text-small text-muted">
               {t('tools.envNote')}
             </p>
+          </Panel>
+        ) : null}
+        {profile.role === 'admin' ? (
+          <Panel title="Admin tools">
+            <div className="flex flex-col gap-2">
+              <Button variant="secondary" size="sm" onClick={() => navigate('/audit-log')}>
+                Audit log
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => navigate('/deposits')}>
+                Deposits
+              </Button>
+            </div>
           </Panel>
         ) : null}
       </div>
