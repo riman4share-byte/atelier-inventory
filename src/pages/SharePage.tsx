@@ -44,6 +44,9 @@ export function SharePage() {
       dir={isArabic ? 'rtl' : 'ltr'}
     >
       <header className="pb-6">
+        {branding.logoUrl ? (
+          <img src={branding.logoUrl} alt="" className="mb-3 h-12 w-auto" />
+        ) : null}
         <h1 className="text-hero font-semibold tracking-tight text-ink">{branding.atelierName}</h1>
         <p className="mt-1.5 text-small text-muted">{t('share.pageSubtitle')}</p>
       </header>
