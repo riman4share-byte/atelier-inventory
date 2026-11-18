@@ -56,7 +56,17 @@ Deno.serve(async (req) => {
   const results = [];
   for (const job of jobs ?? []) {
     try {
-      await supabase.from("erp_jobs").update({ status: "processing", attempts: job.attempts + 1 }).eq("id", job.id);
+      const { error: claimError } = await supabase
+        .from("erp_jobs")
+        .update({ status: "processing", attempts: job.attempts + 1 })
+        .eq("id", job.id);
+      if (claimError) {
+        // The job could not be claimed: another worker may have taken it.
+        // Do not process it twice.
+        console.error("job claim failed:", claimError.message);
+        results.push({ id: job.id, status: "skipped", error: claimError.message });
+        continue;
+      }
 
       if (job.type === "create_dress_item") {
         const payload = job.payload as { code: string; name: string; description?: string; category?: string };
@@ -92,22 +102,37 @@ Deno.serve(async (req) => {
         if (!itemRes.ok) throw new Error(JSON.stringify(itemData));
 
         // Store the code ERPNext really gave, not the one we asked for.
-        const itemCode = itemData?.data?.item_code ?? payload.code;
-        await supabase
+        const itemCode = itemData?.data?.item_code;
+        if (!itemCode) {
+          throw new Error(`ERPNext returned no item_code for ${itemName}`);
+        }
+        const { error: dressError } = await supabase
           .from("dresses")
           .update({ erp_item_code: itemCode, erp_sync_status: "synced", erp_synced_at: new Date().toISOString() })
           .eq("code", payload.code);
-        await supabase.from("erp_sync_log").insert({
+        if (dressError) {
+          // The item exists in ERPNext but the app does not know its code.
+          // Failing here keeps the job in the queue so the sync is retried
+          // instead of being silently marked done.
+          throw new Error(`dress update failed: ${dressError.message}`);
+        }
+        const { error: logWriteError } = await supabase.from("erp_sync_log").insert({
           entity: "dress",
           entity_id: job.payload && "dressId" in job.payload ? (job.payload as { dressId: string }).dressId : null,
           action: "create",
           http_status: itemRes.status,
           message: `Created ${itemCode} (${itemName}) in ${group}`,
         });
-        await supabase.from("erp_jobs").update({ status: "done" }).eq("id", job.id);
+        if (logWriteError) console.error("log insert failed:", logWriteError.message);
+        const { error: doneError } = await supabase.from("erp_jobs").update({ status: "done" }).eq("id", job.id);
+        if (doneError) console.error("job completion failed:", doneError.message);
         results.push({ id: job.id, status: "done", item_code: itemCode });
       } else {
-        await supabase.from("erp_jobs").update({ status: "failed", last_error: "unknown job type" }).eq("id", job.id);
+        const { error: failError } = await supabase
+          .from("erp_jobs")
+          .update({ status: "failed", last_error: "unknown job type" })
+          .eq("id", job.id);
+        if (failError) console.error("job failure update failed:", failError.message);
         results.push({ id: job.id, status: "failed", error: "unknown job type" });
       }
     } catch (e) {
