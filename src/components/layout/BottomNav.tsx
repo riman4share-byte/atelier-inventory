@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '@/features/auth/useAuth';
 import {
   BoxesIcon,
   CalendarIcon,
@@ -17,27 +18,32 @@ interface NavItem {
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
-const ITEMS: NavItem[] = [
-  { to: '/dashboard', labelKey: 'nav.home', Icon: GridIcon },
-  { to: '/dresses', labelKey: 'nav.dresses', Icon: GownIcon },
-  // The daily question — "who is free on the 20th?" — sits in the bar, not
-  // behind a filter on the gallery.
-  { to: '/availability', labelKey: 'nav.dates', Icon: CalendarIcon },
-  { to: '/capture', labelKey: 'nav.capture', Icon: CameraIcon },
-  { to: '/materials', labelKey: 'nav.materials', Icon: BoxesIcon },
-  // Every role gets the account tab: it is where sign-out lives, and a staff
-  // member on a shared tablet must always be able to lock the app.
-  { to: '/account', labelKey: 'nav.account', Icon: PersonIcon },
-];
-
 /**
  * Navigation.
  *
  * Phone: a bottom bar of cells. Tablet and up: a 56px left rail with an
  * active indicator. Same markup, no second component to keep in sync.
+ *
+ * Materials is a back-office screen, so it only appears for admins. Sales
+ * staff see Home, Dresses, Free dates, Capture and Account — the things they
+ * use every day.
  */
 export function BottomNav() {
   const { t } = useTranslation();
+  const { profile } = useAuth();
+
+  const isAdmin = profile?.role === 'admin';
+
+  const items: NavItem[] = [
+    { to: '/dashboard', labelKey: 'nav.home', Icon: GridIcon },
+    { to: '/dresses', labelKey: 'nav.dresses', Icon: GownIcon },
+    { to: '/availability', labelKey: 'nav.dates', Icon: CalendarIcon },
+    { to: '/capture', labelKey: 'nav.capture', Icon: CameraIcon },
+    ...(isAdmin ? [{ to: '/materials', labelKey: 'nav.materials' as const, Icon: BoxesIcon }] : []),
+    // Every role gets the account tab: it is where sign-out lives, and a staff
+    // member on a shared tablet must always be able to lock the app.
+    { to: '/account', labelKey: 'nav.account', Icon: PersonIcon },
+  ];
 
   return (
     <nav
@@ -45,7 +51,7 @@ export function BottomNav() {
       className="shrink-0 border-t border-line bg-surface md:h-full md:w-14 md:border-r md:border-t-0"
     >
       <ul className="flex h-full items-stretch md:flex-col md:justify-start md:pt-2">
-        {ITEMS.map(({ to, labelKey, Icon }) => (
+        {items.map(({ to, labelKey, Icon }) => (
           <li key={to} className="flex-1 md:flex-none">
             <NavLink
               to={to}
