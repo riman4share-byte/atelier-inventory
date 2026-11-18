@@ -361,30 +361,52 @@ export function useMovementSummary() {
     queryFn: async () => {
       const client = supabase as NonNullable<typeof supabase>;
       const now = new Date();
-      const weekEnd = new Date(now.getTime() + 7 * 24 * 3600_000).toISOString();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const weekEnd = new Date(now.getTime() + 7 * 24 * 3600_000);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      const [_outRes, overdueRes, dueRes, reservedRes] = await Promise.all([
-        client.from('dress_movements').select('id', { count: 'exact', head: true }).eq('direction', 'out')
-          .is('corrects_movement_id', null),
-        client.from('dress_movements').select('id', { count: 'exact', head: true }).eq('direction', 'out')
-          .lt('due_at', now.toISOString()).not('due_at', 'is', null),
-        client.from('dress_movements').select('id', { count: 'exact', head: true }).eq('direction', 'out')
-          .gte('due_at', now.toISOString()).lte('due_at', weekEnd),
-        client.from('dress_reservations').select('id', { count: 'exact', head: true })
-          .eq('status', 'active').gte('from_date', monthStart.slice(0, 10)),
-      ]);
+      // Only movements that are still open (no closing "in") count as overdue
+      // or due this week. A dress returned early must not look overdue forever.
+      const { data: movements, error: movementError } = await client
+        .from('dress_movements')
+        .select('dress_id, direction, occurred_at, due_at, corrects_movement_id')
+        .limit(5000);
+      if (movementError) throw movementError;
+
+      const live = (movements ?? []).filter((m) => !m.corrects_movement_id);
+      const outMovements = live.filter((m) => m.direction === 'out');
+      const inMovements = live.filter((m) => m.direction === 'in');
+
+      const overdueDresses = new Set<string>();
+      const dueThisWeekDresses = new Set<string>();
+      for (const out of outMovements) {
+        const hasClosingIn = inMovements.some(
+          (inp) => inp.dress_id === out.dress_id && new Date(inp.occurred_at) > new Date(out.occurred_at),
+        );
+        if (hasClosingIn) continue;
+        if (!out.due_at) continue;
+        const due = new Date(out.due_at);
+        if (due < now) overdueDresses.add(out.dress_id);
+        else if (due <= weekEnd) dueThisWeekDresses.add(out.dress_id);
+      }
+
+      const { count: reservedThisMonth } = await client
+        .from('dress_reservations')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'active')
+        .gte('from_date', monthStart.toISOString().slice(0, 10));
 
       // "out now" = dresses whose location is with_customer
       const { count: outNow } = await client
-        .from('dresses').select('id', { count: 'exact', head: true })
-        .eq('location', 'with_customer').is('deleted_at', null);
+        .from('dresses')
+        .select('id', { count: 'exact', head: true })
+        .eq('location', 'with_customer')
+        .is('deleted_at', null);
 
       return {
         outNow: outNow ?? 0,
-        overdue: overdueRes.count ?? 0,
-        dueThisWeek: dueRes.count ?? 0,
-        reservedThisMonth: reservedRes.count ?? 0,
+        overdue: overdueDresses.size,
+        dueThisWeek: dueThisWeekDresses.size,
+        reservedThisMonth: reservedThisMonth ?? 0,
       };
     },
   });

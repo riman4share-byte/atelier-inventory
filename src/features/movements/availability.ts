@@ -43,7 +43,7 @@ export function bookedDays(ranges: BookingRange[]): Set<string> {
     const end = new Date(range.to);
     end.setHours(0, 0, 0, 0);
     while (cursor <= end) {
-      days.add(cursor.toISOString().slice(0, 10));
+      days.add(dayKey(cursor));
       cursor.setDate(cursor.getDate() + 1);
     }
   }

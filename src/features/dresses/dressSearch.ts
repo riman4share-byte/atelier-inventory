@@ -41,7 +41,7 @@ export function searchExpression(search: string): string | null {
     .trim();
   if (!term) return null;
 
-  const pattern = `.${term}*`;
+  const pattern = `.*${term}*`;
   // Fabric elements cannot be matched with ilike (arrays), and containment is
   // case sensitive, so the common case variants are covered explicitly
   // (as typed, Capitalised, lowercased). Documented in GAPS.md; refined

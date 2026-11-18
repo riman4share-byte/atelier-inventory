@@ -11,10 +11,10 @@ describe('searchExpression', () => {
     const expression = searchExpression('lace');
     expect(expression).toBe(
       [
-        'name_en.ilike.lace*',
-        'name_ar.ilike.lace*',
-        'code.ilike.lace*',
-        'color.ilike.lace*',
+        'name_en.ilike.*lace*',
+        'name_ar.ilike.*lace*',
+        'code.ilike.*lace*',
+        'color.ilike.*lace*',
         // as typed, capitalised and lowercased to survive case-sensitive
         // array containment
         'fabrics.cs.{lace}',
@@ -26,7 +26,7 @@ describe('searchExpression', () => {
   it('strips or-list separators and wildcards from the term', () => {
     const expression = searchExpression('la,ce(*)% ');
     expect(expression).toBe(
-      'name_en.ilike.lace*,name_ar.ilike.lace*,code.ilike.lace*,color.ilike.lace*,fabrics.cs.{lace},fabrics.cs.{Lace}',
+      'name_en.ilike.*lace*,name_ar.ilike.*lace*,code.ilike.*lace*,color.ilike.*lace*,fabrics.cs.{lace},fabrics.cs.{Lace}',
     );
   });
 });
@@ -42,7 +42,7 @@ describe('buildDressFilters', () => {
   it('keeps a concrete status and the search expression', () => {
     const built = buildDressFilters({ search: 'noor', status: 'reserved' });
     expect(built.status).toBe('reserved');
-    expect(built.orExpression).toContain('name_en.ilike.noor*');
+    expect(built.orExpression).toContain('name_en.ilike.*noor*');
   });
 
   it('maps the all chip to no category filter', () => {
