@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSharedDresses } from '@/features/dresses/api';
 import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
+import { Spinner } from '@/components/ui/Spinner';
 
 /**
  * Public read-only page behind a share link (Phase 3). No login, no app
