@@ -8,13 +8,14 @@ import {
   GownIcon,
   GridIcon,
   PersonIcon,
+  SlidersIcon,
 } from '@/components/icons';
 import { cx } from '@/lib/cx';
 import type { ComponentType, SVGProps } from 'react';
 
 interface NavItem {
   to: string;
-  labelKey: 'nav.home' | 'nav.dresses' | 'nav.dates' | 'nav.capture' | 'nav.materials' | 'nav.account';
+  labelKey: 'nav.home' | 'nav.dresses' | 'nav.dates' | 'nav.capture' | 'nav.materials' | 'nav.audit' | 'nav.account';
   Icon: ComponentType<SVGProps<SVGSVGElement>>;
 }
 
@@ -40,6 +41,7 @@ export function BottomNav() {
     { to: '/availability', labelKey: 'nav.dates', Icon: CalendarIcon },
     { to: '/capture', labelKey: 'nav.capture', Icon: CameraIcon },
     ...(isAdmin ? [{ to: '/materials', labelKey: 'nav.materials' as const, Icon: BoxesIcon }] : []),
+    ...(isAdmin ? [{ to: '/audit-log', labelKey: 'nav.audit' as const, Icon: SlidersIcon }] : []),
     // Every role gets the account tab: it is where sign-out lives, and a staff
     // member on a shared tablet must always be able to lock the app.
     { to: '/account', labelKey: 'nav.account', Icon: PersonIcon },
