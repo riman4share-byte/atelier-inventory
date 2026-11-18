@@ -1,4 +1,12 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { useAuth } from '@/features/auth/useAuth';
+
+function HomeRedirect() {
+  const { profile } = useAuth();
+  if (profile?.role === 'admin') return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/availability" replace />;
+}
+
 import { AppShell } from '@/components/layout/AppShell';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { LoginPage } from '@/features/auth/LoginPage';
@@ -41,7 +49,7 @@ export default function App() {
 
       <Route element={<RequireAuth />}>
         <Route element={<AppShell />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<HomeRedirect />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="dresses" element={<DressesPage />} />
           <Route path="dresses/new" element={<DressDetailPage />} />

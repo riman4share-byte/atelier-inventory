@@ -120,7 +120,7 @@ export function CheckInSheet({ open, onClose, dressId, dressCode, currentCustome
             </p>
           ) : null}
 
-          <Button onClick={() => void submit()} loading={createMovement.isPending}>
+          <Button onClick={() => void submit()} loading={createMovement.isPending} className="w-full h-12 text-base">
             {t('movements.checkIn')}
           </Button>
         </div>

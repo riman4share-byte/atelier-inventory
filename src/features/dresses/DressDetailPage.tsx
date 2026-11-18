@@ -424,17 +424,17 @@ function ExistingDress({ id }: { id: string }) {
               </p>
             ) : null}
           </div>
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
+          <div className="mt-2.5 flex flex-col gap-2">
             {dress.location === 'in_atelier' || dress.location === 'other' ? (
-              <Button variant="secondary" size="sm" className="w-auto px-2.5" onClick={() => setCheckoutOpen(true)}>
+              <Button size="md" className="w-full h-12 text-base" onClick={() => setCheckoutOpen(true)}>
                 {t('movements.checkOut')}
               </Button>
             ) : (
-              <Button variant="secondary" size="sm" className="w-auto px-2.5" onClick={() => setCheckinOpen(true)}>
+              <Button size="md" className="w-full h-12 text-base" onClick={() => setCheckinOpen(true)}>
                 {t('movements.checkIn')}
               </Button>
             )}
-            <Button variant="secondary" size="sm" className="w-auto px-2.5" onClick={() => setReserveOpen(true)}>
+            <Button variant="secondary" size="md" className="w-full h-12 text-base" onClick={() => setReserveOpen(true)}>
               {t('movements.reserve')}
             </Button>
           </div>

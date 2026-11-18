@@ -44,9 +44,14 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [reason, setReason] = useState<'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'other'>('rental');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().slice(0, 10);
+  });
   const [deposit, setDeposit] = useState('');
   const [notes, setNotes] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
   const customers = useCustomers(customerSearch);
@@ -195,27 +200,6 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
           {/* The movement itself: reason, return date, money taken. */}
           <Panel>
             <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1">
-                <label
-                  htmlFor={reasonId}
-                  className="eyebrow text-[10px] font-medium tracking-widest text-muted"
-                >
-                  {t('movements.reasonLabel')}
-                </label>
-                <select
-                  id={reasonId}
-                  value={reason}
-                  onChange={(event) => setReason(event.target.value as 'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'other')}
-                  className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
-                >
-                  {REASONS.map((value) => (
-                    <option key={value} value={value}>
-                      {t(`movements.reason.${value}`)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <TextField
                 label={t('movements.dueDate')}
                 type="date"
@@ -229,25 +213,56 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
                 </p>
               ) : null}
 
-              <TextField
-                label={t('movements.deposit')}
-                type="number"
-                mono
-                inputMode="decimal"
-                placeholder="0"
-                value={deposit}
-                onChange={(event) => setDeposit(event.target.value)}
-              />
-            </div>
-          </Panel>
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-left text-caption font-semibold text-accent"
+              >
+                {showAdvanced ? 'Hide options' : 'More options (reason, deposit, notes)'}
+              </button>
 
-          <Panel>
-            <TextArea
-              label={t('movements.conditionNotes')}
-              rows={2}
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-            />
+              {showAdvanced ? (
+                <>
+                  <div className="flex flex-col gap-1">
+                    <label
+                      htmlFor={reasonId}
+                      className="eyebrow text-[10px] font-medium tracking-widest text-muted"
+                    >
+                      {t('movements.reasonLabel')}
+                    </label>
+                    <select
+                      id={reasonId}
+                      value={reason}
+                      onChange={(event) => setReason(event.target.value as 'rental' | 'sale_delivery' | 'fitting' | 'alteration' | 'cleaning' | 'photoshoot' | 'other')}
+                      className="h-9 rounded-field border border-line bg-surface px-2.5 text-body text-ink focus:border-accent"
+                    >
+                      {REASONS.map((value) => (
+                        <option key={value} value={value}>
+                          {t(`movements.reason.${value}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <TextField
+                    label={t('movements.deposit')}
+                    type="number"
+                    mono
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={deposit}
+                    onChange={(event) => setDeposit(event.target.value)}
+                  />
+
+                  <TextArea
+                    label={t('movements.conditionNotes')}
+                    rows={2}
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                  />
+                </>
+              ) : null}
+            </div>
           </Panel>
 
           {errorText ? (
@@ -259,6 +274,8 @@ export function CheckOutSheet({ open, onClose, dressId, dressCode }: CheckOutShe
           <Button
             onClick={() => void submit()}
             loading={createMovement.isPending || createCustomer.isPending}
+            className="w-full h-12 text-base"
+            size="md"
           >
             {t('movements.checkOut')}
           </Button>
