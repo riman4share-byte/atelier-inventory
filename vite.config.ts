@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Atelier Inventory',
@@ -43,6 +43,7 @@ export default defineConfig({
             // a shared tablet one staff member could be served another
             // member's dresses and customer rows.
             urlPattern: /\/rest\/v1\/rpc\/get_shared_dresses/i,
+            method: 'POST',
             handler: 'NetworkFirst',
             options: { cacheName: 'public-share', expiration: { maxEntries: 20, maxAgeSeconds: 300 } },
           },
