@@ -831,7 +831,23 @@ disappeared into it. They carry their own ground now.
 two lines. The mark carries the name now, so the name is not written out
 beside it, and there is room for both.
 
-The dead function that fetched only the first photograph is gone.
+### G-73 · Movement validation and status derivation now live in the database
+
+**Status:** resolved 2026-11-18 · **Phase:** 8
+Four functions in `supabase/migrations/20261118000000_movement_rpc.sql`:
+`check_out_dress`, `check_in_dress`, `reserve_dress`, `cancel_reservation`.
+Each locks the dress row, validates availability (location, overlapping
+reservations), writes the ledger entry and updates the dress atomically, and
+derives `status` from the movement. The frontend calls them via RPC.
+
+This closes the core of G-72: check-out now sets status (rented/sold),
+check-in restores available (or keeps rented if other movements are open),
+and the database rejects a second tablet's checkout.
+
+Still open from G-72's list: the corrections screen (the ledger supports
+`corrects_movement_id` but nothing creates one), `audit_log` writes on
+customer PII, and the turnover-days setting (still `TURNOVER_DAYS = 0`).
+
 
 ### G-71 · There was no way to ask which dresses are free on a date
 
