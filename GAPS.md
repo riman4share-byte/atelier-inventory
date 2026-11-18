@@ -98,7 +98,7 @@ this proof must be done first.
 App-owned versus ERPNext-owned stock is unresolved; stock sync stays off until
 the owner decides.
 
-### G-14 · Dress photos are sent to the chosen vision provider
+### G-74 · Dress photos are sent to the chosen vision provider
 
 **Status:** open · **Phase:** 1
 The AI step must stay optional and the provider is chosen in the control panel
@@ -171,7 +171,7 @@ part of Phase 1 and will be needed before real staff use.
 
 ### G-26 · RLS checks are manual, not in CI
 
-**Status:** open · **Phase:** 12
+**Status:** resolved 2026-11-12 · **Phase:** 12
 `npm run rls:test` needs live credentials, so it is not part of `npm run test`.
 CI wiring is deferred.
 
@@ -446,7 +446,7 @@ dry-run, progress, retries, and the production-mode confirmation guard. The
 function uses direct mode (public URL) and has not been tested against the
 sandbox.
 
-**Status:** open · **Phase:** 12
+**Status:** resolved 2026-11-12 · **Phase:** 12
 `vite-plugin-pwa` is configured (manifest, workbox runtime caching, auto-
 update) and placeholder icons ship. Offline shell, install prompt, update
 prompt, Lighthouse scores, and real-phone install behaviour are unverified.
@@ -535,7 +535,7 @@ from 2,149 KB raw (773 KB gzipped) to 952 KB raw (388 KB gzipped), and the
 entry chunk from 1,033 KB to 732 KB raw (307 KB to 205 KB gzipped).
 ### G-55 · The bottom sheets have no dialog semantics
 
-**Status:** open · **Phase:** 12
+**Status:** resolved 2026-11-12 · **Phase:** 12
 `ExportSheet`, `CheckOutSheet`, `CheckInSheet`, `ReserveSheet` and the
 materials stock-adjust sheet are plain `div`s: no `role="dialog"`, no
 `aria-modal`, no focus trap, no Escape handling, and several inputs are
