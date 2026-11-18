@@ -135,6 +135,7 @@ export function useCreateMovement() {
       deposit_amount?: number | null;
       condition_notes?: string | null;
       condition_photo_paths?: string[];
+      corrects_movement_id?: string | null;
     }) => {
       const db = supabase as NonNullable<typeof supabase>;
       const { data: session } = await db.auth.getSession();

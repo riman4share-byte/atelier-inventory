@@ -415,7 +415,10 @@
     "datesRequired": "From and to dates are required.",
     "conflict": "This dress already has an overlapping reservation.",
     "notInAtelier": "This dress is not in the atelier right now.",
-    "saveFailed": "Saving failed. Check your connection and try again."
+    "saveFailed": "Saving failed. Check your connection and try again.",
+    "correct": "Correct",
+    "correctTitle": "Correct {{code}}",
+    "correctBody": "This creates a correcting entry for the {{direction}} ({{reason}}) above. The original is kept in the ledger."
   },
   "availability": {
     "title": "Free by date",

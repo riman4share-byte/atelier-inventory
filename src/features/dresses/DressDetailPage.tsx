@@ -18,9 +18,11 @@ import {
   type DressRow,
 } from './api';
 import { useDressMovements } from '@/features/movements/api';
+import type { DressMovementRow } from '@/features/movements/api';
 import { CheckOutSheet } from '@/features/movements/CheckOutSheet';
 import { CheckInSheet } from '@/features/movements/CheckInSheet';
 import { ReserveSheet } from '@/features/movements/ReserveSheet';
+import { CorrectSheet } from '@/features/movements/CorrectSheet';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
 import { categoryLabel, toCategory } from './categories';
@@ -127,6 +129,7 @@ function ExistingDress({ id }: { id: string }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkinOpen, setCheckinOpen] = useState(false);
   const [reserveOpen, setReserveOpen] = useState(false);
+  const [correctMovement, setCorrectMovement] = useState<DressMovementRow | null>(null);
   // The background remover is a tool, not part of the page: it opens only
   // when the owner asks for it.
   const [cleanerOpen, setCleanerOpen] = useState(false);
@@ -463,6 +466,13 @@ function ExistingDress({ id }: { id: string }) {
                   {movement.condition_notes ? (
                     <p className="mt-1 text-note text-ink">{movement.condition_notes}</p>
                   ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setCorrectMovement(movement)}
+                    className="mt-1 text-[11px] font-semibold text-accent hover:underline"
+                  >
+                    {t('movements.correct')}
+                  </button>
                   {movement.direction === 'out' ? (
                     <button
                       type="button"
@@ -638,6 +648,16 @@ function ExistingDress({ id }: { id: string }) {
 
         <CheckOutSheet open={checkoutOpen} onClose={() => setCheckoutOpen(false)} dressId={dress.id} dressCode={dress.code} />
         <CheckInSheet open={checkinOpen} onClose={() => setCheckinOpen(false)} dressId={dress.id} dressCode={dress.code} currentCustomerId={dress.current_customer_id} />
+
+        {correctMovement ? (
+          <CorrectSheet
+            open={true}
+            onClose={() => setCorrectMovement(null)}
+            dressId={dress.id}
+            dressCode={dress.code}
+            movement={correctMovement}
+          />
+        ) : null}
         <ReserveSheet open={reserveOpen} onClose={() => setReserveOpen(false)} dressId={dress.id} dressCode={dress.code} />
         {cleanerOpen ? (
           <BackgroundCleaner
