@@ -8,6 +8,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { TextField } from '@/components/ui/TextField';
 import { ChevronRightIcon, PersonIcon } from '@/components/icons';
 import { useCustomers, useCustomerMovements } from '@/features/movements/api';
+import { supabase } from '@/lib/supabase';
 
 function CustomerList() {
   const { t } = useTranslation();
@@ -109,6 +110,30 @@ function CustomerDetail({ id }: { id: string }) {
         ) : null}
 
         <Panel title={t('customers.movements')} flush>
+          {(movements.data ?? []).length > 0 ? (
+            <div className="border-b border-line px-3 py-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-auto px-2.5"
+                onClick={async () => {
+                  const { printHtml, buildCustomerStatementHtml } = await import('@/features/dresses/printDocument');
+                  const dressIds = [...new Set((movements.data ?? []).map((m) => m.dress_id))];
+                  const { data: dresses } = await (supabase as NonNullable<typeof supabase>)
+                    .from('dresses')
+                    .select('id, code, name_en')
+                    .in('id', dressIds);
+                  const names: Record<string, string> = {};
+                  for (const d of dresses ?? []) {
+                    names[d.id] = d.name_en ? `${d.code} ${d.name_en}` : d.code;
+                  }
+                  printHtml(buildCustomerStatementHtml(customer!, movements.data ?? [], names, t('app.name')));
+                }}
+              >
+                Print statement
+              </Button>
+            </div>
+          ) : null}
           {movements.isLoading ? (
             <div className="flex justify-center py-6">
               <Spinner className="h-5 w-5 text-accent" />

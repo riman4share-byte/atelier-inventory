@@ -443,6 +443,19 @@ function ExistingDress({ id }: { id: string }) {
         {/* Timeline */}
         {(movementsQuery.data?.length ?? 0) > 0 ? (
           <Panel title={t('movements.timeline')} flush>
+            <div className="border-b border-line px-3 py-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                className="w-auto px-2.5"
+                onClick={async () => {
+                  const { printHtml, buildDressHistoryHtml } = await import('@/features/dresses/printDocument');
+                  printHtml(buildDressHistoryHtml(dress, movementsQuery.data ?? [], t('app.name')));
+                }}
+              >
+                Print history
+              </Button>
+            </div>
             <ul className="divide-y divide-line">
               {(movementsQuery.data ?? []).map((movement) => (
                 <li key={movement.id} className="px-3 py-2">

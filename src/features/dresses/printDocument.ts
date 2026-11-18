@@ -534,3 +534,131 @@ export function buildReceiptHtml(movement: import('@/features/movements/api').Dr
       <div class="sig"><div>Staff signature</div><div>Customer signature</div></div>
     </body></html>`;
 }
+export function buildDressHistoryHtml(
+  dress: DressRow,
+  movements: import('@/features/movements/api').DressMovementRow[],
+  atelierName: string,
+): string {
+  const e = escapeHtml;
+  const name = dress.name_en || dress.name_ar || dress.code;
+  const rows = movements
+    .slice()
+    .sort((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime())
+    .map((m) => {
+      const occurred = new Date(m.occurred_at).toLocaleString('en-GB');
+      const due = m.due_at ? new Date(m.due_at).toLocaleDateString('en-GB') : '-';
+      return `<tr>
+        <td>${occurred}</td>
+        <td>${e(m.direction)}</td>
+        <td>${e(m.reason)}</td>
+        <td>${e(m.from_location ?? '—')} → ${e(m.to_location)}</td>
+        <td>${due}</td>
+        <td>${m.deposit_amount !== null ? m.deposit_amount : '—'}</td>
+        <td>${e(m.condition_notes ?? '')}</td>
+      </tr>`;
+    })
+    .join('');
+
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+    <title>Dress history - ${e(dress.code)}</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #0b0d0f; padding: 12mm; }
+      h1 { font-size: 18pt; margin-bottom: 2mm; }
+      .sub { color: #5b6470; font-size: 9pt; margin-bottom: 6mm; }
+      table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+      th, td { border: 1px solid #e2e4e9; padding: 2mm; text-align: left; vertical-align: top; }
+      th { background: #f8f9fa; font-weight: 700; }
+      .mono { font-family: 'Consolas', 'SF Mono', ui-monospace, monospace; }
+    </style></head>
+    <body>
+      <h1>${e(atelierName)}</h1>
+      <p class="sub">Dress history card &middot; ${new Date().toLocaleDateString('en-GB')}</p>
+      <div style="margin-bottom: 6mm;">
+        <p><strong>Code:</strong> <span class="mono">${e(dress.code)}</span></p>
+        <p><strong>Name:</strong> ${e(name)}</p>
+        <p><strong>Category:</strong> ${e(dress.category ?? '—')}</p>
+        <p><strong>Status:</strong> ${e(dress.status)}</p>
+        <p><strong>Location:</strong> ${e(dress.location)}</p>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Occurred</th><th>Direction</th><th>Reason</th><th>Route</th>
+            <th>Due back</th><th>Deposit</th><th>Condition</th>
+          </tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="7">No movements recorded.</td></tr>'}</tbody>
+      </table>
+    </body></html>`;
+}
+
+export function buildCustomerStatementHtml(
+  customer: { id: string; full_name: string; phone: string | null },
+  movements: import('@/features/movements/api').DressMovementRow[],
+  dressNames: Record<string, string>,
+  atelierName: string,
+): string {
+  const e = escapeHtml;
+  const rows = movements
+    .slice()
+    .sort((a, b) => new Date(a.occurred_at).getTime() - new Date(b.occurred_at).getTime())
+    .map((m) => {
+      const occurred = new Date(m.occurred_at).toLocaleDateString('en-GB');
+      const due = m.due_at ? new Date(m.due_at).toLocaleDateString('en-GB') : '—';
+      const dressName = dressNames[m.dress_id] ?? m.dress_id.slice(0, 8);
+      const deposit = m.deposit_amount !== null ? m.deposit_amount : '—';
+      const returned = m.deposit_returned ? 'Yes' : 'No';
+      return `<tr>
+        <td>${occurred}</td>
+        <td>${e(dressName)}</td>
+        <td>${e(m.direction)}</td>
+        <td>${e(m.reason)}</td>
+        <td>${due}</td>
+        <td>${deposit}</td>
+        <td>${returned}</td>
+        <td>${e(m.condition_notes ?? '')}</td>
+      </tr>`;
+    })
+    .join('');
+
+  const totalDeposit = movements.reduce((sum, m) => sum + (m.deposit_amount ?? 0), 0);
+  const returnedDeposit = movements.reduce((sum, m) => sum + (m.deposit_returned ? (m.deposit_amount ?? 0) : 0), 0);
+
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+    <title>Customer statement - ${e(customer.full_name)}</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: 'Segoe UI', system-ui, sans-serif; color: #0b0d0f; padding: 12mm; }
+      h1 { font-size: 18pt; margin-bottom: 2mm; }
+      .sub { color: #5b6470; font-size: 9pt; margin-bottom: 6mm; }
+      table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+      th, td { border: 1px solid #e2e4e9; padding: 2mm; text-align: left; vertical-align: top; }
+      th { background: #f8f9fa; font-weight: 700; }
+      .mono { font-family: 'Consolas', 'SF Mono', ui-monospace, monospace; }
+      .totals { margin-top: 6mm; font-size: 10pt; }
+    </style></head>
+    <body>
+      <h1>${e(atelierName)}</h1>
+      <p class="sub">Customer statement &middot; ${new Date().toLocaleDateString('en-GB')}</p>
+      <div style="margin-bottom: 6mm;">
+        <p><strong>Customer:</strong> ${e(customer.full_name)}</p>
+        ${customer.phone ? `<p><strong>Phone:</strong> ${e(customer.phone)}</p>` : ''}
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Dress</th><th>Direction</th><th>Reason</th>
+            <th>Due back</th><th>Deposit</th><th>Returned</th><th>Condition</th>
+          </tr>
+        </thead>
+        <tbody>${rows || '<tr><td colspan="8">No movements recorded.</td></tr>'}</tbody>
+      </table>
+      <div class="totals">
+        <p><strong>Total deposits taken:</strong> ${totalDeposit}</p>
+        <p><strong>Total deposits returned:</strong> ${returnedDeposit}</p>
+        <p><strong>Outstanding:</strong> ${totalDeposit - returnedDeposit}</p>
+      </div>
+    </body></html>`;
+}
+
