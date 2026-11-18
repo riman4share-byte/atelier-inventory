@@ -63,7 +63,7 @@ export function useAddPhotos(dressId: string) {
           original_path: path,
           width: prepared.width,
           height: prepared.height,
-          sort_order: next,
+          sort_order: next++,
         });
         if (insertError) {
           // keep storage tidy if the row insert fails

@@ -111,12 +111,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // one's rows. The precache (the app shell itself) is kept so the app
     // still opens offline.
     if (typeof caches !== 'undefined') {
-      const names = await caches.keys();
-      await Promise.all(
-        names
-          .filter((name) => !name.includes('precache'))
-          .map((name) => caches.delete(name)),
-      );
+      try {
+        const names = await caches.keys();
+        await Promise.all(
+          names
+            .filter((name) => !name.includes('precache'))
+            .map((name) => caches.delete(name)),
+        );
+      } catch {
+        // Cache clearing is best-effort; sign-out must still happen.
+      }
     }
     if (!supabase) return;
     await supabase.auth.signOut();

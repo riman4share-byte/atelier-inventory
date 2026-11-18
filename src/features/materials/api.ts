@@ -111,7 +111,8 @@ export function useSetDressMaterials() {
   return useMutation({
     mutationFn: async ({ dressId, items }: { dressId: string; items: Array<{ material_id: string; quantity: number }> }) => {
       const db = supabase as NonNullable<typeof supabase>;
-      await db.from('dress_materials').delete().eq('dress_id', dressId);
+      const { error: deleteError } = await db.from('dress_materials').delete().eq('dress_id', dressId);
+      if (deleteError) throw deleteError;
       if (items.length > 0) {
         const { error } = await db.from('dress_materials').insert(
           items.map((item) => ({ dress_id: dressId, material_id: item.material_id, quantity: item.quantity })),
