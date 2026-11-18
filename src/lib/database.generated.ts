@@ -831,6 +831,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      adjust_material_stock: {
+        Args: {
+          p_delta: number
+          p_material_id: string
+          p_performed_by?: string
+          p_reason: Database["public"]["Enums"]["stock_reason"]
+        }
+        Returns: number
+      }
       allocate_dress_code: { Args: never; Returns: string }
       app_role: {
         Args: never

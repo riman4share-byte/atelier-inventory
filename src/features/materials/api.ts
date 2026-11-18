@@ -73,19 +73,17 @@ export function useAdjustStock() {
     mutationFn: async ({ materialId, delta, reason }: { materialId: string; delta: number; reason: 'purchase' | 'used' | 'adjustment' | 'return' }) => {
       const db = supabase as NonNullable<typeof supabase>;
       const { data: session } = await db.auth.getSession();
-      const { data: mat, error: readErr } = await db.from('materials').select('stock_qty').eq('id', materialId).single();
-      if (readErr) throw readErr;
-      const newQty = Number(mat.stock_qty) + delta;
-      if (newQty < 0) throw new Error('negative_stock');
-      const { error: updErr } = await db.from('materials').update({ stock_qty: newQty }).eq('id', materialId);
-      if (updErr) throw updErr;
-      const { error: movErr } = await db.from('stock_movements').insert({
-        material_id: materialId,
-        delta,
-        reason,
-        created_by: session?.session?.user?.id ?? null,
+      const { error } = await db.rpc('adjust_material_stock', {
+        p_material_id: materialId,
+        p_delta: delta,
+        p_reason: reason,
+        p_performed_by: session?.session?.user?.id ?? undefined,
       });
-      if (movErr) throw movErr;
+      if (error) {
+        if (error.code === 'P0001') throw new Error('not_found');
+        if (error.code === 'P0002') throw new Error('negative_stock');
+        throw error;
+      }
     },
     onSuccess: () => client.invalidateQueries({ queryKey: ['materials'] }),
   });
