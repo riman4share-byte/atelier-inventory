@@ -14,7 +14,7 @@ export default defineConfig({
         short_name: 'Atelier',
         description: 'Inventory, photo capture and movement tracking for a wedding dress atelier.',
         // The industrial palette: neutral slate, no pink splash screen.
-        theme_color: '#f1f5f9',
+        theme_color: '#f7f4ee',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'any',

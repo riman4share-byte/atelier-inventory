@@ -14,8 +14,9 @@
  * that this app never renders, and a staff member on mobile data pays for
  * every kilobyte of them. Only the subsets actually needed are declared.
  *
- *   Plus Jakarta Sans  latin, latin-ext   - the interface
- *   JetBrains Mono    latin, latin-ext   - codes, numbers, dates
+ *   Instrument Sans   latin, latin-ext   - the interface
+ *   Instrument Serif  latin, latin-ext   - headlines (serif)
+ *   Geist Mono        latin, latin-ext   - codes, numbers, dates
  *   Cairo             arabic, latin      - the Arabic interface
  */
 
@@ -113,14 +114,14 @@
   /* Structure */
   --ink: #1f1b16;
   --muted: #7b7266;
-  --faint: #a39a8e;
+  --faint: #6b6256;
   --line: #e2d9cc;
   --line-strong: #c9bfaf;
 
   /* The single accent hue — amber, like lamplight. */
   --accent: #d4853a;
   --accent-hover: #b86e2a;
-  --accent-ink: #ffffff;
+  --accent-ink: #1f1b16;
   --accent-bg: #faf0d8;
   --accent-line: #e8d4a8;
 
@@ -294,6 +295,12 @@
     font-family: var(--font-arabic);
     letter-spacing: 0;
     line-height: 1.5;
+  }
+
+  /* Buttons and labels in Arabic keep zero tracking too. */
+  html[lang='ar'] button,
+  html[lang='ar'] .eyebrow {
+    letter-spacing: 0;
   }
 
   input,

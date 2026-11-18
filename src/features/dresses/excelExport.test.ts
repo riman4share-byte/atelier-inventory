@@ -39,7 +39,7 @@ describe('the Excel export', () => {
 
   it('writes an empty price as empty, not as zero', () => {
     const empty = { ...dress, rent_price: null } as DressRow;
-    expect(cellValue(design('rent_price'), empty, neutraliseFormula)).toBe('');
+    expect(cellValue(design('rent_price'), empty, neutraliseFormula)).toBe(null);
   });
 
   it('writes a date as a date so it can be sorted', () => {

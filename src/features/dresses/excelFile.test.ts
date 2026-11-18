@@ -119,7 +119,7 @@ describe('the Excel file itself', () => {
     await check.xlsx.load(buffer);
     const sheet = check.worksheets[0]!;
     const headerRow = 5;
-    expect(sheet.getRow(headerRow + 1).getCell(columnOf(sheet, headerRow, 'Rent price')).value).toBe('');
+    expect(sheet.getRow(headerRow + 1).getCell(columnOf(sheet, headerRow, 'Rent price')).value).toBe(null);
   });
 
   it('never carries the software credit', async () => {

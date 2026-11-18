@@ -1,5 +1,5 @@
 import type { DressRow } from './api';
-import { neutraliseFormula, type ExportColumn } from './exportData';
+import { type ExportColumn } from './exportData';
 import {
   cellValue,
   safeSheetName,
@@ -88,37 +88,44 @@ export async function buildExcelWorkbook(
     get: (dress: DressRow) => column.get(dress, origin),
   }));
 
-  sheet.addTable({
-    name: safeTableName(meta.tableName),
-    ref: `A${headerRowIndex}`,
-    headerRow: true,
-    totalsRow: false,
-    style: {
-      theme: 'TableStyleLight9',
-      showFirstColumn: false,
-      showLastColumn: false,
-      showRowStripes: true,
-      showColumnStripes: false,
-    },
-    columns: columns.map((column) => ({ name: column.header, filterButton: true })),
-    rows: values.map((_rowValues, index) =>
-      designColumns.map((designColumn) => {
-        const dress = dresses[index];
-        if (!dress) return '';
-        // The value goes in plain. A cell inside a table cannot carry its
-        // own format: ExcelJS writes the whole object into the cell as
-        // text, and the sheet ends up showing {"value":3500,...}. The
-        // formats are applied to the cells afterwards instead.
-        return cellValue(designColumn, dress, neutraliseFormula);
-      }),
-    ),
-  });
+  if (dresses.length > 0) {
+    sheet.addTable({
+      name: safeTableName(meta.tableName),
+      ref: `A${headerRowIndex}`,
+      headerRow: true,
+      totalsRow: false,
+      style: {
+        theme: 'TableStyleLight9',
+        showFirstColumn: false,
+        showLastColumn: false,
+        showRowStripes: true,
+        showColumnStripes: false,
+      },
+      columns: columns.map((column) => ({ name: column.header, filterButton: true })),
+      rows: values.map((_rowValues, index) =>
+        designColumns.map((designColumn) => {
+          const dress = dresses[index];
+          if (!dress) return '';
+          // The value goes in plain. A cell inside a table cannot carry its
+          // own format: ExcelJS writes the whole object into the cell as
+          // text, and the sheet ends up showing {"value":3500,...}. The
+          // formats are applied to the cells afterwards instead.
+          return cellValue(designColumn, dress);
+        }),
+      ),
+    });
+  } else {
+    // An empty export still gets a header row so the file opens cleanly.
+    columns.forEach((column, index) => {
+      sheet.getCell(headerRowIndex, index + 1).value = column.header;
+    });
+  }
 
   styleTable(sheet, designColumns, headerRowIndex, dresses.length, values);
 
   // --- the footer and the page ---------------------------------------------
   writeFooter(sheet, branding, meta, headerRowIndex + dresses.length + 2);
-  setupPrint(sheet, branding, meta);
+  setupPrint(sheet, branding, meta, headerRowIndex);
 
   return workbook;
 }

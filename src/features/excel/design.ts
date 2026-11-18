@@ -123,24 +123,24 @@ export function safeSheetName(name: string): string {
 export function cellValue<TRow>(
   column: ExcelColumn<TRow>,
   row: TRow,
-  neutralise: (value: string) => string,
+  neutralise?: (value: string) => string,
 ): string | number | Date {
   const raw = column.get(row);
 
   if (column.type === 'price') {
-    if (raw === '') return '';
+    if (raw === '') return null as unknown as string;
     const amount = Number(raw);
-    return Number.isFinite(amount) ? amount : '';
+    return Number.isFinite(amount) ? amount : null as unknown as string;
   }
 
   if (column.type === 'date' || column.type === 'datetime') {
-    if (raw === '') return '';
+    if (raw === '') return null as unknown as string;
     const date = new Date(raw);
     return Number.isNaN(date.getTime()) ? raw : date;
   }
 
-  if (raw === '') return '';
-  return neutralise(raw);
+  if (raw === '') return null as unknown as string;
+  return neutralise ? neutralise(raw) : raw;
 }
 
 /** The number format a column's values use. */
@@ -284,7 +284,7 @@ export function styleTable<TRow>(
       cell.alignment = {
         vertical: 'top',
         horizontal: column?.type === 'price' ? 'right' : 'left',
-        wrapText: column?.id === 'description_en' || column?.id === 'fabrics' || column?.id === 'notes',
+        wrapText: column?.id === 'description_en' || column?.id === 'fabrics' || column?.id === 'notes' || column?.id === 'condition_notes',
       };
       const format = column ? formatFor(column) : undefined;
       if (format) cell.numFmt = format;
@@ -324,7 +324,7 @@ export function writeFooter(
 }
 
 /** Sets the page up for printing: landscape, fitted to the width. */
-export function setupPrint(sheet: Worksheet, branding: ExcelBranding, meta: ExcelMeta): void {
+export function setupPrint(sheet: Worksheet, branding: ExcelBranding, meta: ExcelMeta, headerRowIndex?: number): void {
   sheet.pageSetup = {
     orientation: 'landscape',
     fitToPage: true,
@@ -332,6 +332,10 @@ export function setupPrint(sheet: Worksheet, branding: ExcelBranding, meta: Exce
     fitToHeight: 0,
     margins: { left: 0.4, right: 0.4, top: 0.6, bottom: 0.6, header: 0.2, footer: 0.2 },
   };
+  // Repeat the table header on every printed page.
+  if (headerRowIndex) {
+    sheet.pageSetup.printTitlesRow = `${headerRowIndex}:${headerRowIndex}`;
+  }
   sheet.headerFooter = {
     oddHeader: `&L&"Calibri,Bold"${branding.atelierName}&R&"Calibri"${meta.title}`,
     oddFooter: `&L&"Calibri"Prepared by ${branding.atelierName}&R&"Calibri"Page &P of &N`,

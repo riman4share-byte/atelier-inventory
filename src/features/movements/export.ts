@@ -1,5 +1,4 @@
 import type { DressMovementRow } from './api';
-import { neutraliseFormula } from '@/features/dresses/exportData';
 import {
   cellValue,
   safeSheetName,
@@ -195,14 +194,14 @@ export async function exportMovementsToExcel(
         // own format: ExcelJS writes the whole object into the cell as
         // text, and the sheet ends up showing {"value":3500,...}. The
         // formats are applied to the cells afterwards instead.
-        return cellValue(column, m, neutraliseFormula);
+        return cellValue(column, m);
       }),
     ),
   });
 
   styleTable(sheet, columns, headerRowIndex, movements.length, values);
   writeFooter(sheet, branding ?? { atelierName }, reportMeta, headerRowIndex + movements.length + 2);
-  setupPrint(sheet, branding ?? { atelierName }, reportMeta);
+  setupPrint(sheet, branding ?? { atelierName }, reportMeta, headerRowIndex);
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], {
@@ -213,5 +212,6 @@ export async function exportMovementsToExcel(
   link.href = url;
   link.download = filename;
   link.click();
-  URL.revokeObjectURL(url);
+  // iOS Safari can drop the download if the URL is revoked synchronously.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
