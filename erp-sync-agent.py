@@ -78,10 +78,13 @@ def sb_headers():
     }
 
 
-def sb_request(method, path, body=None):
+def sb_request(method, path, body=None, extra_headers=None):
     url = f"{SUPABASE_URL}{path}"
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method, headers=sb_headers())
+    headers = sb_headers()
+    if extra_headers:
+        headers.update(extra_headers)
+    req = urllib.request.Request(url, data=data, method=method, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             raw = resp.read()
@@ -141,7 +144,7 @@ def find_item_by_code_prefix(code):
     """
     if not code:
         return None
-    filters = json.dumps([["item_name", "like", f"{code}%"]])
+    filters = json.dumps([["item_name", "=", code]])
     quoted = quote(filters, safe="")
     status, data = erp_request(
         "GET",
@@ -188,8 +191,14 @@ def process_job(job):
         "PATCH",
         f"/rest/v1/erp_jobs?id=eq.{job_id}&status=eq.pending",
         {"status": "processing", "attempts": (job.get("attempts") or 0) + 1},
+        extra_headers={"Prefer": "return=representation"},
     )
     if status not in (200, 204):
+        log.info(f"  Job {job_id} was claimed by someone else; skipping.")
+        return
+    # PostgREST returns 204 (or an empty list) when zero rows matched the
+    # filter, so a double claim is invisible unless we check the body.
+    if _ is None or (isinstance(_, list) and len(_) == 0):
         log.info(f"  Job {job_id} was claimed by someone else; skipping.")
         return
 
@@ -303,6 +312,17 @@ def utc_now_iso():
 
 
 def poll_once():
+    # Reap stale "processing" jobs (crashed mid-sync). A job stuck in
+    # processing for more than 10 minutes is assumed abandoned.
+    from datetime import timedelta
+    cutoff = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat().replace("+00:00", "Z")
+    cutoff = quote(cutoff)
+    sb_request(
+        "PATCH",
+        f"/rest/v1/erp_jobs?status=eq.processing&created_at=lt.{cutoff}",
+        {"status": "pending", "last_error": "reaped: stale processing"},
+    )
+
     # quote() as well as the Z: belt and braces for any future format.
     now = quote(utc_now_iso())
     status, jobs = sb_request(
