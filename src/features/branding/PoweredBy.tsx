@@ -1,4 +1,5 @@
 import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
+import { supabase } from '@/lib/supabase';
 import { cx } from '@/lib/cx';
 
 /**
@@ -23,16 +24,29 @@ export function PoweredBy({
   const branding = useAtelierBranding();
   if (!branding.poweredBy) return null;
 
+  // The software credit carries its own mark: the KT logo sits next to the
+  // "Powered by Kais" line, so the credit is recognisable at a glance.
+  const ktLogoUrl = (supabase as NonNullable<typeof supabase>)
+    .storage.from('atelier-logo')
+    .getPublicUrl('powered-by-logo.png').data.publicUrl;
+
   return (
-    <p
+    <span
       className={cx(
-        'text-micro tracking-wide',
+        'inline-flex items-center gap-1.5 text-micro tracking-wide',
         tone === 'faint' ? 'text-faint' : 'text-muted',
         className,
       )}
       data-testid="powered-by"
     >
+      <img
+        src={ktLogoUrl}
+        alt=""
+        aria-hidden="true"
+        className="h-3.5 w-auto shrink-0 opacity-80"
+        loading="lazy"
+      />
       {branding.poweredBy}
-    </p>
+    </span>
   );
 }
