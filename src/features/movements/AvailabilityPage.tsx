@@ -265,7 +265,8 @@ export function AvailabilityPage() {
             >
               {free.length === 0 ? (
                 <p className="px-3 py-3 text-small text-muted" data-testid="no-free">
-                  {t('availability.noneFree')}
+                  {/* With no dresses at all, "every dress is taken" is a lie. */}
+                  {rows.length === 0 ? t('availability.noDresses') : t('availability.noneFree')}
                 </p>
               ) : (
                 <ul className="divide-y divide-line" data-testid="free-list">
@@ -334,12 +335,6 @@ export function AvailabilityPage() {
                     );
                   })}
                 </ul>
-              </Panel>
-            ) : null}
-
-            {rows.length === 0 ? (
-              <Panel>
-                <p className="text-small text-muted">{t('availability.empty')}</p>
               </Panel>
             ) : null}
           </>

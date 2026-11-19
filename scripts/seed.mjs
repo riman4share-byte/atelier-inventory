@@ -215,13 +215,56 @@ async function ensureMaterial(material) {
   return true;
 }
 
+/**
+ * Give a demo dress a real reason for its status. The database owns the
+ * status: it refuses anything the movement ledger does not support, so the
+ * ledger has to be written first and the status follows.
+ */
+async function makeTheLedgerAgree(dressId, status) {
+  if (status === 'available') return;
+
+  if (status === 'reserved') {
+    const today = new Date();
+    const from = today.toISOString().slice(0, 10);
+    const to = new Date(today.getTime() + 2 * 86400000).toISOString().slice(0, 10);
+    const { error } = await admin.from('dress_reservations').insert({
+      dress_id: dressId,
+      from_date: from,
+      to_date: to,
+      status: 'active',
+    });
+    if (error) fail(`could not book the dress: ${error.message}`);
+  } else {
+    const { error } = await admin.from('dress_movements').insert({
+      dress_id: dressId,
+      direction: 'out',
+      reason: status === 'sold' ? 'sale_delivery' : 'rental',
+      from_location: 'in_atelier',
+      to_location: 'with_customer',
+      occurred_at: new Date().toISOString(),
+    });
+    if (error) fail(`could not check the dress out: ${error.message}`);
+  }
+
+  const { error: statusError } = await admin.from('dresses').update({ status }).eq('id', dressId);
+  if (statusError) fail(`could not set the status of the dress: ${statusError.message}`);
+}
+
 async function ensureDress(dress, adminId) {
   const { data, error } = await admin.from('dresses').select('id').eq('code', dress.code).maybeSingle();
   if (error) fail(`could not read dresses: ${error.message}`);
   if (data) return false;
 
-  const { error: insertError } = await admin.from('dresses').insert({ ...dress, created_by: adminId });
+  // A dress is inserted available. The status is owned by the ledger, so it
+  // can only be set once the movement or the booking exists.
+  const { data: inserted, error: insertError } = await admin
+    .from('dresses')
+    .insert({ ...dress, status: 'available', created_by: adminId })
+    .select('id')
+    .single();
   if (insertError) fail(`could not insert ${dress.code}: ${insertError.message}`);
+
+  await makeTheLedgerAgree(inserted.id, dress.status);
   return true;
 }
 

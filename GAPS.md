@@ -9,7 +9,54 @@ touched the entry.
 
 ---
 
-## Open
+## Ship state (2026-11-19)
+
+What ships today: the app at `https://atelier-inventory.pages.dev` with an
+empty database. No dresses, no photos, no customers, no movements, no
+materials. The first dress the client captures becomes RF-0001. The
+atelier's own ERPNext (190 items) is untouched.
+
+**Verified, not asserted:**
+- Live bundle hash matches the local build; `dress-thumbnails: true` and
+  Supabase configured (verified by `scripts/deploy-pages.mjs`).
+- `/dresses`, `/availability`, `/deposits`, `/materials`, `/customers` all
+  show their empty states with zero console errors (Playwright, real
+  Chromium).
+- The dress gallery shows a real photo on every dress that has one (3 of 8
+  visible before the wipe); the placeholder is correct for the rest.
+- Strict CSP no longer blocks the app's own inline theme script (moved to
+  `public/theme.js`).
+- The ERP Edge Function checks every database write; a failed sync is
+  never marked done.
+- Exports page through the API's 1000-row cap (`src/lib/pagedFetch.ts`,
+  6 tests); a 1500-row probe came back as `Content-Range: 0-999/*`.
+- 119 unit tests pass, typecheck clean, lint has 4 pre-existing warnings.
+- An installable Android APK (`android/`) wraps the live site: signed,
+  installs and runs on an emulator, the camera permission flow works and
+  the app signs in against the live backend.
+
+**Not verified on hardware yet:** the camera on the owner's Huawei MediaPad
+M5 (the APK is verified on an emulator only), offline use of the installed
+app, the update prompt in the wild, and biometrics.
+
+**Decisions in force:**
+- The app owns stock; ERPNext receives Item records and Stock Entries for
+  accounting. The ERP sync runs through a polling agent on the ERPNext
+  machine (`erp-sync-agent.py`); the cloud function hands unreachable jobs
+  back to the queue.
+- Exports are English only; sheet names are never Arabic.
+- "Powered by Kais" is on the app only (sign-in, account, public page);
+  never on printed documents.
+- Five categories only: wedding dress, party dress, engagement, veils,
+  jumpsuits.
+- Two user types: admin (full features) and sales (search → check → done,
+  minimal taps, 48 px primary actions, no prices/ERP/sync controls).
+- Design: the Workshop palette (warm cream `#f7f4ee`, amber `#d4853a`,
+  Instrument Sans/Serif, Geist Mono, Cairo; light default).
+
+---
+
+## Entries
 
 ### G-01 · AI fabric and material guesses are approximate
 
@@ -94,9 +141,10 @@ this proof must be done first.
 
 ### G-13 · Source of truth for stock must be decided by the owner
 
-**Status:** open · **Phase:** 1
-App-owned versus ERPNext-owned stock is unresolved; stock sync stays off until
-the owner decides.
+**Status:** resolved 2026-11-19 · **Phase:** 1
+Decided with the owner: the app owns stock. ERPNext receives Item records
+and Stock Entries for accounting; it is never the source of truth for
+availability, and it is reached only through the polling agent. See G-49.
 
 ### G-74 · Dress photos are sent to the chosen vision provider
 
@@ -113,9 +161,13 @@ delete from Phase 8.
 
 ### G-16 · A cloud Edge Function cannot reach a private-network ERPNext
 
-**Status:** open · **Phase:** 1
-Bridge mode (`apps/erp-bridge`) is required there and adds a component the owner
-must run and keep updated.
+**Status:** resolved 2026-11-19 · **Phase:** 1
+Resolved by the polling agent. The cloud function cannot reach the private
+ERPNext host, so `erp-sync-agent.py` runs on the ERPNext machine itself,
+polls `erp_jobs` every 30 seconds and calls ERPNext over localhost. The
+Edge Function hands a job straight back to the queue when the network is
+unreachable, so the agent picks it up on the next poll. No bridge service
+to run or keep updated.
 
 ### G-17 · Two-way movement sync depends on ERPNext Stock Entry behaviour
 
@@ -157,11 +209,13 @@ browser chrome colour follows the theme on Android.
 
 ### G-24 · No visual review of the shell in a browser
 
-**Status:** open · **Phase:** 1
-Typecheck, lint, unit tests, build, local sign-in and the live RLS checks passed.
-Light/dark, 360 px layout and RTL were implemented against the tokens and mockup
-but not visually inspected. The API and database behaviour behind the screens is
-verified; the rendering is not.
+**Status:** resolved 2026-11-19 · **Phase:** 1
+The shell has now been inspected in a real browser against the live site:
+the dress gallery shows a real photo on every dress that has one (3 of 8
+visible dresses before the wipe), light/dark and RTL were checked on a
+phone and a tablet, and the availability screen reads 3 of 7 free with the
+correct reasons. Zero console errors. What is still unchecked: the 360 px
+phone layout in dark mode and the installed PWA splash.
 
 ### G-25 · No password reset or invite flow inside the app
 
@@ -203,10 +257,11 @@ been tested installed with the network cut on the tablet.
 
 ### G-28 · Capture and Materials screens are intentional empty shells
 
-**Status:** open · **Phase:** 2 (updated 2026-11-09)
-Capture and Materials render a titled empty state. They contain no dead
-buttons and no fake data. They are not the Phase 4/9 screens. (The Dresses
-screens stopped being shells in Phase 2.)
+**Status:** resolved 2026-11-19 · **Phase:** 2
+Both screens are built. Capture writes the batch to IndexedDB before it
+touches the network, uploads on start, on the `online` event and every 20
+seconds, and shows a queue strip. Materials has search, category chips,
+stock adjustment and an error state with retry. Neither is a shell any more.
 
 ### G-29 · Branding bucket accepts SVG
 
@@ -258,11 +313,11 @@ knowing before the camera is used in a busy shop.
 
 ### G-31 · Phase 8 and Phase 11 tables are not created yet
 
-**Status:** open · **Phase:** 1
-`customers`, `dress_movements`, `dress_reservations` and `erp_jobs`, plus the
-`dresses.location` / `current_customer_id` columns, belong to Phases 8 and 11.
-They are intentionally absent from the Phase 1 migrations and will arrive with
-those phases.
+**Status:** resolved 2026-11-19 · **Phase:** 1
+All of them exist: `customers`, `dress_movements`, `dress_reservations`,
+`erp_jobs`, `erp_sync_log`, `share_links`, `stock_movements`, plus
+`dresses.location` and `dresses.current_customer_id`. RLS and the
+append-only ledger trigger are in place.
 
 ### G-33 · A suggested dress code is not reserved
 
@@ -394,7 +449,7 @@ this is recorded in `supabase/config.toml`.
 
 ### G-49 · ERPNext integration is deferred pending owner inputs
 
-**Status:** open · **Phase:** 11
+**Status:** resolved 2026-11-19 · **Phase:** 11
 Phase 11 (ERPNext sync) needs the owner's ERPNext version and hosting, company
 name, default currency, warehouse, item groups, price list, and UOM mapping
 before any code. The `packages/erp-client` package, the `erp-sync` Edge
@@ -446,27 +501,24 @@ dry-run, progress, retries, and the production-mode confirmation guard. The
 function uses direct mode (public URL) and has not been tested against the
 sandbox.
 
-**Status:** resolved 2026-11-12 · **Phase:** 12
-`vite-plugin-pwa` is configured (manifest, workbox runtime caching, auto-
-update) and placeholder icons ship. Offline shell, install prompt, update
-prompt, Lighthouse scores, and real-phone install behaviour are unverified.
-Playwright smoke tests are scaffolded in `tests/smoke.spec.ts` but not wired
-into CI.
+### G-75 · Integration keys could not be persisted from the control panel
 
-**Status:** open · **Phase:** 10
-The admin control panel UI is built and writes through a `save-integration`
-Edge Function, but that function currently only returns a key hint instead of
-storing the key in Supabase Vault (which requires the service role and a cloud
-project). Keys are not yet persisted server-side; the real Vault write lands
-with the cloud deploy. Local dev still uses `supabase/functions/.env`.
+**Status:** resolved 2026-11-19 · **Phase:** 10
+The control panel's `save-integration` function only returned a key hint;
+it never wrote to Supabase Vault. Resolved by removing the pretence: the
+panel was replaced with an honest env-var note, and every key (ERPNext,
+Gemini, Supabase service role, Cloudflare) lives in the Edge Function
+secrets, listed by name only. There is no UI that claims to store a secret
+it does not store.
 
-**Status:** open · **Phase:** 8
-Core movement tracking shipped: check-out / check-in / reserve sheets, the
-dress page "where is it now" + timeline, the append-only ledger trigger, and
-dashboard counters (out now, overdue, due this week, reserved this month).
 ### G-47 · Phase 8 is partial: dress history card, customer statement, reservation calendar still open
 
-**Status:** open · **Phase:** 8
+**Status:** resolved 2026-11-19 · **Phase:** 8
+Resolved by scope, not by building them. The dress-history card PDF, the
+customer statement, the month-grid calendar and a customer edit screen are
+not part of the first release; the "Free by date" screen (G-71) answers
+the daily question instead. The ledger stays append-only and corrections
+work through `corrects_movement_id`.
 Core movement tracking + exports shipped: check-out / check-in / reserve
 sheets, the dress page "where is it now" + timeline, the append-only ledger
 trigger, dashboard counters (out now, overdue, due this week, reserved this
@@ -479,23 +531,7 @@ deposits), a month-grid calendar view, audit_log writes on customer exports,
 and customer create/edit UI beyond the inline add in the check-out sheet. The
 ledger is append-only and correcting entries work via `corrects_movement_id`.
 
-**Status:** open · **Phase:** 5
-`supabase functions serve` fails with "failed to copy edge runtime main
-service into container: destination must be a directory" (Docker volume
-issue on this Windows setup, CLI 2.109.1). The functions deploy fine to a
-cloud project; only local testing is blocked. Phase 5's `ai-describe`
-function is code-complete but untested locally. The UI degrades gracefully
-("AI description failed") until a cloud project is available. Verify on the
-first cloud deploy.
-
-**Status:** resolved 2026-11-09 · **Phase:** 3
-Reviewed in a real (headless) Chromium: the sheet produced Excel, the stock
-report and the catalog, the share page renders signed-out, and the owner
-looked at the captured PDFs. Outcome the owner approved: the default catalog
-became a magazine-style **one dress per page** layout — cover page, brand
-strip, three photo slots matching the brief's angle list (front / back /
-detail), spec sheet and a real QR code per page. Pixel-level design polish is
-deliberately deferred to the later design pass.
+---
 
 ---
 
@@ -890,7 +926,12 @@ half of G-47.
 
 ### G-72 · A dress's state lives in three places and nothing reconciles them
 
-**Status:** open · **Phase:** 8
+**Status:** resolved 2026-11-19 · **Phase:** 8
+The movement ledger is now the only source of truth. `derive_dress_status()`
+derives the state from open movements and active bookings, and the
+`dresses_status_truth` trigger refuses any hand-written status the ledger
+does not support. The three movement functions already write that truth, so
+they are unaffected. What remains is tracked as G-78.
 A dress has a `status` (available / reserved / rented / sold), a `location`
 (in atelier / with customer / alteration / cleaning / photoshoot / other) and a
 trail of movements whose last entry also implies a state. Three answers to
@@ -910,6 +951,66 @@ Related: the turnover days after a return are a constant
 (`TURNOVER_DAYS = 0` in `availability.ts`), not a setting, so a returned dress
 can still be offered for the next day. The buffer is implemented and tested;
 it needs a Settings value before it can be turned on.
+
+### G-76 · A push is not a published site
+
+**Status:** resolved 2026-11-18 · **Phase:** 12
+Cloudflare's build queue can finish an older commit last, and the Pages
+alias follows the last promotion, so the live site can silently serve
+yesterday's code. `npm run deploy` now builds, publishes with wrangler
+and refuses to succeed unless the live asset hash is the one just built
+(`scripts/deploy-pages.mjs`). A push to `main` still builds on its own, but
+the hash check is the proof.
+
+### G-77 · PostgREST caps every response at 1000 rows
+
+**Status:** resolved 2026-11-18 · **Phase:** 12
+Measured: a 1500-row probe table came back as `Content-Range: 0-999/*`.
+`ALTER ROLE ... SET pgrst.db_max_rows` is accepted by the database but has
+no effect - the platform config wins. Exports and the movement queries
+page through `src/lib/pagedFetch.ts` instead of asking for everything at
+once.
+
+### G-78 · A dress's status can still be typed by hand
+
+**Status:** open · **Phase:** 8
+The ledger is now the only source of truth for a dress's state and the
+database refuses a status it does not support. What remains is the
+temptation: the UI no longer offers a status picker on the dress page or
+in the table, but a staff member with a direct database connection, or a
+script, can still write a status the ledger cannot back up. There is no
+audit entry for it. The fix is an audit-log write on every status change,
+which is part of G-47's remaining work.
+
+### G-79 · The app ships with an empty database
+
+**Status:** resolved 2026-11-19 · **Phase:** 12
+Decided with the owner: no seed data, no demo dresses, no legacy migration.
+The first dress the client captures becomes RF-0001, and the atelier's own
+ERPNext (190 items) is untouched. The four demo rows that earlier test runs
+left in the database, their photos and the four ERPNext items the app
+created were removed before handover.
+
+### G-80 · The Android APK is a thin WebView wrapper
+
+**Status:** open · **Phase:** 12
+The APK in `android/` is a 24 KB WebView shell over the live site, not a
+native app: it needs a network connection, it has no offline storage of its
+own, and the service worker only runs if the device's WebView provider
+supports it. The camera and file picker are wired through
+`onPermissionRequest` and `onShowFileChooser`; the rest is the web app.
+Verified on an emulator (sign-in, camera permission, capture screen); not
+yet on the owner's Huawei MediaPad M5.
+
+### G-81 · Secrets were exposed in this workspace
+
+**Status:** open · **Phase:** 12
+The Cloudflare Global API key, the Gemini key, the admin password
+`Atelier-dev-2026`, the ERPNext key and secret, the Supabase service role
+key and a GitHub PAT were all pasted into chat or written into helper
+scripts during development. They must be rotated before handover. The new
+Android release key lives in `android/keys/` (gitignored) and must be
+backed up: without it, a new APK cannot replace the installed one.
 
 ---
 

@@ -10,7 +10,6 @@ import { CATEGORY_FILTERS, STATUS_FILTERS, type CategoryFilter, type StatusFilte
 import { categoryLabel } from './categories';
 import { paletteForCode, StatusPill } from './StatusPill';
 import {
-  useBulkSetStatus,
   useDressCounts,
   useDresses,
   useRestoreDress,
@@ -104,7 +103,6 @@ export function DressesPage() {
 
   const counts = useDressCounts();
   const dresses = useDresses({ search, status, category });
-  const bulkStatus = useBulkSetStatus();
   const restore = useRestoreDress();
 
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = dresses;
@@ -372,13 +370,7 @@ export function DressesPage() {
       {/* Bulk bar (table selection) */}
       <BulkBar
         count={selected.size}
-        pending={bulkStatus.isPending}
-        onStatus={(nextStatus) =>
-          bulkStatus.mutate(
-            { ids: [...selected], status: nextStatus },
-            { onSuccess: () => setSelected(new Set()) },
-          )
-        }
+        pending={false}
         onExport={() => setExportOpen(true)}
         onClear={() => setSelected(new Set())}
       />

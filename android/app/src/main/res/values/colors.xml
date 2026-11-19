@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Workshop paper colour: the app opens on the same cream it uses. -->
+    <color name="cream">#FFF7F4EE</color>
+    <color name="amber">#FFD4853A</color>
+    <color name="ink">#FF1F1B16</color>
+</resources>

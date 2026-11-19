@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button';
 import { Panel } from '@/components/ui/Panel';
 import { FullScreenLoader } from '@/components/layout/FullScreenLoader';
 import { Screen } from '@/components/layout/Screen';
-import { SegmentedControl } from '@/components/ui/SegmentedControl';
 import { ImageIcon, LinkIcon, PencilIcon, QrIcon, TrashIcon } from '@/components/icons';
 import {
   dressErrorMessage,
@@ -26,6 +25,7 @@ import { CorrectSheet } from '@/features/movements/CorrectSheet';
 import { AvailabilityCalendar } from './AvailabilityCalendar';
 import { emptyDressForm, DressForm, dressRowToForm, formToPayload } from './DressForm';
 import { categoryLabel, toCategory } from './categories';
+import { StatusPill } from './StatusPill';
 import { useDescribeDress, aiErrorMessage } from '@/features/ai/api';
 import { useAtelierBranding } from '@/features/branding/useAtelierBranding';
 import { DressAiReview } from '@/features/ai/DressAiReview';
@@ -33,13 +33,6 @@ import { PhotoGallery } from '@/features/photos/PhotoGallery';
 import { useEnqueueErpSync } from '@/features/erp/api';
 import { BackgroundCleaner } from '@/features/cleanup/BackgroundCleaner';
 import { buildHangTagHtml, printHtml } from '@/features/dresses/printDocument';
-
-const STATUS_OPTIONS: ReadonlyArray<{ value: DressRow['status']; labelKey: string }> = [
-  { value: 'available', labelKey: 'status.available' },
-  { value: 'reserved', labelKey: 'status.reserved' },
-  { value: 'rented', labelKey: 'status.rented' },
-  { value: 'sold', labelKey: 'status.sold' },
-];
 
 const LISTING_LABELS: Record<DressRow['listing_type'], string> = {
   sale: 'dress.listingSale',
@@ -81,7 +74,9 @@ function CreateDress() {
             create.isError
               ? dressErrorMessage(create.error) === 'duplicate_code'
                 ? t('dress.errors.duplicateCode')
-                : t('dress.errors.saveFailed')
+                : dressErrorMessage(create.error) === 'status_not_supported'
+                  ? t('dress.errors.statusNotSupported')
+                  : t('dress.errors.saveFailed')
               : null
           }
           onSubmit={(values) => {
@@ -107,7 +102,6 @@ function ExistingDress({ id }: { id: string }) {
   const dressQuery = useDress(id);
   const photosQuery = useDressPhotos(id, { enabled: dressQuery.data?.found === true });
   const movementsQuery = useDressMovements(id);
-  const statusUpdate = useUpdateDress();
   const formUpdate = useUpdateDress();
   const softDelete = useSoftDeleteDress();
   const describe = useDescribeDress();
@@ -210,7 +204,9 @@ function ExistingDress({ id }: { id: string }) {
               formUpdate.isError
                 ? dressErrorMessage(formUpdate.error) === 'duplicate_code'
                   ? t('dress.errors.duplicateCode')
-                  : t('dress.errors.saveFailed')
+                  : dressErrorMessage(formUpdate.error) === 'status_not_supported'
+                    ? t('dress.errors.statusNotSupported')
+                    : t('dress.errors.saveFailed')
                 : null
             }
             onSubmit={(values) =>
@@ -392,22 +388,11 @@ function ExistingDress({ id }: { id: string }) {
 
         <div>
           <span className="eyebrow mb-1.5 block">{t('dress.statusLabel')}</span>
-          <SegmentedControl
-            label={t('dress.statusLabel')}
-            options={STATUS_OPTIONS.map((option) => ({
-              value: option.value,
-              label: t(option.labelKey),
-            }))}
-            value={dress.status}
-            onChange={(value) =>
-              statusUpdate.mutate({ id: dress.id, values: { status: value } })
-            }
-          />
-          {statusUpdate.isError ? (
-            <p className="mt-1.5 text-note text-danger" role="alert">
-              {t('dress.errors.saveFailed')}
-            </p>
-          ) : null}
+          {/* The status is not typed in: it follows the ledger (G-72). */}
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill status={dress.status} label={t(`status.${dress.status}`)} />
+            <span className="text-note text-muted">{t('dress.statusFollowsLedger')}</span>
+          </div>
         </div>
 
         {!isDraft ? (

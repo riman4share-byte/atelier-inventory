@@ -1,0 +1,11 @@
+# The SDK location is per machine, so it is never committed.
+local.properties
+.gradle/
+build/
+app/build/
+
+# The release signing key and its passwords. Back the keystore up somewhere
+# safe: without the same key, a new APK cannot replace the installed one.
+keys/
+*.keystore
+*.jks

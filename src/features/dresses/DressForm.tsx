@@ -10,13 +10,6 @@ import { TextArea } from '@/components/ui/TextArea';
 import { DRESS_CATEGORIES, categoryLabel } from './categories';
 import { TextField } from '@/components/ui/TextField';
 
-const STATUS_OPTIONS: ReadonlyArray<{ value: DressStatus; labelKey: string }> = [
-  { value: 'available', labelKey: 'status.available' },
-  { value: 'reserved', labelKey: 'status.reserved' },
-  { value: 'rented', labelKey: 'status.rented' },
-  { value: 'sold', labelKey: 'status.sold' },
-];
-
 const LISTING_OPTIONS: ReadonlyArray<{ value: ListingType; labelKey: string }> = [
   { value: 'sale', labelKey: 'dress.listingSale' },
   { value: 'rent', labelKey: 'dress.listingRent' },
@@ -268,15 +261,10 @@ export function DressForm({ initial, savingLabel, pending, submitError, onSubmit
             />
           </div>
 
-          <div>
-            <span className="eyebrow mb-1.5 block">{t('dress.statusLabel')}</span>
-            <SegmentedControl
-              label={t('dress.statusLabel')}
-              options={STATUS_OPTIONS.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
-              value={values.status}
-              onChange={(value) => set('status', value)}
-            />
-          </div>
+          {/* No status picker: the status follows the movement ledger. A
+              dress becomes rented by being checked out, reserved by being
+              booked and sold by being delivered. Typing a status would be a
+              claim the ledger cannot back up. */}
 
           <div>
             <span className="eyebrow mb-1.5 block">{t('dress.listingLabel')}</span>

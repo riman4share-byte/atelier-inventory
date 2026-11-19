@@ -142,6 +142,14 @@ export function useSuggestedCode(enabled: boolean) {
   });
 }
 
+/**
+ * The two ways a save can fail that the app can say something useful about.
+ *
+ * `23505` is the unique violation on the dress code. `P0009` is the state
+ * guard: the database refuses a status the movement ledger does not
+ * support, because a dress can only be rented by being checked out, reserved
+ * by being booked and sold by being delivered.
+ */
 export function dressErrorMessage(error: unknown): string {
   if (
     error &&
@@ -150,6 +158,14 @@ export function dressErrorMessage(error: unknown): string {
     (error as { code?: unknown }).code === '23505'
   ) {
     return 'duplicate_code';
+  }
+  if (
+    error &&
+    typeof error === 'object' &&
+    'code' in error &&
+    (error as { code?: unknown }).code === 'P0009'
+  ) {
+    return 'status_not_supported';
   }
   return 'unknown';
 }
@@ -210,19 +226,6 @@ export function useRestoreDress() {
 // ---------------------------------------------------------------------------
 // Phase 3: exports, table pagination and share links
 // ---------------------------------------------------------------------------
-
-/** Change the status of many dresses at once (table bulk bar). */
-export function useBulkSetStatus() {
-  const client = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ ids, status }: { ids: string[]; status: DressRow['status'] }) => {
-      const db = supabase as NonNullable<typeof supabase>;
-      const { error } = await db.from('dresses').update({ status }).in('id', ids);
-      if (error) throw error;
-    },
-    onSuccess: () => client.invalidateQueries({ queryKey: dressKeys.all }),
-  });
-}
 
 export const EXPORT_ROW_LIMIT = 2000;
 

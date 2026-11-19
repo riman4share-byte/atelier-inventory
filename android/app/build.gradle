@@ -1,0 +1,62 @@
+plugins {
+    id 'com.android.application'
+}
+
+// The signing material is read from the environment, never from this file.
+// Populate these from keys\release-signing.env before a release build:
+//   ANDROID_KEYSTORE_STORE_FILE, ANDROID_KEYSTORE_PASSWORD,
+//   ANDROID_KEYSTORE_ALIAS, ANDROID_KEYSTORE_KEY_PASSWORD
+// When they are absent the release build still assembles, just unsigned, so
+// nobody is blocked from working on the app without the key.
+def envOrNull = { String name -> System.getenv(name) }
+def signingReady = ['ANDROID_KEYSTORE_STORE_FILE', 'ANDROID_KEYSTORE_PASSWORD',
+                    'ANDROID_KEYSTORE_ALIAS', 'ANDROID_KEYSTORE_KEY_PASSWORD']
+        .every { envOrNull(it) }
+
+android {
+    namespace 'com.riman.atelier'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.riman.atelier"
+        // Android 7.0 and newer. The atelier tablet is Android 10.
+        minSdk 24
+        // 34 on purpose: Android 15 forces edge-to-edge on apps that target
+        // 35, which would put the web page under the status bar. Raise this
+        // to 35 when the app is published to a store, and handle the insets.
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        if (signingReady) {
+            release {
+                storeFile file(envOrNull('ANDROID_KEYSTORE_STORE_FILE'))
+                storePassword envOrNull('ANDROID_KEYSTORE_PASSWORD')
+                keyAlias envOrNull('ANDROID_KEYSTORE_ALIAS')
+                keyPassword envOrNull('ANDROID_KEYSTORE_KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signingReady) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// No dependencies on purpose: the wrapper is the platform WebView, so the
+// APK stays small and the build needs nothing from a repository.
+dependencies {
+}

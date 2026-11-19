@@ -448,13 +448,18 @@ export function DressesTable({
 interface BulkBarProps {
   count: number;
   pending: boolean;
-  onStatus: (status: DressStatus) => void;
   onExport: () => void;
   onClear: () => void;
 }
 
-/** Shows when rows are selected in the table: change status in bulk or export. */
-export function BulkBar({ count, pending, onStatus, onExport, onClear }: BulkBarProps) {
+/**
+ * Shows when rows are selected in the table: export them, or let go.
+ *
+ * There is no "set status" here on purpose. The status of a dress follows
+ * the movement ledger, so a bulk status change would be a claim with
+ * nothing behind it - the same lie the dress page used to offer.
+ */
+export function BulkBar({ count, pending, onExport, onClear }: BulkBarProps) {
   const { t } = useTranslation();
   if (count === 0) return null;
   return (
@@ -465,18 +470,7 @@ export function BulkBar({ count, pending, onStatus, onExport, onClear }: BulkBar
       <span className="mr-1 font-mono text-[11px] font-semibold tracking-tight text-ink">
         {t('table.selected', { count })}
       </span>
-      {(['available', 'reserved', 'rented', 'sold'] as const).map((value) => (
-        <button
-          key={value}
-          type="button"
-          disabled={pending}
-          onClick={() => onStatus(value)}
-          className="h-7 rounded-field border border-line bg-surface-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted transition-colors hover:border-line-strong hover:text-ink disabled:opacity-50"
-        >
-          {t(`status.${value}`)}
-        </button>
-      ))}
-      <Button size="sm" className="w-auto px-2.5" onClick={onExport}>
+      <Button size="sm" className="w-auto px-2.5" onClick={onExport} disabled={pending}>
         {t('table.bulkExport')}
       </Button>
       <button
